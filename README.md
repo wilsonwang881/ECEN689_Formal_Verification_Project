@@ -24,7 +24,7 @@ Python + Flask + Redis + HTML + JavaScript + CSS
 
 ## Environment Setup
 
-Ensure Python 3 and virtualenv is installed.
+Ensure **Python 3** and **virtualenv** is installed.
 
 For the first time setup, clone the code, change into the root directory of the code folder, then run:
 
@@ -34,9 +34,17 @@ For the first time setup, clone the code, change into the root directory of the 
 
 ``pip install -r requirements.txt``
 
-Once the environemt is setup, anytime wants to activate the virtual environemnt, run:
+Install [Redis](https://redis.io/topics/quickstart). Remember to copy **redis-server** and **redis-cli** to ``/usr/local/bin/``.
+
+Once the environemt is setup, anytime one wants to activate the virtual environemnt, run:
 
 ``source venv/bin/activate``
+
+Remember to start **Redis** with:
+
+``redis-server``
+
+The connection information such as **port number** is shown in the terminal.
 
 
 ## APIs
