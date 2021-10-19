@@ -42,8 +42,6 @@ Once the environemt is setup, anytime one wants to activate the virtual environe
 
 Then run:
 
-``export FLASK_APP=backend.py``
-
 ``flask run``
 
 to start the backend.
