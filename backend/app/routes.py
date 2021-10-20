@@ -14,6 +14,12 @@ def query_signal_lights():
     pass
 
 
+# Routes for setting light signals at intersections
+@app.route("/set_signal_lights")
+def set_signal_lights():
+    pass
+
+
 # Routes for getting the location of a vehicle
 @app.route("/query_vehicle_location")
 def query_vehicle_location():

@@ -1,5 +1,36 @@
-class Vehicle:
-    def __init__(self, starting_location, speed, route_completion_status) -> None:
+"""
+Date: 10/19/2021
+Description: the code implements vehicles as threads. Each vehicle/thread can talk to the backend via HTTP requests and make decisions.
+"""
+import threading
+import requests
+
+# Each vehicle in the traffic system is represented by a thread
+# Class Vehicle inherits the threading library
+# So that the Vehicle objects can make decisions and interact with the traffic system
+class Vehicle(threading.Thread):
+    def __init__(self, id, starting_location, speed, route_completion_status) -> None:
+        # Needed for using the threading library
+        threading.Thread.__init__(self)
+
+        # Set the object attributes
+        self.id = id
         self.location = starting_location
         self.speed = speed
+        self.location_visited = []
         self.route_completion_status = route_completion_status
+
+
+    # Inherited from the threading library
+    # The thread runs this function when it starts
+    def run(self):
+        print("Vehicle %d running" % (self.id))
+
+        # Ask for congestion map
+
+        # Ask for traffic light status if visible
+
+        # Make movement decision
+
+        # Update the backend  
+        
