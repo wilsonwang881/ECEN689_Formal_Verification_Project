@@ -6,7 +6,7 @@ import threading
 import requests
 
 
-class Congestion_Computation_Worker(threading.Thread):
+class Congestion_Computation(threading.Thread):
     def __init__(self, id, road_responsible) -> None:
         # Needed for using the threading library
         threading.Thread.__init__(self)
