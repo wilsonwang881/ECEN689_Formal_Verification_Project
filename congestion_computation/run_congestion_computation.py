@@ -6,7 +6,7 @@ import threading
 import requests
 
 
-from congestion_computation_worker import Congestion_Computation_Worker
+from congestion_computation import Congestion_Computation
 
 
 # Number of road sections
@@ -16,7 +16,7 @@ vehicle_number = 12
 thread_list = list()
 
 for i in range(vehicle_number):
-    thread_object = Congestion_Computation_Worker(id=i, road_responsible=None)
+    thread_object = Congestion_Computation(id=i, road_responsible=None)
     thread_list.append(thread_object)
     thread_object.start()
 
