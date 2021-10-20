@@ -103,7 +103,7 @@ To start congestion computation, vehicles and traffic signal control, make sure 
 The backend uses Python Flask as the framework and implements the following APIs:
 
 | Route                                        |
-|----------------------------------------------|-----------------------------------------|
+|----------------------------------------------|
 | ``/query_signal_light/<intersection>``           |
 | ``/set_signal_light/<intersection>/<signal>``             |
 | ``/query_vehicle_status/<vehicle_id>``         | 
