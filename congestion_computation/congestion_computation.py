@@ -4,6 +4,7 @@ Description: the code implements congestion calculation as threads. Each thread 
 """
 import threading
 import requests
+import time
 
 
 class Congestion_Computation(threading.Thread):
@@ -14,6 +15,7 @@ class Congestion_Computation(threading.Thread):
         # Set the object attributes
         self.id = id
         self.road_responsible = road_responsible
+        self.vehicle_list = list()
 
     
     # Inherited from the threading library
@@ -21,10 +23,14 @@ class Congestion_Computation(threading.Thread):
     def run(self):
         print("Cogestion computation work %d running" % (self.id))
 
-        # Get a list of vehicles on the road
+        while True:
 
-        # Update local record
+            # Get a list of vehicles on the road
 
-        # Calculate the congestion
+            # Update local record
 
-        # Send the updated congestion information back to the backend
+            # Calculate the congestion
+
+            # Send the updated congestion information back to the backend
+            response = requests.get("http://127.0.0.1:5000/set_road_congestion/%d/2" % self.id)
+            time.sleep(0.5)

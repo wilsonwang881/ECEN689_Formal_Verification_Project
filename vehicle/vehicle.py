@@ -4,6 +4,7 @@ Description: the code implements vehicles as threads. Each vehicle/thread can ta
 """
 import threading
 import requests
+import time
 
 # Each vehicle in the traffic system is represented by a thread
 # Class Vehicle inherits the threading library
@@ -33,4 +34,8 @@ class Vehicle(threading.Thread):
         # Make movement decision
 
         # Update the backend  
+
+        while True:
+            response = requests.get("http://127.0.0.1:5000/set_vehicle_speed/%d/2" % self.id)
+            time.sleep(0.5)
         

@@ -6,7 +6,7 @@ from vehicle import Vehicle
 
 
 # Number of vehicles
-vehicle_number = 5
+vehicle_number = 15
 
 # Start a list of threads
 thread_list = list()
