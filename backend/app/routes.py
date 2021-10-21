@@ -1,5 +1,8 @@
 from threading import Lock
+import json
 from app import app
+from app import redis_db
+from location_speed_encoding.crossroads import Crossroads
 
 
 # Synchronization construct
@@ -53,10 +56,12 @@ def index():
 
 
 # Route for getting light signals at intersections
-@app.route("/query_signal_lights/<intersection>")
+@app.route("/query_signal_lights/<int:intersection>")
 def query_signal_lights(intersection):
-    pass
+    res = json.loads(redis_db.get(Crossroads(intersection).name))
 
+    return res
+    
 
 # Route for setting light signals at intersections
 @app.route("/set_signal_lights/<intersection>/<signal>")

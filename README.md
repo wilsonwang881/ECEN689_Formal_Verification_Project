@@ -156,7 +156,10 @@ In JSON format:
         {
         "direction": direction_name<clockwise>,
         "vehicles": {
-                  <vehicle_name>: <vehicle_location>,
+                  <vehicle_name>: {
+                                  "speed": <moving or stopped>,
+                                  "location": <location>
+                                  }
                   ...
                   },
         "congestion_index": <computed_value>

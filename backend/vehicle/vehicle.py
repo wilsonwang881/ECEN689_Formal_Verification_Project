@@ -39,5 +39,6 @@ class Vehicle(threading.Thread):
 
         while True:
             response = requests.get("http://127.0.0.1:5000/set_vehicle_status/%d/2/2" % self.id)
+            response = requests.get("http://127.0.0.1:5000/query_signal_lights/%d" % 1)
             time.sleep(0.5)
         

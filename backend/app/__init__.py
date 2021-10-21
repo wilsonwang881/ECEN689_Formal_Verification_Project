@@ -46,7 +46,10 @@ JSON format:
         {
         "direction": direction_name<anticlockwise>,
         "vehicles": {
-                  <vehicle_name>: <vehicle_location>,
+                  <vehicle_name>: {
+                                  "speed": <moving or stopped>,
+                                  "location": <location>
+                                  }
                   ...
                   },
         "congestion_index": <computed_value>
@@ -69,13 +72,13 @@ for road_segment in Road:
 # Initialize the crossroad->traffic light information in the database
 # All red
 for crossroad in Crossroads:
-    tmpp_record = []
+    tmpp_record = {}
     for signal_light_position in Signal_light_positions:
-        tmpp_record.append({signal_light_position.name: Traffic_light.RED.name})
+        tmpp_record[signal_light_position.name] = Traffic_light.RED.name
     redis_db.set(crossroad.name, json.dumps(tmpp_record))
 
 # Record the number of vehicles in the database
 # TODO: change the vehicle injection process to one at a time
-redis_db.set("vehicles", 15)
+redis_db.set("vehicles", 0)
 
 from app import routes
