@@ -43,17 +43,24 @@ ECEN689_Formal_Verification_Project\    ------> Root directory
         app\
             __init__.py
             routes.py
-    congestion_computation\    ---------------> Threaded computation
-        congestion_computation.py
-        run_congestion_computation.py
-    location_speed_encoding\    --------------> Location and speed representation
-    trafic_signal_control\    ----------------> Single thread signal light control
-        traffic_signal_control_master.py
-    unit_tests\    ---------------------------> Automated tests
-    vehicle\    ------------------------------> One vehicle object per thread
-        vehicle.py
-        vehicle_threads_start_script.py
+        congestion_computation\    ---------------> Threaded computation
+            congestion_computation.py
+            run_congestion_computation.py
+        location_speed_encoding\    --------------> Location and speed representation
+            __init__.py
+            crossroads.py
+            direction.py
+            road.py
+            signal_light_positions.py
+            speed.py
+            traffic_lights.py
+        trafic_signal_control\    ----------------> Single thread signal light control
+            traffic_signal_control_master.py
+        vehicle\    ------------------------------> One vehicle object per thread
+            vehicle.py
+            run_vehicle_threads.py
     .flaskenv    -----------------------------> Python flask environment variables
+    unit_tests\    ---------------------------> Automated tests    
     .gitignore 
     README.md
     requirements.txt    ----------------------> Python library requirements
@@ -150,6 +157,13 @@ Each congestion computation thread is responsible for one road segment, not the 
 6. The thread terminates only with manual exit of the program.
 
 The number of congestion computation threads is fixed, because the map does not change. The number of road segments is fixed.
+
+Formula to calculate the congestion index:
+
+1. Once a vehicle shows up on the road segment, put the car and the timestamp into an array.
+2. Sum up the difference between the current time and the timestamp for each vehicle.
+3. Divide the sum by the number of vehicles.
+4. Once the vehicle leaves the road segment, remove the record from the array.
 
 
 ## Traffic Light Control Workflow
