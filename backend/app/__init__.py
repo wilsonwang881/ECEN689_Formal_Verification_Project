@@ -9,6 +9,7 @@ from location_speed_encoding.direction import Direction
 from location_speed_encoding.signal_light_positions import Signal_light_positions
 from location_speed_encoding.traffic_light import Traffic_light
 
+
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -22,15 +23,47 @@ redis_db = redis.Redis(
 logger = logging.getLogger(('werkzeug'))
 logger.setLevel(logging.ERROR)
 
-# Initialize the location(road segment)->vehicle information in the database
-# All empty
-# 
-# Initialize the road segment->congestion index information in the database
-# All 0 (no congestion)
+"""
+Initialize the road segment->vehicle information in the database
+All empty
+
+Initialize the road segment->congestion index information in the database
+All 0 (no congestion)
+
+Initialize the (exact) location->vehicle information in the database
+All empty
+JSON format:
+{<road_segment_name>: 
+    [
+        {
+        "direction": direction_name<clockwise>,
+        "vehicles": {
+                  <vehicle_name>: <vehicle_location>,
+                  ...
+                  },
+        "congestion_index": <computed_value>
+        },
+        {
+        "direction": direction_name<anticlockwise>,
+        "vehicles": {
+                  <vehicle_name>: <vehicle_location>,
+                  ...
+                  },
+        "congestion_index": <computed_value>
+        }
+    ]
+}
+
+Vehicle_location:
+on vertical road segments: the top is the 0th position
+                           the bottom is the 29th position
+on the horizontal road segments: the leftmost is the 0th position
+                                 the rightmost is the 29th position
+"""
 for road_segment in Road:
     tmpp_record = []
     for direction in Direction:
-        tmpp_record.append({"direction": direction.name, "vehicles": [], "congestion_index": 0})
+        tmpp_record.append({"direction": direction.name, "vehicles": {}, "congestion_index": 0})
     redis_db.set(road_segment.name, json.dumps(tmpp_record))
 
 # Initialize the crossroad->traffic light information in the database
