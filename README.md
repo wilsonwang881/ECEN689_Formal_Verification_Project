@@ -1,16 +1,43 @@
 ## Table of Contents
 
 - [Table of Contents](#table-of-contents)
+- [Map](#map)
 - [Goal](#goal)
 - [Structure](#structure)
 - [Technology Stack](#technology-stack)
 - [Environment Setup](#environment-setup)
+- [Location Encoding](#location-encoding)
+- [Road Segment Record](#road-segment-record)
 - [Backend Workflow](#backend-workflow)
 - [Vehicle Workflow](#vehicle-workflow)
 - [Congestion Computation Workflow](#congestion-computation-workflow)
 - [Traffic Light Control Workflow](#traffic-light-control-workflow)
 - [Unit Test Workflow](#unit-test-workflow)
 - [Tutorials](#tutorials)
+
+
+## Map
+
+```
+====A  ==============  ============== D
+     ||              ||              ||
+     ||              ||              ||
+     ||              ||              ||
+     ||              ||              ||
+     ||              ||              ||
+     ||              ||              || 
+       ==============  ==============  
+     ||              ||              ||
+     ||              ||              ||
+     ||              ||              ||
+     ||              ||              ||
+     ||              ||              ||
+     ||              ||              || 
+     B ==============  ============== C
+```
+Each vehicle must start from A, visit B, C, D in any order and leave at A.
+A is not a crossroad.
+B, C and D are crossroads.
 
 
 ## Goal
@@ -37,9 +64,8 @@ Bonus part: a single page web application for viewing the traffic in real time.
 The files are organized as the follows:
 
 ```
-ECEN689_Formal_Verification_Project\    ------> Root directory
-    backend\    ------------------------------> Python Flask backend
-        backend.py
+ECEN689_Formal_Verification_Project\    ----------> Root directory
+    backend\    ----------------------------------> Python Flask backend
         app\
             __init__.py
             routes.py
@@ -58,12 +84,14 @@ ECEN689_Formal_Verification_Project\    ------> Root directory
             traffic_signal_control_master.py
         vehicle\    ------------------------------> One vehicle object per thread
             vehicle.py
-            run_vehicle_threads.py
-    .flaskenv    -----------------------------> Python flask environment variables
-    unit_tests\    ---------------------------> Automated tests    
+            run_vehicle_threads.py    
+        .flaskenv    -----------------------------> Python flask environment variables
+        backend.py
+        config.py
+    unit_tests\    -------------------------------> Automated tests    
     .gitignore 
     README.md
-    requirements.txt    ----------------------> Python library requirements
+    requirements.txt    --------------------------> Python library requirements
 ```
 
 
@@ -103,6 +131,47 @@ Remember to start **Redis** with:
 The connection information such as **port number** is shown in the terminal.
 
 To start congestion computation, vehicles and traffic signal control, make sure the virtual environment is activated before starting the corresponding scripts.
+
+
+## Location Encoding
+
+Each road segment has a name.
+
+Each road segment has two lanes: in clockwise or anti-clockwise direction.
+
+If the road segment is vertical, the 0th position is on the top.
+
+If the road segment is horizontal, the 0th position is the leftmost one.
+
+Encoding order: road segment -> lane direction -> square position.
+
+
+## Road Segment Record
+
+In JSON format:
+
+```
+{<road_segment_name>: 
+    [
+        {
+        "direction": direction_name<clockwise>,
+        "vehicles": {
+                  <vehicle_name>: <vehicle_location>,
+                  ...
+                  },
+        "congestion_index": <computed_value>
+        },
+        {
+        "direction": direction_name<anticlockwise>,
+        "vehicles": {
+                  <vehicle_name>: <vehicle_location>,
+                  ...
+                  },
+        "congestion_index": <computed_value>
+        }
+    ]
+}
+```
 
 
 ## Backend Workflow
