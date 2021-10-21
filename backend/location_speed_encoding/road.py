@@ -1,5 +1,5 @@
 """
-     ====E==== ====F==== 
+   A ====E==== ====F==== 
     |         |         |       
     G         H         I        
     |         |         |        
@@ -15,16 +15,17 @@ from enum import Enum
 
 
 class Road(Enum):
-    E = 1
-    F = 2
-    G = 3
-    H = 4
-    I = 5
-    J = 6
-    K = 7
-    L = 8
-    M = 9
-    N = 10
-    O = 11
-    P = 12
+    ROAD_A = 0
+    ROAD_E = 1
+    ROAD_F = 2
+    ROAD_G = 3
+    ROAD_H = 4
+    ROAD_I = 5
+    ROAD_J = 6
+    ROAD_K = 7
+    ROAD_L = 8
+    ROAD_M = 9
+    ROAD_N = 10
+    ROAD_O = 11
+    ROAD_P = 12
 

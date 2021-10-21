@@ -18,7 +18,7 @@ class Vehicle(threading.Thread):
         self.id = id
         self.location = starting_location
         self.speed = speed
-        self.location_visited = []
+        self.location_visited = list()
         self.route_completion_status = route_completion_status
 
 
@@ -35,7 +35,9 @@ class Vehicle(threading.Thread):
 
         # Update the backend  
 
+        # Update its current location
+
         while True:
-            response = requests.get("http://127.0.0.1:5000/set_vehicle_speed/%d/2" % self.id)
+            response = requests.get("http://127.0.0.1:5000/set_vehicle_status/%d/2/2" % self.id)
             time.sleep(0.5)
         

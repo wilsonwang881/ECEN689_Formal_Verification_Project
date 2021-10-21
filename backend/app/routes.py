@@ -19,7 +19,7 @@ time = 0
 
 
 # Function to update the database and store temporary records
-def update(mode, id):
+def update(mode, id, value):
     global total_vehicles
     global reported_vehicles
     global total_congestion_compute_workers
@@ -59,11 +59,11 @@ def query_signal_lights(intersection):
 
 
 # Route for setting light signals at intersections
-@app.route("/set_signal_lights/<intersection>")
-def set_signal_lights(intersection):
+@app.route("/set_signal_lights/<intersection>/<signal>")
+def set_signal_lights(intersection, signal):
     mutex.acquire()
 
-    update("signal_lights", 1)
+    update("signal_lights", intersection, [signal])
 
     mutex.release()
     
@@ -71,32 +71,20 @@ def set_signal_lights(intersection):
 
 
 # Route for getting the location of a vehicle
-@app.route("/query_vehicle_location/<vehicle_id>")
+@app.route("/query_vehicle_status/<vehicle_id>")
 def query_vehicle_location(vehicle_id):
     pass
 
 
-# Route for setting the location of a vehicle
-@app.route("/set_vehicle_location/<vehicle_id>/<location>")
-def set_vehicle_location(vehicle_id, location):
-    pass
-
-
-# Route for getting the speed of a vehicle
-@app.route("/query_vehicle_speed/<vehicle_id>")
-def query_vehicle_speed(vehicle_id):
-    pass
-
-
-# Route for setting the speed of a vehicle
-@app.route("/set_vehicle_speed/<vehicle_id>/<speed>")
-def set_vehicle_speed(vehicle_id, speed):
+# Route for setting the status of a vehicle
+@app.route("/set_vehicle_status/<vehicle_id>/<location>/<speed>")
+def set_vehicle_location(vehicle_id, location, speed):
     mutex.acquire()
 
-    update("vehicle_report", vehicle_id)
+    update("vehicle_report", vehicle_id, [location, speed])
 
     mutex.release()
-    
+
     return "OK"
 
 
@@ -123,7 +111,7 @@ def query_road_congestion(road_id):
 def set_road_congestion(road_id, index):
     mutex.acquire()
 
-    update("congestion_compute_report", road_id)
+    update("congestion_compute_report", road_id, [index])
 
     mutex.release()
     

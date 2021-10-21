@@ -15,13 +15,14 @@ class Congestion_Computation(threading.Thread):
         # Set the object attributes
         self.id = id
         self.road_responsible = road_responsible
-        self.vehicle_list = list()
+        self.vehicle_list = {}
+        self.current_time = 0
 
     
     # Inherited from the threading library
     # The thread runs this function when it starts
     def run(self):
-        print("Cogestion computation work %d running" % (self.id))
+        print("Cogestion computation worker %d running" % (self.id))
 
         while True:
 
