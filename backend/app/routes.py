@@ -67,7 +67,7 @@ def query_signal_lights(intersection):
     
 
 # Route for setting light signals at intersections
-@app.route("/set_signal_lights/<intersection>/<direction>/<signal>")
+@app.route("/set_signal_lights/<int:intersection>/<int:direction>/<int:signal>")
 def set_signal_lights(intersection, signal):
     mutex.acquire()
 
@@ -81,7 +81,7 @@ def set_signal_lights(intersection, signal):
 
 
 # Route for getting the location of a vehicle
-@app.route("/query_vehicle_status/<vehicle_id>")
+@app.route("/query_vehicle_status/<int:vehicle_id>")
 def query_vehicle_location(vehicle_id):
     res = json.loads(redis_db.get(vehicle_id))
 
@@ -89,7 +89,7 @@ def query_vehicle_location(vehicle_id):
 
 
 # Route for setting the status of a vehicle
-@app.route("/set_vehicle_status/<id>/<road_segment>/<direction>/<location>/<intersection>/<speed>/<timestamp>")
+@app.route("/set_vehicle_status/<int:id>/<int:road_segment>/<int:direction>/<int:location>/<int:intersection>/<int:speed>/<int:timestamp>")
 def set_vehicle_location(id, road_segment, direction, location, intersection, speed, timestamp):
     mutex.acquire()
 
@@ -103,13 +103,13 @@ def set_vehicle_location(id, road_segment, direction, location, intersection, sp
 
 
 # Route for getting the route completion status of a vehicle
-@app.route("/query_vehicle_completion/<vehicle_id> ")
+@app.route("/query_vehicle_completion/<int:vehicle_id> ")
 def query_vehicle_completion(vehicle_id):
     pass
 
 
 # Route for setting the route completion status of a vehicle
-@app.route("/set_vehicle_completion/<vehicle_id>")
+@app.route("/set_vehicle_completion/<int:vehicle_id>")
 def set_vehicle_completion(vehicle_id):
     pass
 
@@ -123,7 +123,7 @@ def query_road_congestion(road_id):
 
 
 # Route for setting the road congestion status
-@app.route("/set_road_congestion/<int:road_id>/<int:direction_1>/<index_1>/<int:direction_2>/<index_2>/<timestamp>")
+@app.route("/set_road_congestion/<int:road_id>/<int:direction_1>/<index_1>/<int:direction_2>/<index_2>/<int:timestamp>")
 def set_road_congestion(road_id, direction_1, index_1, direction_2, index_2, timestamp):
     mutex.acquire()
 
@@ -137,18 +137,18 @@ def set_road_congestion(road_id, direction_1, index_1, direction_2, index_2, tim
 
 
 # Route for getting the vehicles at one location
-@app.route("/query_location/<road_segment>/<direction>/<location>/<intersection>")
+@app.route("/query_location/<int:road_segment>/<int:direction>/<int:location>/<int:intersection>")
 def query_location(location):
     pass
 
 
 # Route for adding vehicle to the system
-@app.route("/add_vehicle/<vehicle_id>")
+@app.route("/add_vehicle/<int:vehicle_id>")
 def add_vehicle(vehicle_id):
     pass
 
 
 # Route for removing vehicle from the system
-@app.route("/remove_vehicle/<vehicle_id>")
+@app.route("/remove_vehicle/<int:vehicle_id>")
 def remove_vehicle(vehicle_id):
     pass

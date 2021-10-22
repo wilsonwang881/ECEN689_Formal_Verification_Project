@@ -95,5 +95,6 @@ for crossroad in Crossroads:
 # TODO: change the vehicle injection process to one at a time
 redis_db.set("vehicles", 0)
 current_states["vehicles"] = 0
+current_states["pending_vehicles"] = 0
 
 from app import routes
