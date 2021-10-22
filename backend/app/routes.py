@@ -3,6 +3,7 @@ import json
 from app import app
 from app import redis_db
 from location_speed_encoding.crossroads import Crossroads
+from location_speed_encoding.road import Road
 
 
 # Synchronization construct
@@ -56,7 +57,7 @@ def index():
 
 
 # Route for getting light signals at intersections
-@app.route("/query_signal_lights/<int:intersection>")
+@app.route("/query_signal_lights/<int: intersection>")
 def query_signal_lights(intersection):
     res = json.loads(redis_db.get(Crossroads(intersection).name))
 
@@ -78,7 +79,9 @@ def set_signal_lights(intersection, signal):
 # Route for getting the location of a vehicle
 @app.route("/query_vehicle_status/<vehicle_id>")
 def query_vehicle_location(vehicle_id):
-    pass
+    res = json.loads(redis_db.get(vehicle_id))
+
+    return res
 
 
 # Route for setting the status of a vehicle
@@ -106,13 +109,15 @@ def set_vehicle_completion(vehicle_id):
 
 
 # Route for getting the road congestion status
-@app.route("/query_road_congestion/<road_id>")
+@app.route("/query_road_congestion/<int:road_id>")
 def query_road_congestion(road_id):
-    pass
+    res = json.loads(redis_db.get(Road(road_id).name))
+
+    return res
 
 
 # Route for setting the road congestion status
-@app.route("/set_road_congestion/<road_id>/<index>")
+@app.route("/set_road_congestion/<int: road_id>/<index>")
 def set_road_congestion(road_id, index):
     mutex.acquire()
 
@@ -127,3 +132,4 @@ def set_road_congestion(road_id, index):
 @app.route("/query_location/<location>")
 def query_location(location):
     pass
+

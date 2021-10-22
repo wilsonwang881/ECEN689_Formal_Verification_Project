@@ -33,28 +33,25 @@ All 0 (no congestion)
 Initialize the (exact) location->vehicle information in the database
 All empty
 JSON format:
-{<road_segment_name>: 
-    [
-        {
-        "direction": direction_name<clockwise>,
+<road_segment_name>: {
+    direction_name<clockwise>: {
         "vehicles": {
-                  <vehicle_name>: <vehicle_location>,
-                  ...
-                  },
-        "congestion_index": <computed_value>
+            <vehicle_name>: {
+                "vehicle_location": <vehicle_location>,
+                "vehicle_speed": <vehicle_speed>
+            }
         },
-        {
-        "direction": direction_name<anticlockwise>,
-        "vehicles": {
-                  <vehicle_name>: {
-                                  "speed": <moving or stopped>,
-                                  "location": <location>
-                                  }
-                  ...
-                  },
         "congestion_index": <computed_value>
-        }
-    ]
+    },
+    direction_name<anti-clockwise>: {
+        "vehicles": {
+            <vehicle_name>: {
+                "vehicle_location": <vehicle_location>,
+                "vehicle_speed": <vehicle_speed>
+            }
+        },
+        "congestion_index": <computed_value>
+    }
 }
 
 Vehicle_location:
@@ -64,9 +61,11 @@ on the horizontal road segments: the leftmost is the 0th position
                                  the rightmost is the 29th position
 """
 for road_segment in Road:
-    tmpp_record = []
+    tmpp_record = {}
     for direction in Direction:
-        tmpp_record.append({"direction": direction.name, "vehicles": {}, "congestion_index": 0})
+        tmpp_record[direction.name] = {}
+        tmpp_record[direction.name]["vehicles"] = {}
+        tmpp_record[direction.name]["congestion_index"] = 0
     redis_db.set(road_segment.name, json.dumps(tmpp_record))
 
 # Initialize the crossroad->traffic light information in the database

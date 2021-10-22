@@ -27,18 +27,20 @@ class Vehicle(threading.Thread):
     def run(self):
         print("Vehicle %d running" % (self.id))
 
-        # Ask for congestion map
-
-        # Ask for traffic light status if visible
-
-        # Make movement decision
-
-        # Update the backend  
-
-        # Update its current location
-
         while True:
+
+             # Ask for congestion map
+
+            # Ask for traffic` light status if visible
+
+            # Make movement decision
+
+            # Update the backend  
+
+            # Update its currrent location
+
             response = requests.get("http://127.0.0.1:5000/set_vehicle_status/%d/2/2" % self.id)
             response = requests.get("http://127.0.0.1:5000/query_signal_lights/%d" % 1)
+            response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d" % 1)
             time.sleep(0.5)
         

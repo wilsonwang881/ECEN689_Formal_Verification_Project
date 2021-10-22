@@ -19,21 +19,23 @@
 ## Map
 
 ```
-====A  ==============  ============== D
-     ||              ||              ||
-     ||              ||              ||
-     ||              ||              ||
-     ||              ||              ||
-     ||              ||              ||
-     ||              ||              || 
-       ==============  ==============  
-     ||              ||              ||
-     ||              ||              ||
-     ||              ||              ||
-     ||              ||              ||
-     ||              ||              ||
-     ||              ||              || 
-     B ==============  ============== C
+====A  =======E=======  =======F======= D
+     ||               ||               ||
+     ||               ||               ||
+     ||               ||               ||
+      G                H                I
+     ||               ||               ||
+     ||               ||               || 
+     ||               ||               || 
+       =======J=======  =======K=======  
+     ||               ||               ||
+     ||               ||               ||
+     ||               ||               ||
+      L                M                N
+     ||               ||               ||
+     ||               ||               || 
+     ||               ||               || 
+     B =======O=======  =======P======= C
 ```
 Each vehicle must start from A, visit B, C, D in any order and leave at A.
 A is not a crossroad.
@@ -151,28 +153,25 @@ Encoding order: road segment -> lane direction -> square position.
 In JSON format:
 
 ```
-{<road_segment_name>: 
-    [
-        {
-        "direction": direction_name<clockwise>,
+<road_segment_name>: {
+    direction_name<clockwise>: {
         "vehicles": {
-                  <vehicle_name>: {
-                                  "speed": <moving or stopped>,
-                                  "location": <location>
-                                  }
-                  ...
-                  },
-        "congestion_index": <computed_value>
+            <vehicle_name>: {
+                "vehicle_location": <vehicle_location>,
+                "vehicle_speed": <vehicle_speed>
+            }
         },
-        {
-        "direction": direction_name<anticlockwise>,
-        "vehicles": {
-                  <vehicle_name>: <vehicle_location>,
-                  ...
-                  },
         "congestion_index": <computed_value>
-        }
-    ]
+    },
+    direction_name<anti-clockwise>: {
+        "vehicles": {
+            <vehicle_name>: {
+                "vehicle_location": <vehicle_location>,
+                "vehicle_speed": <vehicle_speed>
+            }
+        },
+        "congestion_index": <computed_value>
+    }
 }
 ```
 
@@ -181,17 +180,17 @@ In JSON format:
 
 The backend uses Python Flask as the framework and implements the following APIs:
 
-| Route                                        |
-|----------------------------------------------|
-| ``/query_signal_light/<intersection>``           |
-| ``/set_signal_light/<intersection>/<signal>``             |
-| ``/query_vehicle_status/<vehicle_id>``         | 
+| Route                                                   |
+|---------------------------------------------------------|
+| ``/query_signal_light/<intersection>``                  |
+| ``/set_signal_light/<intersection>/<signal>``           |
+| ``/query_vehicle_status/<vehicle_id>``                  | 
 | ``/set_vehicle_status/<vehicle_id>/<location>/<speed>`` | 
-| ``/query_vehicle_completion/<vehicle_id>``       | 
-| ``/set_vehicle_completion/<vehicle_id>``         | 
-| ``/query_road_congestion/<road_id>``             | 
-| ``/set_road_congestion/<road_id>/<index>``        |
-| ``/query_location/<location>``                   |
+| ``/query_vehicle_completion/<vehicle_id>``              | 
+| ``/set_vehicle_completion/<vehicle_id>``                | 
+| ``/query_road_congestion/<road_id>``                    | 
+| ``/set_road_congestion/<road_id>/<index>``              |
+| ``/query_location/<location>``                          |
 
 The route names are fairly self-explanatory. The ``/query_location`` route is used to get the vehicle at one location if any.
 
