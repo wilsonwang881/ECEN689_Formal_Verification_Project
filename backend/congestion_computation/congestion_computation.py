@@ -8,7 +8,7 @@ import time
 from location_speed_encoding.direction import Direction
 
 
-polling_interval = 0.5
+polling_interval = 0.4
 
 
 class Congestion_Computation(threading.Thread):
@@ -39,19 +39,15 @@ class Congestion_Computation(threading.Thread):
             # Send the updated congestion information back to the backend
             while True:
                 # for direction in Direction:
-                response_1 = requests.get("http://127.0.0.1:5000/set_road_congestion/%d/%d/0/%d" % \
-                    (self.id, Direction(1).value, self.current_time))
-                
-                response_2 = requests.get("http://127.0.0.1:5000/set_road_congestion/%d/%d/0/%d" % \
-                    (self.id, Direction(2).value, self.current_time))
+                response = requests.get("http://127.0.0.1:5000/set_road_congestion/%d/%d/0/%d/0/%d" % \
+                    (self.id, Direction(1).value, Direction(2).value, int(self.current_time)))
 
-                if response_1.text == response_2.text == self.current_time:
-                    self.current_time = response_1.text
+                if response.text != self.current_time:
+                    self.current_time = response.text
                     break
-                else:
+                else:                    
                     time.sleep(polling_interval)
-
-            # print("congestion computation %d progressing" % self.id)
+            
             
             
             

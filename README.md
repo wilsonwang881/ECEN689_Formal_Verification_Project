@@ -7,8 +7,11 @@
 - [Technology Stack](#technology-stack)
 - [Environment Setup](#environment-setup)
 - [Location Encoding](#location-encoding)
-- [Road Segment Record](#road-segment-record)
-- [Traffic Light Record](#traffic-light-record)
+- [Database Record Format](#database-record-format)
+  - [Road Segment Record](#road-segment-record)
+  - [Traffic Light Record](#traffic-light-record)
+  - [Vehicle Record](#vehicle-record)
+  - [Number of Vehicles](#number-of-vehicles)
 - [Backend Workflow](#backend-workflow)
 - [Vehicle Workflow](#vehicle-workflow)
 - [Congestion Computation Workflow](#congestion-computation-workflow)
@@ -162,9 +165,12 @@ on the horizontal road segments    the leftmost is the 0th position
 ```                            
 
 
-## Road Segment Record
+## Database Record Format
 
-In JSON format:
+All records are in JSON format.
+
+
+### Road Segment Record
 
 ```
 <road_segment_name>: {
@@ -190,9 +196,7 @@ In JSON format:
 ```
 
 
-## Traffic Light Record
-
-In JSON format:
+### Traffic Light Record
 
 ```
 JSON format:
@@ -203,29 +207,49 @@ JSON format:
 ```
 
 
+### Vehicle Record
+
+```
+<vehicle_name>: {
+    "road_segment": <road_segment_name>,
+    "direction": <direction_name>,
+    "location": <location_on_the_segment>
+}
+```
+
+### Number of Vehicles
+
+```
+"vehicles": <number_of_vehicles_in_the_system>,
+"pending_vehicles": <number_of_vehicles_waiting_to_enter_the_system>
+```
+
+
 ## Backend Workflow
 
 The backend uses Python Flask as the framework and implements the following APIs:
 
-| Route                                                                                     |
-|-------------------------------------------------------------------------------------------|
-| ``/query_signal_light/<intersection>``                                                    |
-| ``/set_signal_light/<intersection>/<direction>/<signal>``                                 | 
-| ``/query_vehicle_status/<vehicle_id>``                                                    | 
+| Route                                                                                             |
+|---------------------------------------------------------------------------------------------------|
+| ``/query_signal_light/<intersection>``                                                            |
+| ``/set_signal_light/<intersection>/<direction>/<signal>``                                         | 
+| ``/query_vehicle_status/<vehicle_id>``                                                            | 
 | ``/set_vehicle_status/<vehicle_id>/<road_segment>/<direction>/<location>/<intersection>/<speed>`` | 
-| ``/query_vehicle_completion/<vehicle_id>``                                                | 
-| ``/set_vehicle_completion/<vehicle_id>``                                                  | 
-| ``/query_road_congestion/<road_id>/<direction>``                                          | 
-| ``/set_road_congestion/<road_id>/<direction>/<index>``                                    |
-| ``/query_location/<road_segment>/<direction>/<location>/<intersection>``                  |
-| ``/add_vehicle/<vehicle_id>``                                                             |
-| ``/remove_vehicle/<vehicle_id>``                                                          |
+| ``/query_vehicle_completion/<vehicle_id>``                                                        | 
+| ``/set_vehicle_completion/<vehicle_id>``                                                          | 
+| ``/query_road_congestion/<road_id>/<direction>``                                                  | 
+| ``/set_road_congestion/<road_id>/<direction>/<index>/<direction>/<index>``                        |
+| ``/query_location/<road_segment>/<direction>/<location>/<intersection>``                          |
+| ``/add_vehicle/<vehicle_id>``                                                                     |
+| ``/remove_vehicle/<vehicle_id>``                                                                  |
 
 The route names are fairly self-explanatory. The ``/query_location`` route is used to get the vehicle at one location if any.
 
 If any vehicle thread or congestion computation thread queries the backend, the backend will query the database and return the information.
 
 If any thread sends the updated information to the backend, the backend will temporarily hold the information until all threads have reported. After all the information is gathered, the backend will temporarily block all requests, update the database then resume operation.
+
+The backend responses to the requests sent by the threads with the current timestamp. If the threads receive timestamps that are different from their own ones, the threads then know their requests have been fullfilled and can move to the next decision making process.
 
 **At the end of each route, a <current_time> value is added for synchronizing with the backend.**
 

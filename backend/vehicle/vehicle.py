@@ -12,7 +12,7 @@ from location_speed_encoding.signal_light_positions import Signal_light_position
 from location_speed_encoding.traffic_light import Traffic_light
 
 
-polling_interval = 0.5
+polling_interval = 0.4
 
 
 # Each vehicle in the traffic system is represented by a thread
@@ -25,14 +25,13 @@ class Vehicle(threading.Thread):
 
         # Set the object attributes
         self.id = id
-        self.location = starting_location
+        self.location = 0
         self.speed = 0
         self.location_visited = list()
         self.route_completion_status = route_completion_status
         self.current_time = 0
         self.road_segment = 0
         self.direction = 0
-        self.location = 0
         self.intersection = 0
 
 
@@ -59,16 +58,14 @@ class Vehicle(threading.Thread):
             # Update the backend
             while True:
                 response = requests.get("http://127.0.0.1:5000/set_vehicle_status/%d/%d/%d/%d/%d/%d/%d" \
-                    % (self.id, self.road_segment, self.direction, self.location, self.intersection, self.speed, self.current_time))
+                    % (self.id, self.road_segment, self.direction, self.location, self.intersection, self.speed, int(self.current_time)))
                 # print(response.text)
-                if int(response.text) != self.current_time:
-                    self.current_time = int(response.text)
+                if response.text != self.current_time:
+                    self.current_time = response.text
                     break
                 else:
                     time.sleep(polling_interval)
 
             # Update its currrent location            
             
-
-            print("vehicle %d progressing" % self.id)
         

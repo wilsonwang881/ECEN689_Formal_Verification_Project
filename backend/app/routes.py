@@ -123,11 +123,11 @@ def query_road_congestion(road_id):
 
 
 # Route for setting the road congestion status
-@app.route("/set_road_congestion/<int:road_id>/<int:direction>/<index>/<timestamp>")
-def set_road_congestion(road_id, direction, index, timestamp):
+@app.route("/set_road_congestion/<int:road_id>/<int:direction_1>/<index_1>/<int:direction_2>/<index_2>/<timestamp>")
+def set_road_congestion(road_id, direction_1, index_1, direction_2, index_2, timestamp):
     mutex.acquire()
 
-    update("congestion_compute_report", road_id, [index])
+    update("congestion_compute_report", road_id, [index_1])
 
     mutex.release()
     
