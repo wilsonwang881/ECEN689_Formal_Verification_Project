@@ -2,6 +2,8 @@ from threading import Lock
 import json
 from app import app
 from app import redis_db
+from app import current_states
+from app import clock
 from location_speed_encoding.crossroads import Crossroads
 from location_speed_encoding.road import Road
 
@@ -65,7 +67,7 @@ def query_signal_lights(intersection):
     
 
 # Route for setting light signals at intersections
-@app.route("/set_signal_lights/<intersection>/<signal>")
+@app.route("/set_signal_lights/<intersection>/<direction>/<signal>")
 def set_signal_lights(intersection, signal):
     mutex.acquire()
 
@@ -85,7 +87,7 @@ def query_vehicle_location(vehicle_id):
 
 
 # Route for setting the status of a vehicle
-@app.route("/set_vehicle_status/<vehicle_id>/<location>/<speed>")
+@app.route("/set_vehicle_status/<id>/<road_segment>/<direction>/<location>/<intersection>/<speed>")
 def set_vehicle_location(vehicle_id, location, speed):
     mutex.acquire()
 
@@ -117,8 +119,8 @@ def query_road_congestion(road_id):
 
 
 # Route for setting the road congestion status
-@app.route("/set_road_congestion/<int:road_id>/<index>")
-def set_road_congestion(road_id, index):
+@app.route("/set_road_congestion/<int:road_id>/<int:direction>/<index>")
+def set_road_congestion(road_id, direction, index):
     mutex.acquire()
 
     update("congestion_compute_report", road_id, [index])
@@ -129,7 +131,18 @@ def set_road_congestion(road_id, index):
 
 
 # Route for getting the vehicles at one location
-@app.route("/query_location/<location>")
+@app.route("/query_location/<road_segment>/<direction>/<location>/<intersection>")
 def query_location(location):
     pass
 
+
+# Route for adding vehicle to the system
+@app.route("/add_vehicle/<vehicle_id>")
+def add_vehicle(vehicle_id):
+    pass
+
+
+# Route for removing vehicle from the system
+@app.route("/remove_vehicle/<vehicle_id>")
+def remove_vehicle(vehicle_id):
+    pass

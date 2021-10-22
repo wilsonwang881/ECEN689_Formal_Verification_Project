@@ -23,6 +23,12 @@ redis_db = redis.Redis(
 logger = logging.getLogger(('werkzeug'))
 logger.setLevel(logging.ERROR)
 
+# storage for recording the current states of vehicles, crossroads and road segments
+current_states = {}
+
+# Clock
+clock = 0
+
 """
 Initialize the road segment->vehicle information in the database
 All empty
@@ -67,6 +73,7 @@ for road_segment in Road:
         tmpp_record[direction.name]["vehicles"] = {}
         tmpp_record[direction.name]["congestion_index"] = 0
     redis_db.set(road_segment.name, json.dumps(tmpp_record))
+    current_states[road_segment.name] = tmpp_record
 
 """
 # Initialize the crossroad->traffic light information in the database
@@ -82,9 +89,11 @@ for crossroad in Crossroads:
     for signal_light_position in Signal_light_positions:
         tmpp_record[signal_light_position.name] = Traffic_light.RED.name
     redis_db.set(crossroad.name, json.dumps(tmpp_record))
+    current_states[crossroad.name] = tmpp_record
 
 # Record the number of vehicles in the database
 # TODO: change the vehicle injection process to one at a time
 redis_db.set("vehicles", 0)
+current_states["vehicles"] = 0
 
 from app import routes

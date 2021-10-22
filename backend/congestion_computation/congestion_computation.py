@@ -5,6 +5,7 @@ Description: the code implements congestion calculation as threads. Each thread 
 import threading
 import requests
 import time
+from location_speed_encoding.direction import Direction
 
 
 polling_interval = 0.5
@@ -36,5 +37,7 @@ class Congestion_Computation(threading.Thread):
             # Calculate the congestion
 
             # Send the updated congestion information back to the backend
-            response = requests.get("http://127.0.0.1:5000/set_road_congestion/%d/2" % self.id)
+            for direction in Direction:
+                response = requests.get("http://127.0.0.1:5000/set_road_congestion/%d/%d/0" % (self.id, direction.value))
+            
             time.sleep(polling_interval)

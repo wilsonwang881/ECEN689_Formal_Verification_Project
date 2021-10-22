@@ -207,17 +207,19 @@ JSON format:
 
 The backend uses Python Flask as the framework and implements the following APIs:
 
-| Route                                                   |
-|---------------------------------------------------------|
-| ``/query_signal_light/<intersection>``                  |
-| ``/set_signal_light/<intersection>/<signal>``           |
-| ``/query_vehicle_status/<vehicle_id>``                  | 
-| ``/set_vehicle_status/<vehicle_id>/<location>/<speed>`` | 
-| ``/query_vehicle_completion/<vehicle_id>``              | 
-| ``/set_vehicle_completion/<vehicle_id>``                | 
-| ``/query_road_congestion/<road_id>``                    | 
-| ``/set_road_congestion/<road_id>/<index>``              |
-| ``/query_location/<location>``                          |
+| Route                                                                                     |
+|-------------------------------------------------------------------------------------------|
+| ``/query_signal_light/<intersection>``                                                    |
+| ``/set_signal_light/<intersection>/<direction>/<signal>``                                 | 
+| ``/query_vehicle_status/<vehicle_id>``                                                    | 
+| ``/set_vehicle_status/<vehicle_id>/<road_segment>/<direction>/<location>/<intersection>/<speed>`` | 
+| ``/query_vehicle_completion/<vehicle_id>``                                                | 
+| ``/set_vehicle_completion/<vehicle_id>``                                                  | 
+| ``/query_road_congestion/<road_id>/<direction>``                                          | 
+| ``/set_road_congestion/<road_id>/<direction>/<index>``                                    |
+| ``/query_location/<road_segment>/<direction>/<location>/<intersection>``                  |
+| ``/add_vehicle/<vehicle_id>``                                                             |
+| ``/remove_vehicle/<vehicle_id>``                                                          |
 
 The route names are fairly self-explanatory. The ``/query_location`` route is used to get the vehicle at one location if any.
 
