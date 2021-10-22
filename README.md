@@ -227,6 +227,8 @@ If any vehicle thread or congestion computation thread queries the backend, the 
 
 If any thread sends the updated information to the backend, the backend will temporarily hold the information until all threads have reported. After all the information is gathered, the backend will temporarily block all requests, update the database then resume operation.
 
+**At the end of each route, a <current_time> value is added for synchronizing with the backend.**
+
 
 ## Vehicle Workflow
 

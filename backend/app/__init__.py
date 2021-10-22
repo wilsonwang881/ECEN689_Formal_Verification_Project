@@ -3,9 +3,9 @@ import redis
 import logging
 import json
 from config import Config
-from location_speed_encoding.road import Road
 from location_speed_encoding.crossroads import Crossroads
 from location_speed_encoding.direction import Direction
+from location_speed_encoding.road import Road
 from location_speed_encoding.signal_light_positions import Signal_light_positions
 from location_speed_encoding.traffic_light import Traffic_light
 

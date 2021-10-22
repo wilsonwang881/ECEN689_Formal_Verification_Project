@@ -74,8 +74,10 @@ def set_signal_lights(intersection, signal):
     update("signal_lights", intersection, [signal])
 
     mutex.release()
+
+    global time
     
-    return "OK"
+    return str(time)
 
 
 # Route for getting the location of a vehicle
@@ -87,15 +89,17 @@ def query_vehicle_location(vehicle_id):
 
 
 # Route for setting the status of a vehicle
-@app.route("/set_vehicle_status/<id>/<road_segment>/<direction>/<location>/<intersection>/<speed>")
-def set_vehicle_location(vehicle_id, location, speed):
+@app.route("/set_vehicle_status/<id>/<road_segment>/<direction>/<location>/<intersection>/<speed>/<timestamp>")
+def set_vehicle_location(id, road_segment, direction, location, intersection, speed, timestamp):
     mutex.acquire()
 
-    update("vehicle_report", vehicle_id, [location, speed])
+    update("vehicle_report", id, [location, speed])
 
     mutex.release()
 
-    return "OK"
+    global time
+    
+    return str(time)
 
 
 # Route for getting the route completion status of a vehicle
@@ -119,15 +123,17 @@ def query_road_congestion(road_id):
 
 
 # Route for setting the road congestion status
-@app.route("/set_road_congestion/<int:road_id>/<int:direction>/<index>")
-def set_road_congestion(road_id, direction, index):
+@app.route("/set_road_congestion/<int:road_id>/<int:direction>/<index>/<timestamp>")
+def set_road_congestion(road_id, direction, index, timestamp):
     mutex.acquire()
 
     update("congestion_compute_report", road_id, [index])
 
     mutex.release()
     
-    return "OK"
+    global time
+    
+    return str(time)
 
 
 # Route for getting the vehicles at one location

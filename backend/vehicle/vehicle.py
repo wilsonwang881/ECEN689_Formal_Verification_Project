@@ -5,7 +5,11 @@ Description: the code implements vehicles as threads. Each vehicle/thread can ta
 import threading
 import requests
 import time
+from location_speed_encoding.crossroads import Crossroads
+from location_speed_encoding.direction import Direction
 from location_speed_encoding.road import Road
+from location_speed_encoding.signal_light_positions import Signal_light_positions
+from location_speed_encoding.traffic_light import Traffic_light
 
 
 polling_interval = 0.5
@@ -22,9 +26,14 @@ class Vehicle(threading.Thread):
         # Set the object attributes
         self.id = id
         self.location = starting_location
-        self.speed = speed
+        self.speed = 0
         self.location_visited = list()
         self.route_completion_status = route_completion_status
+        self.current_time = 0
+        self.road_segment = 0
+        self.direction = 0
+        self.location = 0
+        self.intersection = 0
 
 
     # Inherited from the threading library
@@ -36,18 +45,30 @@ class Vehicle(threading.Thread):
 
             # Ask for the congestion map
             for road in Road:
-                response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d" % road.value)
+                for direction in Direction:
+                    response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d/%d" \
+                        % (road.value, direction.value))
 
             # Ask for traffic light status if visible
+            for crossroad in Crossroads:
+                response = requests.get("http://127.0.0.1:5000/query_signal_lights/%d" \
+                    % crossroad.value)
 
             # Make movement decision
 
-            # Update the backend  
+            # Update the backend
+            while True:
+                response = requests.get("http://127.0.0.1:5000/set_vehicle_status/%d/%d/%d/%d/%d/%d/%d" \
+                    % (self.id, self.road_segment, self.direction, self.location, self.intersection, self.speed, self.current_time))
+                # print(response.text)
+                if int(response.text) != self.current_time:
+                    self.current_time = int(response.text)
+                    break
+                else:
+                    time.sleep(polling_interval)
 
-            # Update its currrent location
-
-            response = requests.get("http://127.0.0.1:5000/set_vehicle_status/%d/2/2" % self.id)
-            response = requests.get("http://127.0.0.1:5000/query_signal_lights/%d" % 1)
+            # Update its currrent location            
             
-            time.sleep(polling_interval)
+
+            print("vehicle %d progressing" % self.id)
         
