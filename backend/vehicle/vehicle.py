@@ -8,6 +8,9 @@ import time
 from location_speed_encoding.road import Road
 
 
+polling_interval = 0.5
+
+
 # Each vehicle in the traffic system is represented by a thread
 # Class Vehicle inherits the threading library
 # So that the Vehicle objects can make decisions and interact with the traffic system
@@ -35,7 +38,7 @@ class Vehicle(threading.Thread):
             for road in Road:
                 response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d" % road.value)
 
-            # Ask for traffic` light status if visible
+            # Ask for traffic light status if visible
 
             # Make movement decision
 
@@ -46,5 +49,5 @@ class Vehicle(threading.Thread):
             response = requests.get("http://127.0.0.1:5000/set_vehicle_status/%d/2/2" % self.id)
             response = requests.get("http://127.0.0.1:5000/query_signal_lights/%d" % 1)
             
-            time.sleep(0.5)
+            time.sleep(polling_interval)
         

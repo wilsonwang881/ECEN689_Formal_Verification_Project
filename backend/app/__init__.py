@@ -68,8 +68,15 @@ for road_segment in Road:
         tmpp_record[direction.name]["congestion_index"] = 0
     redis_db.set(road_segment.name, json.dumps(tmpp_record))
 
+"""
 # Initialize the crossroad->traffic light information in the database
 # All red
+JSON format:
+<crossroad_name>: {
+    <signal_light_position>: <traffic_light_color>,
+    ...
+}
+"""
 for crossroad in Crossroads:
     tmpp_record = {}
     for signal_light_position in Signal_light_positions:
