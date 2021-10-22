@@ -8,6 +8,7 @@
 - [Environment Setup](#environment-setup)
 - [Location Encoding](#location-encoding)
 - [Road Segment Record](#road-segment-record)
+- [Traffic Light Record](#traffic-light-record)
 - [Backend Workflow](#backend-workflow)
 - [Vehicle Workflow](#vehicle-workflow)
 - [Congestion Computation Workflow](#congestion-computation-workflow)
@@ -93,7 +94,7 @@ ECEN689_Formal_Verification_Project\    ----------> Root directory
         .flaskenv    -----------------------------> Python flask environment variables
         backend.py
         config.py
-        run_threads.py    ------------------------> Start vehicle and congestion computation threads
+        run_threads.py    ------------------------> Start vehicle and congestion computation
     unit_tests\    -------------------------------> Automated tests    
     .gitignore 
     README.md
