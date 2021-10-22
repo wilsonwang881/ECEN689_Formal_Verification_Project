@@ -57,7 +57,7 @@ def index():
 
 
 # Route for getting light signals at intersections
-@app.route("/query_signal_lights/<int: intersection>")
+@app.route("/query_signal_lights/<int:intersection>")
 def query_signal_lights(intersection):
     res = json.loads(redis_db.get(Crossroads(intersection).name))
 
@@ -112,12 +112,12 @@ def set_vehicle_completion(vehicle_id):
 @app.route("/query_road_congestion/<int:road_id>")
 def query_road_congestion(road_id):
     res = json.loads(redis_db.get(Road(road_id).name))
-
+    print("Query road congestion")
     return res
 
 
 # Route for setting the road congestion status
-@app.route("/set_road_congestion/<int: road_id>/<index>")
+@app.route("/set_road_congestion/<int:road_id>/<index>")
 def set_road_congestion(road_id, index):
     mutex.acquire()
 

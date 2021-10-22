@@ -19,27 +19,30 @@
 ## Map
 
 ```
-====A  =======E=======  =======F======= D
-     ||               ||               ||
-     ||               ||               ||
-     ||               ||               ||
-      G                H                I
-     ||               ||               ||
-     ||               ||               || 
-     ||               ||               || 
-       =======J=======  =======K=======  
-     ||               ||               ||
-     ||               ||               ||
-     ||               ||               ||
-      L                M                N
-     ||               ||               ||
-     ||               ||               || 
-     ||               ||               || 
-     B =======O=======  =======P======= C
+====A Z =======E======= X =======F======= D
+     | |               | |               | |
+     | |               | |               | |
+     | |               | |               | |
+      G                 H                 I
+     | |               | |               | |
+     | |               | |               | | 
+     | |               | |               | | 
+      Y =======J======= U =======K======= W
+     | |               | |               | |
+     | |               | |               | |
+     | |               | |               | |
+      L                 M                 N
+     | |               | |               | |
+     | |               | |               | | 
+     | |               | |               | | 
+      B =======O======= V =======P======= C
 ```
+
 Each vehicle must start from A, visit B, C, D in any order and leave at A.
-A is not a crossroad.
-B, C and D are crossroads.
+
+A is not a crossroad. B, C and D are crossroads.
+
+Each road segment has two lanes running in different directions.
 
 
 ## Goal
@@ -72,8 +75,8 @@ ECEN689_Formal_Verification_Project\    ----------> Root directory
             __init__.py
             routes.py
         congestion_computation\    ---------------> Threaded computation
-            congestion_computation.py
-            run_congestion_computation.py
+            __init__.py
+            congestion_computation.py            
         location_speed_encoding\    --------------> Location and speed representation
             __init__.py
             crossroads.py
@@ -85,11 +88,12 @@ ECEN689_Formal_Verification_Project\    ----------> Root directory
         trafic_signal_control\    ----------------> Single thread signal light control
             traffic_signal_control_master.py
         vehicle\    ------------------------------> One vehicle object per thread
-            vehicle.py
-            run_vehicle_threads.py    
+            __init__.py
+            vehicle.py  
         .flaskenv    -----------------------------> Python flask environment variables
         backend.py
         config.py
+        run_threads.py    ------------------------> Start vehicle and congestion computation threads
     unit_tests\    -------------------------------> Automated tests    
     .gitignore 
     README.md
@@ -120,19 +124,19 @@ Once the environemt is setup, anytime one wants to activate the virtual environe
 
 ``source venv/bin/activate``
 
-Then run:
+To start the backend, change directory to **backend**, then run:
 
 ``flask run``
 
-to start the backend.
+To start vehicle and congestion threads, change directory to **backend**, then run:
+
+``python run_threads.py``
 
 Remember to start **Redis** with:
 
 ``redis-server``
 
-The connection information such as **port number** is shown in the terminal.
-
-To start congestion computation, vehicles and traffic signal control, make sure the virtual environment is activated before starting the corresponding scripts.
+The connection information such as **port number** is shown in the terminal.**
 
 
 ## Location Encoding
