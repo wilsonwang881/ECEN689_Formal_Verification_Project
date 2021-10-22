@@ -7,6 +7,9 @@ import requests
 import time
 
 
+polling_interval = 0.5
+
+
 class Congestion_Computation(threading.Thread):
     def __init__(self, id, road_responsible) -> None:
         # Needed for using the threading library
@@ -34,4 +37,4 @@ class Congestion_Computation(threading.Thread):
 
             # Send the updated congestion information back to the backend
             response = requests.get("http://127.0.0.1:5000/set_road_congestion/%d/2" % self.id)
-            time.sleep(0.5)
+            time.sleep(polling_interval)

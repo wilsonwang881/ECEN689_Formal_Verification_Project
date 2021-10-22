@@ -136,7 +136,7 @@ Remember to start **Redis** with:
 
 ``redis-server``
 
-The connection information such as **port number** is shown in the terminal.**
+The connection information such as **port number** is shown in the terminal.
 
 
 ## Location Encoding
@@ -150,6 +150,15 @@ If the road segment is vertical, the 0th position is on the top.
 If the road segment is horizontal, the 0th position is the leftmost one.
 
 Encoding order: road segment -> lane direction -> square position.
+
+Vehicle location:
+
+```
+on vertical road segments          the top is the 0th position
+                                   the bottom is the 29th position
+on the horizontal road segments    the leftmost is the 0th position
+                                   the rightmost is the 29th position
+```                            
 
 
 ## Road Segment Record
@@ -176,6 +185,19 @@ In JSON format:
         },
         "congestion_index": <computed_value>
     }
+}
+```
+
+
+## Traffic Light Record
+
+In JSON format:
+
+```
+JSON format:
+<crossroad_name>: {
+    <signal_light_position>: <traffic_light_color>,
+    ...
 }
 ```
 

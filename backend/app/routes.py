@@ -112,7 +112,7 @@ def set_vehicle_completion(vehicle_id):
 @app.route("/query_road_congestion/<int:road_id>")
 def query_road_congestion(road_id):
     res = json.loads(redis_db.get(Road(road_id).name))
-    print("Query road congestion")
+    
     return res
 
 

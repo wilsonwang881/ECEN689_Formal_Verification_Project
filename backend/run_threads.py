@@ -17,12 +17,12 @@ for i in range(vehicle_number):
     thread_object.start()
 
 # Number of road sections
-vehicle_number = 12
+road_segments = 12
 
 # Start a list of threads
 thread_list = list()
 
-for i in range(vehicle_number):
+for i in range(road_segments):
     thread_object = Congestion_Computation(id=i, road_responsible=None)
     thread_list.append(thread_object)
     thread_object.start()
