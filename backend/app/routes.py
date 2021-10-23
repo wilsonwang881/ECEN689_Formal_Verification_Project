@@ -5,9 +5,10 @@ from app import app
 from app import redis_db
 from app import current_states
 from app import clock
-from location_speed_encoding import signal_light_positions
-from location_speed_encoding.crossroads import Crossroads
-from location_speed_encoding.road import Road
+from location_speed_encoding import Crossroads
+from location_speed_encoding import Direction
+from location_speed_encoding import Road
+from location_speed_encoding import Signal_light_positions
 
 
 # Synchronization construct
@@ -40,18 +41,29 @@ def update(mode, id, value):
     global congestion_compute_records
     global clock
 
-    if (mode == "vehicle_report") and (id not in vehicle_records):
+    if (mode == "vehicle_report") and (id not in vehicle_records):        
         reported_vehicles += 1
         vehicle_records.append(id)
         current_states[id] = value
-    elif (mode == "congestion_compute_report") and (id not in congestion_compute_records):
+
+        # TODO: add the road_segment record update to place the vehicle at the new location
+        
+    elif (mode == "congestion_compute_report") and (id not in congestion_compute_records):        
         reported_congestion_compute += 1
         congestion_compute_records.append(id)
-        current_states[Road(id).name] = value
-    elif (mode == "signal_lights") and (id not in signal_light_records):
+        for key in current_states[Road(id).name]:
+            if key == Direction.DIRECTION_CLOCKWISE.name:
+                current_states[Road(id).name][Direction.DIRECTION_CLOCKWISE.name]["congestion_index"] = \
+                    value[Direction.DIRECTION_CLOCKWISE.name]["congestion_index"]
+            elif key == Direction.DIRECTION_ANTICLOCKWISE.name:
+                current_states[Road(id).name][Direction.DIRECTION_ANTICLOCKWISE.name]["congestion_index"] = \
+                    value[Direction.DIRECTION_ANTICLOCKWISE.name]["congestion_index"]
+        
+    elif (mode == "signal_lights") and (id not in signal_light_records):        
         reported_signal_light += 1
         signal_light_records.append(id)
         current_states[Crossroads(id).name] = value
+        
     
     # If all threads have reported, update the database
     if (reported_vehicles == total_vehicles) \
@@ -76,13 +88,19 @@ def update(mode, id, value):
 @app.route("/")
 @app.route("/index")
 def index():
+
     return "Hello world!"
 
 
 # Route for getting light signals at intersections
 @app.route("/query_signal_lights/<int:intersection>")
 def query_signal_lights(intersection):
+
+    mutex.acquire()
+
     res = json.loads(redis_db.get(Crossroads(intersection).name))
+
+    mutex.release()
 
     return str(res)
     
@@ -90,6 +108,7 @@ def query_signal_lights(intersection):
 # Route for setting light signals at intersections
 @app.route("/set_signal_lights/<int:intersection>", methods=["POST"])
 def set_signal_lights(intersection):
+
     payload = request.get_json()
     
     mutex.acquire()
@@ -106,20 +125,20 @@ def set_signal_lights(intersection):
 # Route for getting the location of a vehicle
 @app.route("/query_vehicle_status/<int:vehicle_id>")
 def query_vehicle_location(vehicle_id):
+
+    mutex.acquire()
+
     res = json.loads(redis_db.get(vehicle_id))
+
+    mutex.release()
 
     return res
 
 
 # Route for setting the status of a vehicle
-@app.route("/set_vehicle_status/<int:id>/<int:road_segment>/<int:direction>/<int:location>/<int:intersection>/<int:speed>")
-def set_vehicle_location(id, road_segment, direction, location, intersection, speed):
-    payload = {}
-    payload["road_segment"] = road_segment
-    payload["direction"] = direction
-    payload["location"] = location
-    payload["intersection"] = intersection
-    payload["speed"] = speed
+@app.route("/set_vehicle_status/<int:id>", methods=["POST"])
+def set_vehicle_location(id):
+    payload = request.get_json()
 
     mutex.acquire()
 
@@ -132,29 +151,23 @@ def set_vehicle_location(id, road_segment, direction, location, intersection, sp
     return str(clock)
 
 
-# Route for getting the route completion status of a vehicle
-@app.route("/query_vehicle_completion/<int:vehicle_id> ")
-def query_vehicle_completion(vehicle_id):
-    pass
-
-
-# Route for setting the route completion status of a vehicle
-@app.route("/set_vehicle_completion/<int:vehicle_id>")
-def set_vehicle_completion(vehicle_id):
-    pass
-
-
 # Route for getting the road congestion status
-@app.route("/query_road_congestion/<int:road_id>")
-def query_road_congestion(road_id):
+@app.route("/query_road_congestion/<int:road_id>/<int:direction>")
+def query_road_congestion(road_id, direction):
+
+    mutex.acquire()
+
     res = json.loads(redis_db.get(Road(road_id).name))
+
+    mutex.release()
     
-    return res
+    return str(res[Direction(direction).name]["congestion_index"])
 
 
 # Route for setting the road congestion status
 @app.route("/set_road_congestion/<int:road_id>", methods=["POST"])
 def set_road_congestion(road_id):
+
     payload = request.get_json()
 
     mutex.acquire()
@@ -169,18 +182,39 @@ def set_road_congestion(road_id):
 
 
 # Route for getting the vehicles at one location
-@app.route("/query_location/<int:road_segment>/<int:direction>/<int:location>/<int:intersection>")
-def query_location(location):
-    pass
+@app.route("/query_location/<int:road_id>/<int:direction>/<int:location>/<int:intersection>")
+def query_location(road_id, direction, location, intersection):
+
+    if intersection == 0:
+
+        mutex.acquire()
+
+        res = json.loads(redis_db.get(Road(road_id).name))
+
+        mutex.release()
+
+        return res[Direction(direction).name]["vehicles"]
+
+    else:
+
+        mutex.acquire()
+
+        res = json.load(redis_db.get(Crossroads(intersection).name))
+
+        mutex.release()
+
+        return res
 
 
 # Route for adding vehicle to the system
 @app.route("/add_vehicle/<int:vehicle_id>")
 def add_vehicle(vehicle_id):
+
     pass
 
 
 # Route for removing vehicle from the system
 @app.route("/remove_vehicle/<int:vehicle_id>")
 def remove_vehicle(vehicle_id):
+
     pass

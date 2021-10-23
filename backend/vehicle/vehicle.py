@@ -8,6 +8,7 @@ import time
 from location_speed_encoding.crossroads import Crossroads
 from location_speed_encoding.direction import Direction
 from location_speed_encoding.road import Road
+from location_speed_encoding.route_completion_status import Route_completion_status
 from location_speed_encoding.signal_light_positions import Signal_light_positions
 from location_speed_encoding.traffic_light import Traffic_light
 
@@ -25,14 +26,15 @@ class Vehicle(threading.Thread):
 
         # Set the object attributes
         self.id = id
-        self.location = 0
-        self.speed = 0
-        self.location_visited = list()
-        self.route_completion_status = route_completion_status
-        self.current_time = 0
         self.road_segment = 0
         self.direction = 0
+        self.location = 0
         self.intersection = 0
+        self.speed = 0
+        self.route_completion = Route_completion_status.NOT_STARTED
+        self.location_visited = list()
+        self.route_completion_status = route_completion_status
+        self.current_time = 0                
 
 
     # Inherited from the threading library
@@ -54,11 +56,19 @@ class Vehicle(threading.Thread):
                     % crossroad.value)
 
             # Make movement decision
+            payload = {}
+            payload["road_segment"] = self.road_segment
+            payload["direction"] = self.direction
+            payload["location"] = self.location
+            payload["intersection"] = self.intersection
+            payload["speed"] = self.speed
+            payload["route_completion"] = self.route_completion.name
+
 
             # Update the backend
             while True:
-                response = requests.get("http://127.0.0.1:5000/set_vehicle_status/%d/%d/%d/%d/%d/%d" \
-                    % (self.id, self.road_segment, self.direction, self.location, self.intersection, self.speed))
+                response = requests.post("http://127.0.0.1:5000/set_vehicle_status/%d" \
+                    % (self.id), json=payload)
                 
                 if response.text != self.current_time:
                     self.current_time = response.text

@@ -86,6 +86,7 @@ ECEN689_Formal_Verification_Project\    ----------> Root directory
             crossroads.py
             direction.py
             road.py
+            route_completion_status.py
             signal_light_positions.py
             speed.py
             traffic_lights.py
@@ -215,7 +216,8 @@ JSON format:
     "direction": <direction_name>,
     "location": <location_on_the_segment>,
     "intersection": <intersection>,
-    "speed": <speed>
+    "speed": <speed>,
+    "route_completion": <yes_no_not_started>
 }
 ```
 
@@ -231,19 +233,17 @@ JSON format:
 
 The backend uses Python Flask as the framework and implements the following APIs:
 
-| Route                                                                                             |
-|---------------------------------------------------------------------------------------------------|
-| ``/query_signal_light/<intersection>``                                                            |
-| ``/set_signal_light/<intersection>``                                                              | 
-| ``/query_vehicle_status/<vehicle_id>``                                                            | 
-| ``/set_vehicle_status/<vehicle_id>/<road_segment>/<direction>/<location>/<intersection>/<speed>`` | 
-| ``/query_vehicle_completion/<vehicle_id>``                                                        | 
-| ``/set_vehicle_completion/<vehicle_id>``                                                          | 
-| ``/query_road_congestion/<road_id>/<direction>``                                                  | 
-| ``/set_road_congestion/<road_id>``                        |
-| ``/query_location/<road_segment>/<direction>/<location>/<intersection>``                          |
-| ``/add_vehicle/<vehicle_id>``                                                                     |
-| ``/remove_vehicle/<vehicle_id>``                                                                  |
+| Route                                                                                        |
+|----------------------------------------------------------------------------------------------|
+| ``/query_signal_light/<intersection>``                                                       |
+| ``/set_signal_light/<intersection>``                                                         | 
+| ``/query_vehicle_status/<vehicle_id>``                                                       | 
+| ``/set_vehicle_status/<vehicle_id>``                                                         | 
+| ``/query_road_congestion/<road_id>/<direction>``                                             | 
+| ``/set_road_congestion/<road_id>``                                                           |
+| ``/query_location/<road_id>/<direction>/<location>/<intersection>``                          |
+| ``/add_vehicle/<vehicle_id>``                                                                |
+| ``/remove_vehicle/<vehicle_id>``                                                             |
 
 The route names are fairly self-explanatory. The ``/query_location`` route is used to get the vehicle at one location if any.
 
