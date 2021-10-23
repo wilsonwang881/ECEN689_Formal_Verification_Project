@@ -39,8 +39,8 @@ class Congestion_Computation(threading.Thread):
             # Send the updated congestion information back to the backend
             while True:
                 # for direction in Direction:
-                response = requests.get("http://127.0.0.1:5000/set_road_congestion/%d/%d/0/%d/0/%d" % \
-                    (self.id, Direction(1).value, Direction(2).value, int(self.current_time)))
+                response = requests.post("http://127.0.0.1:5000/set_road_congestion/%d" % \
+                    (self.id), data={})
 
                 if response.text != self.current_time:
                     self.current_time = response.text

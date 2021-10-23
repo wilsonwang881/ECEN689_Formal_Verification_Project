@@ -213,7 +213,9 @@ JSON format:
 <vehicle_name>: {
     "road_segment": <road_segment_name>,
     "direction": <direction_name>,
-    "location": <location_on_the_segment>
+    "location": <location_on_the_segment>,
+    "intersection": <intersection>,
+    "speed": <speed>
 }
 ```
 
@@ -232,13 +234,13 @@ The backend uses Python Flask as the framework and implements the following APIs
 | Route                                                                                             |
 |---------------------------------------------------------------------------------------------------|
 | ``/query_signal_light/<intersection>``                                                            |
-| ``/set_signal_light/<intersection>/<direction>/<signal>``                                         | 
+| ``/set_signal_light/<intersection>``                                                              | 
 | ``/query_vehicle_status/<vehicle_id>``                                                            | 
 | ``/set_vehicle_status/<vehicle_id>/<road_segment>/<direction>/<location>/<intersection>/<speed>`` | 
 | ``/query_vehicle_completion/<vehicle_id>``                                                        | 
 | ``/set_vehicle_completion/<vehicle_id>``                                                          | 
 | ``/query_road_congestion/<road_id>/<direction>``                                                  | 
-| ``/set_road_congestion/<road_id>/<direction>/<index>/<direction>/<index>``                        |
+| ``/set_road_congestion/<road_id>``                        |
 | ``/query_location/<road_segment>/<direction>/<location>/<intersection>``                          |
 | ``/add_vehicle/<vehicle_id>``                                                                     |
 | ``/remove_vehicle/<vehicle_id>``                                                                  |
@@ -310,6 +312,8 @@ One single thread exists for doing traffic light control.
 ## Tutorials
 
 [The Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world) by Miguel Grinberg.
+
+[Flask's Documentation](https://flask.palletsprojects.com/en/2.0.x/)
 
 [Python - Multithreaded Programming](https://www.tutorialspoint.com/python/python_multithreading.htm).
 
