@@ -91,7 +91,7 @@ def query_signal_lights(intersection):
 @app.route("/set_signal_lights/<int:intersection>", methods=["POST"])
 def set_signal_lights(intersection):
     payload = request.get_json()
-
+    
     mutex.acquire()
 
     update("signal_lights", intersection, payload)

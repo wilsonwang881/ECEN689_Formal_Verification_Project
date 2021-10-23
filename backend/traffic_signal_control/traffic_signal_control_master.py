@@ -59,7 +59,7 @@ class Traffic_signal_control_master:
             while True:
                 for crossroad in Crossroads:
                     response = requests.post("http://127.0.0.1:5000/set_signal_lights/%d" % crossroad.value, \
-                        data=json.dumps(self.traffic_lights[crossroad.name]))
+                        json=self.traffic_lights[crossroad.name])
 
                 if response.text != self.current_time:
                     self.current_time = response.text
