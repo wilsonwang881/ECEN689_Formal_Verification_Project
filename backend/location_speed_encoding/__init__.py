@@ -3,6 +3,7 @@
 from .crossroads import Crossroads
 from .direction import Direction
 from .road import Road
+from .route_completion_status import Route_completion_status
 from .signal_light_positions import Signal_light_positions
 from .speed import Speed
 from .traffic_light import Traffic_light
