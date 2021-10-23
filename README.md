@@ -7,7 +7,7 @@
 - [Technology Stack](#technology-stack)
 - [Environment Setup](#environment-setup)
 - [Location Encoding](#location-encoding)
-- [Database Record Format](#database-record-format)
+- [Database](#database)
   - [Road Segment Record](#road-segment-record)
   - [Traffic Light Record](#traffic-light-record)
   - [Vehicle Record](#vehicle-record)
@@ -166,7 +166,7 @@ on the horizontal road segments    the leftmost is the 0th position
 ```                            
 
 
-## Database Record Format
+## Database
 
 All records are in JSON format.
 
@@ -229,27 +229,60 @@ JSON format:
 ```
 
 
+### Database Structure
+
+**Redis** is primarily a key-value pair database system. Compared with any SQL based database system such as **MySQL**, which has a strict on the structure, ** Redis** allows more flexibility. The content in **Redis** used by the project is listed below.
+
+
+```
+"ROAD_A": <road_segment_record>,
+"ROAD_B": <road_segment_record>,
+"ROAD_C": <road_segment_record>,
+"ROAD_D": <road_segment_record>,
+...
+...
+"CROSSROAD_A": <traffic_light_record>,
+"CROSSROAD_B": <traffic_light_record>,
+"CROSSROAD_C": <traffic_light_record>,
+"CROSSROAD_D": <traffic_light_record>,
+...
+...
+"VEHICLE_1": <vehicle_record>,
+"VEHICLE_2": <vehicle_record>,
+"VEHICLE_3": <vehicle_record>,
+"VEHICLE_4": <vehicle_record>,
+...
+...
+"vehicles": <number_of_vehicles_in_the_system>,
+"pending_vehicles": <number_of_vehicles_waiting_to_enter_the_system>
+```
+
+
 ## Backend Workflow
 
 The backend uses Python Flask as the framework and implements the following APIs:
 
-| Route                                                                                        |
-|----------------------------------------------------------------------------------------------|
-| ``/query_signal_light/<intersection>``                                                       |
-| ``/set_signal_light/<intersection>``                                                         | 
-| ``/query_vehicle_status/<vehicle_id>``                                                       | 
-| ``/set_vehicle_status/<vehicle_id>``                                                         | 
-| ``/query_road_congestion/<road_id>/<direction>``                                             | 
-| ``/set_road_congestion/<road_id>``                                                           |
-| ``/query_location/<road_id>/<direction>/<location>/<intersection>``                          |
-| ``/add_vehicle/<vehicle_id>``                                                                |
-| ``/remove_vehicle/<vehicle_id>``                                                             |
+| Route                                                                       
+|-----------------------------------------------------------------------------|
+| ``/query_signal_light/<intersection>``                                      |
+| ``/set_signal_light/<intersection>``                                        | 
+| ``/query_vehicle_status/<vehicle_id>``                                      | 
+| ``/set_vehicle_status/<vehicle_id>``                                        | 
+| ``/query_road_congestion/<road_id>/<direction>``                            | 
+| ``/set_road_congestion/<road_id>``                                          |
+| ``/query_location/<road_id>/<direction>/<location>/<intersection>``         |
+| ``/add_vehicle/<vehicle_id>``                                               |
+| ``/remove_vehicle/<vehicle_id>``                                            |
+
+Threads report updated information with HTTP POST method. The payload is in JSON format, as shown in [Database](#database).
 
 The route names are fairly self-explanatory. The ``/query_location`` route is used to get the vehicle at one location if any.
 
 If any vehicle thread or congestion computation thread queries the backend, the backend will query the database and return the information.
 
 If any thread sends the updated information to the backend, the backend will temporarily hold the information until all threads have reported. After all the information is gathered, the backend will temporarily block all requests, update the database then resume operation.
+
+To ensure data consistency, all operations to the database are protected with mutex, including queries.
 
 The backend responses to the requests sent by the threads with the current timestamp. If the threads receive timestamps that are different from their own ones, the threads then know their requests have been fullfilled and can move to the next decision making process.
 

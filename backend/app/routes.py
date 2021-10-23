@@ -1,18 +1,16 @@
-from threading import Lock
+
 import json
 from flask import request
 from app import app
 from app import redis_db
 from app import current_states
 from app import clock
+from app import mutex
 from location_speed_encoding import Crossroads
 from location_speed_encoding import Direction
 from location_speed_encoding import Road
 from location_speed_encoding import Signal_light_positions
 
-
-# Synchronization construct
-mutex = Lock()
 
 # Shared variables
 total_vehicles = 15
@@ -44,7 +42,7 @@ def update(mode, id, value):
     if (mode == "vehicle_report") and (id not in vehicle_records):        
         reported_vehicles += 1
         vehicle_records.append(id)
-        current_states[id] = value
+        current_states["vehicle_%d" % id] = value
 
         # TODO: add the road_segment record update to place the vehicle at the new location
         

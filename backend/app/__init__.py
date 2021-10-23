@@ -2,6 +2,7 @@ from flask import Flask
 import redis
 import logging
 import json
+from threading import Lock
 from config import Config
 from location_speed_encoding.crossroads import Crossroads
 from location_speed_encoding.direction import Direction
@@ -28,6 +29,11 @@ current_states = {}
 
 # Clock
 clock = 0
+
+# Synchronization construct
+mutex = Lock()
+
+mutex.acquire()
 
 """
 Initialize the road segment->vehicle information in the database
@@ -96,5 +102,7 @@ for crossroad in Crossroads:
 redis_db.set("vehicles", 0)
 current_states["vehicles"] = 0
 current_states["pending_vehicles"] = 0
+
+mutex.release()
 
 from app import routes
