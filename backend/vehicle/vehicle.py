@@ -57,9 +57,9 @@ class Vehicle(threading.Thread):
 
             # Update the backend
             while True:
-                response = requests.get("http://127.0.0.1:5000/set_vehicle_status/%d/%d/%d/%d/%d/%d/%d" \
-                    % (self.id, self.road_segment, self.direction, self.location, self.intersection, self.speed, int(self.current_time)))
-                # print(response.text)
+                response = requests.get("http://127.0.0.1:5000/set_vehicle_status/%d/%d/%d/%d/%d/%d" \
+                    % (self.id, self.road_segment, self.direction, self.location, self.intersection, self.speed))
+                
                 if response.text != self.current_time:
                     self.current_time = response.text
                     break

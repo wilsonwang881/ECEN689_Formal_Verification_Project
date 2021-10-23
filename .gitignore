@@ -3,6 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Redis DB stuff
+dump.rdb
+*.rdb
+
+# VS Code settings
+.vscode/*
+
 # C extensions
 *.so
 
