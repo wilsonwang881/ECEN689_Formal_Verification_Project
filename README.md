@@ -91,6 +91,7 @@ ECEN689_Formal_Verification_Project\    ----------> Root directory
             speed.py
             traffic_lights.py
         trafic_signal_control\    ----------------> Single thread signal light control
+            __init__.py
             traffic_signal_control_master.py
         vehicle\    ------------------------------> One vehicle object per thread
             __init__.py

@@ -1,5 +1,6 @@
 
 import json
+from os import name
 from flask import request
 from app import app
 from app import redis_db
@@ -43,10 +44,39 @@ def update(mode, id, value):
         reported_vehicles += 1
         vehicle_records.append(id)
 
-        # Update the vehicle record
+        # Update the current vehicle record
         current_states["vehicle_%d" % id] = value
 
-        # TODO: add the road_segment record update to place the vehicle at the new location
+        # Get the previous vehicle record
+        original_vehicle_record = json.loads(redis_db.get("vehicle_%d" % id))        
+
+        # Get the previous road segment record 
+        original_road_segment_record = json.loads(redis_db.get(Road(original_vehicle_record["road_segment"]).name))
+
+        # Update the previous road segment record, but in the current record set only
+        # Do not commit to the database at this moment
+
+        # Compare if the vehicle were on the same road segment
+        if (original_vehicle_record["road_segment"] != value["road_segment"]) \
+            or (original_vehicle_record["intersection"] != value["intersection"]):
+            if value["road_segment"] == 0:                
+                if ("vehicle_%d" % id) in original_road_segment_record[value["direction"]]["vehicles"]:
+                    # Moving from road segment to crossroad
+                    original_road_segment_record[value["direction"]]["vehicles"].pop("vehicle_%d" % id)
+                    current_states[original_vehicle_record["road_segment"]] = original_road_segment_record
+                else:
+                    # Moving from cross to road segment
+                    current_states[value["road_segment"]][value["direction"]]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = value["location"]
+                    current_states[value["road_segment"]][value["direction"]]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = value["vehicle_speed"]
+
+        else:            
+            if original_vehicle_record["road_segment"] == value["road_segment"]:
+                # If on the same road segment 
+                current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id] = {}
+                current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = value["location"]
+                current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = value["speed"]
+
+            # Do not update crossroad->vehicle mapping: no such mapping in the database        
         
     elif (mode == "congestion_compute_report") and (id not in congestion_compute_records):        
         reported_congestion_compute += 1
