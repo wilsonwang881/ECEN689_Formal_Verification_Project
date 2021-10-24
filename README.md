@@ -263,20 +263,20 @@ JSON format:
 The backend uses Python Flask as the framework and implements the following APIs:
 
 | Route                                                                       
-|-----------------------------------------------------------------------------|
-| ``/query_signal_light/<intersection>``                                      |
-| ``/set_signal_light/<intersection>``                                        | 
-| ``/query_vehicle_status/<vehicle_id>``                                      | 
-| ``/set_vehicle_status/<vehicle_id>``                                        | 
-| ``/query_road_congestion/<road_id>/<direction>``                            | 
-| ``/set_road_congestion/<road_id>``                                          |
-| ``/query_location/<road_id>/<direction>/<location>/<intersection>``         |
-| ``/add_vehicle/<vehicle_id>``                                               |
-| ``/remove_vehicle/<vehicle_id>``                                            |
+|------------------------------------------------------------------|
+| ``/query_signal_light/<intersection>``                           |
+| ``/set_signal_light/<intersection>``                             | 
+| ``/query_vehicle_status/<vehicle_id>``                           | 
+| ``/set_vehicle_status/<vehicle_id>``                             | 
+| ``/query_road_congestion/<road_id>/<direction>``                 | 
+| ``/set_road_congestion/<road_id>``                               |
+| ``/query_location/<road_id>/<direction>/<intersection>``         |
+| ``/add_vehicle/<vehicle_id>``                                    |
+| ``/remove_vehicle/<vehicle_id>``                                 |
 
 Threads report updated information with HTTP POST method. The payload is in JSON format, as shown in [Database](#database).
 
-The route names are fairly self-explanatory. The ``/query_location`` route is used to get the vehicle at one location if any.
+The route names are fairly self-explanatory. The ``/query_location`` route is used to get the vehicle records at any road segment or crossroads.
 
 If any vehicle thread or congestion computation thread queries the backend, the backend will query the database and return the information.
 
@@ -285,8 +285,6 @@ If any thread sends the updated information to the backend, the backend will tem
 To ensure data consistency, all operations to the database are protected with mutex, including queries.
 
 The backend responses to the requests sent by the threads with the current timestamp. If the threads receive timestamps that are different from their own ones, the threads then know their requests have been fullfilled and can move to the next decision making process.
-
-**At the end of each route, a <current_time> value is added for synchronizing with the backend.**
 
 
 ## Vehicle Workflow

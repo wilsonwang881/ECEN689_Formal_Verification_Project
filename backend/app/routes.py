@@ -42,6 +42,8 @@ def update(mode, id, value):
     if (mode == "vehicle_report") and (id not in vehicle_records):        
         reported_vehicles += 1
         vehicle_records.append(id)
+
+        # Update the vehicle record
         current_states["vehicle_%d" % id] = value
 
         # TODO: add the road_segment record update to place the vehicle at the new location
@@ -136,6 +138,7 @@ def query_vehicle_location(vehicle_id):
 # Route for setting the status of a vehicle
 @app.route("/set_vehicle_status/<int:id>", methods=["POST"])
 def set_vehicle_location(id):
+
     payload = request.get_json()
 
     mutex.acquire()
@@ -180,8 +183,8 @@ def set_road_congestion(road_id):
 
 
 # Route for getting the vehicles at one location
-@app.route("/query_location/<int:road_id>/<int:direction>/<int:location>/<int:intersection>")
-def query_location(road_id, direction, location, intersection):
+@app.route("/query_location/<int:road_id>/<int:direction>/<int:intersection>")
+def query_location(road_id, direction, intersection):
 
     if intersection == 0:
 
