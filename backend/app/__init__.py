@@ -7,6 +7,7 @@ from config import Config
 from location_speed_encoding.crossroads import Crossroads
 from location_speed_encoding.direction import Direction
 from location_speed_encoding.road import Road
+from location_speed_encoding.route_completion_status import Route_completion_status
 from location_speed_encoding.signal_light_positions import Signal_light_positions
 from location_speed_encoding.traffic_light import Traffic_light
 
@@ -26,6 +27,9 @@ logger.setLevel(logging.ERROR)
 
 # storage for recording the current states of vehicles, crossroads and road segments
 current_states = {}
+
+# Number of vehicles, whether enroute or not
+total_number_of_vehicles = 15
 
 # Clock
 clock = 0
@@ -101,7 +105,18 @@ for crossroad in Crossroads:
 # TODO: change the vehicle injection process to one at a time
 redis_db.set("vehicles", 0)
 current_states["vehicles"] = 0
-current_states["pending_vehicles"] = 0
+current_states["pending_vehicles"] = total_number_of_vehicles
+
+for id in range(total_number_of_vehicles):
+    current_states["vehicle_%d" % id] = {}
+    current_states["vehicle_%d" % id]["road_segment"] = Road.ROAD_A.value
+    current_states["vehicle_%d" % id]["direction"] = 0
+    current_states["vehicle_%d" % id]["location"] = 0
+    current_states["vehicle_%d" % id]["intersection"] = 0
+    current_states["vehicle_%d" % id]["speed"] = 0
+    current_states["vehicle_%d" % id]["route_completion"] = Route_completion_status.NOT_STARTED.value
+
+    redis_db.set("vehicle_%d" % id, json.dumps(current_states["vehicle_%d" % id]))
 
 mutex.release()
 

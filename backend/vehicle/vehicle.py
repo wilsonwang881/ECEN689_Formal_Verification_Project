@@ -27,7 +27,7 @@ class Vehicle(threading.Thread):
         # Set the object attributes
         self.id = id
         self.road_segment = 0
-        self.direction = 0
+        self.direction = 1
         self.location = 0
         self.intersection = 0
         self.speed = 0
@@ -43,6 +43,8 @@ class Vehicle(threading.Thread):
         print("Vehicle %d running" % (self.id))
 
         while True:
+
+            # TODO: make vehicl movement decisions
 
             # Ask for the congestion map
             for road in Road:

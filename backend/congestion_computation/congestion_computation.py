@@ -23,7 +23,8 @@ class Congestion_Computation(threading.Thread):
         self.road_segment = Road(road_responsible)
         self.congestion_index_clockwise = 0
         self.congestion_index_anticlockwise = 0
-        self.vehicle_list = {}
+        self.vehicle_list_clockwise = {}
+        self.vehicle_list_anticlockwise = {}
         self.current_time = 0
 
     
@@ -34,18 +35,31 @@ class Congestion_Computation(threading.Thread):
 
         while True:
 
-            # Get a list of vehicles on the road
+            # TODO: change the congestion computation to: average vehicle speed
+
+            # Get a list of vehicles on the road            
+            for direction in Direction:
+                response = requests.get("http://127.0.0.1:5000/query_location/%d/%d/%d" \
+                    % (self.road_segment.value, direction.value, 0))
+
+                if direction == Direction.DIRECTION_CLOCKWISE:
+                    self.vehicle_list_clockwise = response.json()
+                else:
+                    self.vehicle_list_anticlockwise = response.json()
 
             # Update local record
-            payload = {}
-            payload[Direction.DIRECTION_CLOCKWISE.name] = {}
-            payload[Direction.DIRECTION_CLOCKWISE.name]["congestion_index"] = 0
-            payload[Direction.DIRECTION_ANTICLOCKWISE.name] = {}
-            payload[Direction.DIRECTION_ANTICLOCKWISE.name]["congestion_index"] = 1
+            self.congestion_index_clockwise = len(self.vehicle_list_clockwise)
+            self.congestion_index_anticlockwise = len(self.vehicle_list_anticlockwise)                        
             
             # Calculate the congestion
 
             # Send the updated congestion information back to the backend
+            payload = {}
+            payload[Direction.DIRECTION_CLOCKWISE.name] = {}
+            payload[Direction.DIRECTION_CLOCKWISE.name]["congestion_index"] = self.congestion_index_clockwise
+            payload[Direction.DIRECTION_ANTICLOCKWISE.name] = {}
+            payload[Direction.DIRECTION_ANTICLOCKWISE.name]["congestion_index"] = self.congestion_index_anticlockwise
+
             while True:
                 # for direction in Direction:
                 response = requests.post("http://127.0.0.1:5000/set_road_congestion/%d" % \
