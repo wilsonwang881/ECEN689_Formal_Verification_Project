@@ -116,6 +116,7 @@ ECEN689_Formal_Verification_Project\    ----------> Root directory
             __init__.py
             crossroads.py
             direction.py
+            map.py
             road.py
             route_completion_status.py
             signal_light_positions.py
@@ -189,19 +190,19 @@ Square position:
 ```
      29                   0  
      ======================
-0  | |                    | | 29
-   | |                    | |
-   | |                    | |
-   | |                    | |
-   | |                    | |
-   | |                    | |
-   | |                    | |
-29 | |                    | | 0
-     ======================
-     0                   29
+0  | |                    
+   | |                   
+   | |                
+   | |                 
+   | |                 
+   | |                
+   | |                
+29 | |                
 ```
 
-The square position encoding is anti-clockwise.
+When a vehicle is moving from square 0 to square 29 on the same road segment, the vehicle is said to be on the right lane.
+
+When a vehicle is moving from square 29 to square 0 on the same road segment, the vehicle is said to be on the left lane.
 
 
 ## Database
@@ -213,7 +214,7 @@ All records are in JSON format.
 
 ```
 <road_segment_name>: {
-    direction_name<clockwise>: {
+    direction_name<right>: {
         "vehicles": {
             <vehicle_name>: {
                 "vehicle_location": <vehicle_location>,
@@ -222,7 +223,7 @@ All records are in JSON format.
         },
         "congestion_index": <computed_value>
     },
-    direction_name<anti-clockwise>: {
+    direction_name<left>: {
         "vehicles": {
             <vehicle_name>: {
                 "vehicle_location": <vehicle_location>,

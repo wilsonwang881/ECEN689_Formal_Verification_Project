@@ -73,12 +73,12 @@ def update(mode, id, value):
         reported_congestion_compute += 1
         congestion_compute_records.append(id)
         for key in current_states[Road(id).name]:
-            if key == Direction.DIRECTION_CLOCKWISE.name:
-                current_states[Road(id).name][Direction.DIRECTION_CLOCKWISE.name]["congestion_index"] = \
-                    value[Direction.DIRECTION_CLOCKWISE.name]["congestion_index"]
-            elif key == Direction.DIRECTION_ANTICLOCKWISE.name:
-                current_states[Road(id).name][Direction.DIRECTION_ANTICLOCKWISE.name]["congestion_index"] = \
-                    value[Direction.DIRECTION_ANTICLOCKWISE.name]["congestion_index"]
+            if key == Direction.DIRECTION_RIGHT.name:
+                current_states[Road(id).name][Direction.DIRECTION_RIGHT.name]["congestion_index"] = \
+                    value[Direction.DIRECTION_RIGHT.name]["congestion_index"]
+            elif key == Direction.DIRECTION_LEFT.name:
+                current_states[Road(id).name][Direction.DIRECTION_LEFT.name]["congestion_index"] = \
+                    value[Direction.DIRECTION_LEFT.name]["congestion_index"]
         
     elif (mode == "signal_lights") and (id not in signal_light_records):        
         reported_signal_light += 1
@@ -87,16 +87,16 @@ def update(mode, id, value):
 
     elif mode == "add_vehicle":
         # Check if there were any vehicle on road segment A in the previous time slot
-        previous_road_A_record = json.loads(redis_db.get(Road.ROAD_A.name))[Direction.DIRECTION_CLOCKWISE.name]["vehicles"]
+        previous_road_A_record = json.loads(redis_db.get(Road.ROAD_A.name))[Direction.DIRECTION_RIGHT.name]["vehicles"]
 
         if previous_road_A_record == {}:
             # Check if there were any vehicle on road segment A in the current time slot
-            current_road_A_record = current_states[Road.ROAD_A.name][Direction.DIRECTION_CLOCKWISE.name]["vehicles"]
+            current_road_A_record = current_states[Road.ROAD_A.name][Direction.DIRECTION_RIGHT.name]["vehicles"]
 
             if current_road_A_record == {}:
-                current_states[Road.ROAD_A.name][Direction.DIRECTION_CLOCKWISE.name]["vehicles"]["vehicle_%d" % id] = {}
-                current_states[Road.ROAD_A.name][Direction.DIRECTION_CLOCKWISE.name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = Road.ROAD_A.value
-                current_states[Road.ROAD_A.name][Direction.DIRECTION_CLOCKWISE.name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = Speed.STOPPED.value
+                current_states[Road.ROAD_A.name][Direction.DIRECTION_RIGHT.name]["vehicles"]["vehicle_%d" % id] = {}
+                current_states[Road.ROAD_A.name][Direction.DIRECTION_RIGHT.name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = Road.ROAD_A.value
+                current_states[Road.ROAD_A.name][Direction.DIRECTION_RIGHT.name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = Speed.STOPPED.value
 
                 return True
 
