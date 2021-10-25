@@ -3,6 +3,7 @@
 - [Table of Contents](#table-of-contents)
 - [Map](#map)
 - [Goal](#goal)
+- [Constraints](#constraints)
 - [Structure](#structure)
 - [Technology Stack](#technology-stack)
 - [Environment Setup](#environment-setup)
@@ -12,6 +13,7 @@
   - [Traffic Light Record](#traffic-light-record)
   - [Vehicle Record](#vehicle-record)
   - [Number of Vehicles](#number-of-vehicles)
+  - [Database Structure](#database-structure)
 - [Backend Workflow](#backend-workflow)
 - [Vehicle Workflow](#vehicle-workflow)
 - [Congestion Computation Workflow](#congestion-computation-workflow)
@@ -180,20 +182,26 @@ Each road segment has a name.
 
 Each road segment has two lanes: in clockwise or anti-clockwise direction.
 
-If the road segment is vertical, the 0th position is on the top.
-
-If the road segment is horizontal, the 0th position is the leftmost one.
-
 Encoding order: road segment -> lane direction -> square position.
 
-Vehicle location:
+Square position:
 
 ```
-on vertical road segments          the top is the 0th position
-                                   the bottom is the 29th position
-on the horizontal road segments    the leftmost is the 0th position
-                                   the rightmost is the 29th position
-```                            
+     29                   0  
+     ======================
+0  | |                    | | 29
+   | |                    | |
+   | |                    | |
+   | |                    | |
+   | |                    | |
+   | |                    | |
+   | |                    | |
+29 | |                    | | 0
+     ======================
+     0                   29
+```
+
+The square position encoding is anti-clockwise.
 
 
 ## Database
@@ -330,8 +338,6 @@ Each vehicle is a single thread:
 8. Send the movement decision to the backend.
 9. Once the backend has acknowledged the update, go to the next iteration.
 10. The vehicle resets its location and route completion status and restarts.
-
-The vehicle threads are started by ``vehicle_threads_start_script.py``.
 
 The number of vehicles can be changed.
 

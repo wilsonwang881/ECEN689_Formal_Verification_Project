@@ -7,13 +7,13 @@ import requests
 import time
 
 
-from location_speed_encoding.crossroads import Crossroads
-from location_speed_encoding.direction import Direction
-from location_speed_encoding.road import Road
-from location_speed_encoding.route_completion_status import Route_completion_status
-from location_speed_encoding.signal_light_positions import Signal_light_positions
-from location_speed_encoding.speed import Speed
-from location_speed_encoding.traffic_light import Traffic_light
+from location_speed_encoding import Crossroads
+from location_speed_encoding import Direction
+from location_speed_encoding import Road
+from location_speed_encoding import Route_completion_status
+from location_speed_encoding import Signal_light_positions
+from location_speed_encoding import Speed
+from location_speed_encoding import Traffic_light
 
 
 polling_interval = 0.4
@@ -37,7 +37,11 @@ class Vehicle(threading.Thread):
         self.location_visited = list()
         self.route_completion_status = Route_completion_status.NOT_STARTED
         self.current_time = 0                
-        self.target_crossroad = [Crossroads.CROSSROAD_B, Crossroads.CROSSROAD_C, Crossroads.CROSSROAD_D]
+        
+        target_crossroad = [Crossroads.CROSSROAD_B, Crossroads.CROSSROAD_C, Crossroads.CROSSROAD_D]
+        one_way_crossroad = [Crossroads.CROSSROAD_B, Crossroads.CROSSROAD_C, Crossroads.CROSSROAD_D]
+        three_way_crossroad = [Crossroads.CROSSROAD_V, Crossroads.CROSSROAD_W, Crossroads.CROSSROAD_X, Crossroads.CROSSROAD_Y, Crossroads.CROSSROAD_Z]
+        four_way_crossroad = [Crossroads.CROSSROAD_U]
 
 
     # Inherited from the threading library
@@ -80,7 +84,7 @@ class Vehicle(threading.Thread):
                     
                     time.sleep(polling_interval)
 
-            elif self.route_completion == Route_completion_status.FINISHED:
+            elif self.route_completion_status == Route_completion_status.FINISHED:
             # If the vehicle just finished the route
             # Reset its status to NOT_STARTED
                 while True:
@@ -107,10 +111,12 @@ class Vehicle(threading.Thread):
                     
                     time.sleep(polling_interval)
 
-            elif self.route_completion == Route_completion_status.ENROUTE:
+            elif self.route_completion_status == Route_completion_status.ENROUTE:
             # If yes, proceed                
                 # Make vehicle movement decisions
-                if self.location != 0 and self.location != 29:
+                if (self.location != 0 and self.location != 29) \
+                    or (self.location == 0 and self.direction == Direction.DIRECTION_ANTICLOCKWISE) \
+                        or (self.location == 29 and self.direction == Direction.DIRECTION_CLOCKWISE):
                 # If not at any crossroad
                     response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
                         % (self.road_segment.value, self.direction.value)).json()
@@ -131,7 +137,8 @@ class Vehicle(threading.Thread):
                                 self.speed = Speed.MOVING
                                 self.location -= 1
                     
-                elif self.location == 0 or self.location == 29:
+                elif (self.location == 0 and self.direction == Direction.DIRECTION_CLOCKWISE) \
+                    or (self.location == 29 and self.direction == Direction.DIRECTION_ANTICLOCKWISE):
                     # If the vehicle were at the crossroad
 
                     # Ask for traffic light status if visible
@@ -226,45 +233,72 @@ class Vehicle(threading.Thread):
                             crossroad_to_query = Crossroads.CROSSROAD_V
                             traffic_light_orientation = Signal_light_positions.WEST
                     
+                    # Get the traffic light signal
                     response = requests.get("http://127.0.0.1:5000/query_signal_lights/%d" \
                         % crossroad_to_query.value).json()
 
-                    signal_light = Traffic_light(response[traffic_light_orientation.name])                                                                                                
+                    signal_light = Traffic_light[response[traffic_light_orientation.name]]                                                                                                
 
                     if signal_light == Traffic_light.GREEN:
-                    # If green light, move into the cross                        
-                        self.speed = Speed.MOVING
-                        self.previous_road_segment = self.road_segment
-                        self.intersection = crossroad_to_query
-                        
-                        # TODO Check whether there is any vehicle in the crossroad
+                    # If green light, route                     
+                        if crossroad_to_query in one_way_crossroad:
+                        # If at crossroads B, C or D
+                            if crossroad_to_query == Crossroads.CROSSROAD_B and :
+                                road_sgment_to_query = Road.ROAD_O
 
+                            # Ask if any vehicles were at the other side of the crossroad   
+                            response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
+                                % (traffic_light_orientation))      
+
+                            # Make movement decision
+
+                            # If the vehicle goes past the crossroad
+                            
+                            # Update the route completion status  
+
+                        elif crossroad_to_query in three_way_crossroad:
+                        # If at crossroads V, W, X, Y, Z
+
+                        # Ask if any vehicles were at the other side of the crossroad         
+
+                        # Make movement decision
+
+                        # If the vehicle goes past the crossroad
+                        
+                        # Update the route completion status  
+
+                        elif crossroad_to_query in four_way_crossroad:
+                        # If at crossroad U
+
+                        # Ask if any vehicles were at the other side of the crossroad         
+
+                        # Make movement decision
+
+                        # If the vehicle goes past the crossroad
+                        
+                        # Update the route completion status  
+
+                        self.speed = Speed.MOVING
+                        self.previous_road_segment = self.road_segment                                         
+
+                        # Ask for the congestion map
+                        for road in Road:
+                            for direction in Direction:
+                                response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d/%d" \
+                                    % (road.value, direction.value))
+                        
                     elif signal_light == Traffic_light.RED:
-                    # If not, do not move
+                    # If red, do not move
                         self.speed = Speed.STOPPED
                         self.previous_road_segment = self.road_segment
                             
-                else:
-                    # If the vehicle were in the crossroad
-                    # Update the route completion status                   
-
-                     # Ask for the congestion map
-                    for road in Road:
-                        for direction in Direction:
-                            response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d/%d" \
-                                % (road.value, direction.value))                    
-
-                    # Make movement decision      
-
-                    pass         
-
+                                      
                 # Update the backend
                 payload = {}
                 payload["road_segment"] = self.road_segment.value
                 payload["direction"] = self.direction.value
                 payload["location"] = self.location
-                payload["intersection"] = self.intersection.value
-                payload["vehicle_speed"] = self.speed
+                payload["vehicle_speed"] = self.speed.value
                 payload["route_completion"] = self.route_completion_status.value
 
 
