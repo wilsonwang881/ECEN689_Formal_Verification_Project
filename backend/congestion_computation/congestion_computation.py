@@ -42,7 +42,7 @@ class Congestion_Computation(threading.Thread):
                 response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
                     % (self.road_segment.value, direction.value))
 
-                if direction == Direction.DIRECTION_CLOCKWISE:
+                if direction == Direction.DIRECTION_RIGHT:
                     self.vehicle_list_clockwise = response.json()
                 else:
                     self.vehicle_list_anticlockwise = response.json()
@@ -55,10 +55,10 @@ class Congestion_Computation(threading.Thread):
 
             # Send the updated congestion information back to the backend
             payload = {}
-            payload[Direction.DIRECTION_CLOCKWISE.name] = {}
-            payload[Direction.DIRECTION_CLOCKWISE.name]["congestion_index"] = self.congestion_index_clockwise
-            payload[Direction.DIRECTION_ANTICLOCKWISE.name] = {}
-            payload[Direction.DIRECTION_ANTICLOCKWISE.name]["congestion_index"] = self.congestion_index_anticlockwise
+            payload[Direction.DIRECTION_RIGHT.name] = {}
+            payload[Direction.DIRECTION_RIGHT.name]["congestion_index"] = self.congestion_index_clockwise
+            payload[Direction.DIRECTION_LEFT.name] = {}
+            payload[Direction.DIRECTION_LEFT.name]["congestion_index"] = self.congestion_index_anticlockwise
 
             while True:
                 # for direction in Direction:

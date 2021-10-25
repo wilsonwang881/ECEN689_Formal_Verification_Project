@@ -2,6 +2,7 @@
 # So that importing code from other Python code is easier
 from .crossroads import Crossroads
 from .direction import Direction
+from .map import MAP
 from .road import Road
 from .route_completion_status import Route_completion_status
 from .signal_light_positions import Signal_light_positions

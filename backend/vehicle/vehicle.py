@@ -9,6 +9,7 @@ import time
 
 from location_speed_encoding import Crossroads
 from location_speed_encoding import Direction
+from location_speed_encoding import MAP
 from location_speed_encoding import Road
 from location_speed_encoding import Route_completion_status
 from location_speed_encoding import Signal_light_positions
@@ -31,7 +32,7 @@ class Vehicle(threading.Thread):
         self.id = id
         self.road_segment = Road.ROAD_A
         self.previous_road_segment = Road.ROAD_A
-        self.direction = Direction.DIRECTION_CLOCKWISE
+        self.direction = Direction.DIRECTION_LEFT
         self.location = 0
         self.speed = Speed.STOPPED
         self.location_visited = list()
@@ -62,7 +63,7 @@ class Vehicle(threading.Thread):
                     if response.text == "OK":
                         # If permission acquired, set the initial location
                         self.road_segment = Road.ROAD_A
-                        self.direction = Direction.DIRECTION_CLOCKWISE
+                        self.direction = Direction.DIRECTION_RIGHT
                         self.location = 0
                         self.speed = Speed.STOPPED
                         self.location_visited.clear()
@@ -89,7 +90,7 @@ class Vehicle(threading.Thread):
             # Reset its status to NOT_STARTED
                 while True:
                     self.road_segment = Road.ROAD_A
-                    self.direction = Direction.DIRECTION_CLOCKWISE
+                    self.direction = Direction.DIRECTION_RIGHT
                     self.location = 0
                     self.speed = Speed.STOPPED
                     self.location_visited.clear()
@@ -115,8 +116,8 @@ class Vehicle(threading.Thread):
             # If yes, proceed                
                 # Make vehicle movement decisions
                 if (self.location != 0 and self.location != 29) \
-                    or (self.location == 0 and self.direction == Direction.DIRECTION_ANTICLOCKWISE) \
-                        or (self.location == 29 and self.direction == Direction.DIRECTION_CLOCKWISE):
+                    or (self.location == 0 and self.direction == Direction.DIRECTION_LEFT) \
+                        or (self.location == 29 and self.direction == Direction.DIRECTION_RIGHT):
                 # If not at any crossroad
                     response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
                         % (self.road_segment.value, self.direction.value)).json()
@@ -124,115 +125,27 @@ class Vehicle(threading.Thread):
                     # Handle cases when the vehicle is moving clockwise or anticlockwise
                     # Check whether any other vehicle is immediately before the vehicle itself
                     for key in response:
-                        if self.direction == Direction.DIRECTION_CLOCKWISE:
+                        if self.direction == Direction.DIRECTION_RIGHT:
                             if response[key]["vehicle_location"] == self.location + 1:
                                 self.speed = Speed.STOPPED
                             else:
                                 self.speed = Speed.MOVING
                                 self.location += 1
-                        elif self.direction == Direction.DIRECTION_ANTICLOCKWISE:
+                        elif self.direction == Direction.DIRECTION_LEFT:
                             if response[key] == self.location - 1:
                                 self.speed = Speed.STOPPED
                             else:
                                 self.speed = Speed.MOVING
                                 self.location -= 1
                     
-                elif (self.location == 0 and self.direction == Direction.DIRECTION_CLOCKWISE) \
-                    or (self.location == 29 and self.direction == Direction.DIRECTION_ANTICLOCKWISE):
+                elif (self.location == 0 and self.direction == Direction.DIRECTION_RIGHT) \
+                    or (self.location == 29 and self.direction == Direction.DIRECTION_LEFT):
                     # If the vehicle were at the crossroad
 
-                    # Ask for traffic light status if visible
-                    crossroad_to_query = Crossroads.CROSSROAD_Z
-                    traffic_light_orientation = Signal_light_positions.EAST
-
-                    if self.road_segment == Road.ROAD_A:
-                        crossroad_to_query = Crossroads.CROSSROAD_Z
-                        traffic_light_orientation = Signal_light_positions.EAST
-                    elif self.road_segment == Road.ROAD_E:
-                        if self.direction == Direction.DIRECTION_CLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_X
-                            traffic_light_orientation = Signal_light_positions.EAST
-                        if self.direction == Direction.DIRECTION_ANTICLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_Z
-                            traffic_light_orientation = Signal_light_positions.WEST
-                    elif self.road_segment == Road.ROAD_F:
-                        if self.direction == Direction.DIRECTION_CLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_D
-                            traffic_light_orientation = Signal_light_positions.EAST
-                        if self.direction == Direction.DIRECTION_ANTICLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_X
-                            traffic_light_orientation = Signal_light_positions.WEST
-                    elif self.road_segment == Road.ROAD_G:
-                        if self.direction == Direction.DIRECTION_CLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_Z
-                            traffic_light_orientation = Signal_light_positions.NORTH
-                        if self.direction == Direction.DIRECTION_ANTICLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_Y
-                            traffic_light_orientation = Signal_light_positions.SOUTH
-                    elif self.road_segment == Road.ROAD_H:
-                        if self.direction == Direction.DIRECTION_CLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_X
-                            traffic_light_orientation = Signal_light_positions.NORTH
-                        if self.direction == Direction.DIRECTION_ANTICLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_U
-                            traffic_light_orientation = Signal_light_positions.SOUTH
-                    elif self.road_segment == Road.ROAD_I:
-                        if self.direction == Direction.DIRECTION_CLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_D
-                            traffic_light_orientation = Signal_light_positions.NORTH
-                        if self.direction == Direction.DIRECTION_ANTICLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_W
-                            traffic_light_orientation = Signal_light_positions.SOUTH
-                    elif self.road_segment == Road.ROAD_J:
-                        if self.direction == Direction.DIRECTION_CLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_U
-                            traffic_light_orientation = Signal_light_positions.EAST
-                        if self.direction == Direction.DIRECTION_ANTICLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_Y
-                            traffic_light_orientation = Signal_light_positions.WEST
-                    elif self.road_segment == Road.ROAD_K:
-                        if self.direction == Direction.DIRECTION_CLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_W
-                            traffic_light_orientation = Signal_light_positions.EAST
-                        if self.direction == Direction.DIRECTION_ANTICLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_U
-                            traffic_light_orientation = Signal_light_positions.WEST
-                    elif self.road_segment == Road.ROAD_L:
-                        if self.direction == Direction.DIRECTION_CLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_Y
-                            traffic_light_orientation = Signal_light_positions.NORTH
-                        if self.direction == Direction.DIRECTION_ANTICLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_B
-                            traffic_light_orientation = Signal_light_positions.SOUTH
-                    elif self.road_segment == Road.ROAD_M:
-                        if self.direction == Direction.DIRECTION_CLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_U
-                            traffic_light_orientation = Signal_light_positions.NORTH
-                        if self.direction == Direction.DIRECTION_ANTICLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_V
-                            traffic_light_orientation = Signal_light_positions.SOUTH
-                    elif self.road_segment == Road.ROAD_N:
-                        if self.direction == Direction.DIRECTION_CLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_W
-                            traffic_light_orientation = Signal_light_positions.NORTH
-                        if self.direction == Direction.DIRECTION_ANTICLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_C
-                            traffic_light_orientation = Signal_light_positions.SOUTH
-                    elif self.road_segment == Road.ROAD_O:
-                        if self.direction == Direction.DIRECTION_CLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_V
-                            traffic_light_orientation = Signal_light_positions.EAST
-                        if self.direction == Direction.DIRECTION_ANTICLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_B
-                            traffic_light_orientation = Signal_light_positions.WEST
-                    elif self.road_segment == Road.ROAD_P:
-                        if self.direction == Direction.DIRECTION_CLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_C
-                            traffic_light_orientation = Signal_light_positions.EAST
-                        if self.direction == Direction.DIRECTION_ANTICLOCKWISE:
-                            crossroad_to_query = Crossroads.CROSSROAD_V
-                            traffic_light_orientation = Signal_light_positions.WEST
-                    
+                    # Get the right crossroad to query
+                    crossroad_to_query = MAP[self.road_segment][self.direction]["crossroad"]
+                    traffic_light_orientation = MAP[self.road_segment][self.direction]["traffic_light_orientation"]
+                                        
                     # Get the traffic light signal
                     response = requests.get("http://127.0.0.1:5000/query_signal_lights/%d" \
                         % crossroad_to_query.value).json()
@@ -243,8 +156,11 @@ class Vehicle(threading.Thread):
                     # If green light, route                     
                         if crossroad_to_query in one_way_crossroad:
                         # If at crossroads B, C or D
-                            if crossroad_to_query == Crossroads.CROSSROAD_B and :
-                                road_sgment_to_query = Road.ROAD_O
+                            if crossroad_to_query == Crossroads.CROSSROAD_B:
+                                # road_sgment_to_query = Road.ROAD_O
+
+                            elif crossroad_to_query == Crossroads.CROSSROAD_C:
+                                # road_sgment_to_query = Road.ROAD_O
 
                             # Ask if any vehicles were at the other side of the crossroad   
                             response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
