@@ -39,8 +39,8 @@ class Congestion_Computation(threading.Thread):
 
             # Get a list of vehicles on the road            
             for direction in Direction:
-                response = requests.get("http://127.0.0.1:5000/query_location/%d/%d/%d" \
-                    % (self.road_segment.value, direction.value, 0))
+                response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
+                    % (self.road_segment.value, direction.value))
 
                 if direction == Direction.DIRECTION_CLOCKWISE:
                     self.vehicle_list_clockwise = response.json()
