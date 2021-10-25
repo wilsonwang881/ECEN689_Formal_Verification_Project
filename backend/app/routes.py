@@ -57,27 +57,16 @@ def update(mode, id, value):
         # Do not commit to the database at this moment
 
         # Compare if the vehicle were on the same road segment
-        if (original_vehicle_record["road_segment"] != value["road_segment"]) \
-            or (original_vehicle_record["intersection"] != value["intersection"]):
-            if value["road_segment"] == 0:     
-                if ("vehicle_%d" % id) in original_road_segment_record[Direction(value["direction"]).name]["vehicles"]:
-                    # Moving from road segment to crossroad
-                    original_road_segment_record[value["direction"]]["vehicles"].pop("vehicle_%d" % id)
-                    current_states[original_vehicle_record["road_segment"]] = original_road_segment_record
-                else:
-                    # Moving from cross to road segment
-                    current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id] = {}
-                    current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = value["location"]
-                    current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = value["vehicle_speed"]
-
-        else:            
-            if original_vehicle_record["road_segment"] == value["road_segment"]:
-                # If on the same road segment 
+        if (original_vehicle_record["road_segment"] != value["road_segment"]):            
+            if ("vehicle_%d" % id) in original_road_segment_record[Direction(value["direction"]).name]["vehicles"]:
+                # Moving from road segment to crossroad
+                original_road_segment_record[value["direction"]]["vehicles"].pop("vehicle_%d" % id)
+                current_states[original_vehicle_record["road_segment"]] = original_road_segment_record
                 current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id] = {}
                 current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = value["location"]
-                current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = value["vehicle_speed"]
+                current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = value["vehicle_speed"]                       
 
-            # Do not update crossroad->vehicle mapping: no such mapping in the database        
+        # Do not update crossroad->vehicle mapping: no such mapping in the database        
         
     elif (mode == "congestion_compute_report") and (id not in congestion_compute_records):        
         reported_congestion_compute += 1
@@ -112,7 +101,7 @@ def update(mode, id, value):
         for key in current_states:
             redis_db.set(key, json.dumps(current_states[key]))
 
-        print("Reset! Time = %d" % clock)
+        print("Database update! Time = %d" % clock)
                 
 
 # Test route
@@ -214,28 +203,16 @@ def set_road_congestion(road_id):
 
 
 # Route for getting the vehicles at one location
-@app.route("/query_location/<int:road_id>/<int:direction>/<int:intersection>")
-def query_location(road_id, direction, intersection):
+@app.route("/query_location/<int:road_id>/<int:direction>")
+def query_location(road_id, direction):
 
-    if intersection == 0:
+    mutex.acquire()
 
-        mutex.acquire()
+    res = json.loads(redis_db.get(Road(road_id).name))
 
-        res = json.loads(redis_db.get(Road(road_id).name))
+    mutex.release()
 
-        mutex.release()
-
-        return res[Direction(direction).name]["vehicles"]
-
-    else:
-
-        mutex.acquire()
-
-        res = json.load(redis_db.get(Crossroads(intersection).name))
-
-        mutex.release()
-
-        return res
+    return res[Direction(direction).name]["vehicles"]
 
 
 # Route for adding vehicle to the system

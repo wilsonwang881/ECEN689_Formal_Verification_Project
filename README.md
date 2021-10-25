@@ -48,6 +48,8 @@ A is not a crossroad. B, C and D are crossroads.
 
 Each road segment has two lanes running in different directions.
 
+Traffic signals are either red or green.
+
 
 ## Goal
 
@@ -62,6 +64,33 @@ The infrastructure group develop the traffic light control system.
 The vehicle group simulate the vehicles in the traffic system.
 
 The congestion information is shared across all vehicles.
+
+Maximize the number of vehicles completing the route per unit time.
+
+
+## Constraints
+
+Each road segment is divided into 30 slots.
+
+Each vehicle can move one slot at a time.
+
+At any time instant, the same slot should have one vehicle. Otherwise, a collision happens.
+
+Vehicles stop at a red signal and cannot make right turn.
+
+Between two consecutive time steps, one vehicle can cross the road intersection.
+
+At any time step, at the same intersection, only one signal can be green.
+
+Vehicles at the intersection can see others at the intersection as well.
+
+Vehicles have limited visibility along the same direction.
+
+Vehicles can only move in the correct direction of the lane.
+
+No U-turn.
+
+Vehicles cannot move if another vehicle were immediately ahead of it.
 
 
 ## Structure
@@ -216,7 +245,6 @@ JSON format:
     "road_segment": <road_segment_name>,
     "direction": <direction_name>,
     "location": <location_on_the_segment>,
-    "intersection": <intersection>,
     "speed": <speed>,
     "route_completion": <yes_no_not_started>
 }
@@ -264,20 +292,20 @@ JSON format:
 The backend uses Python Flask as the framework and implements the following APIs:
 
 | Route                                                                       
-|------------------------------------------------------------------|
-| ``/query_signal_light/<intersection>``                           |
-| ``/set_signal_light/<intersection>``                             | 
-| ``/query_vehicle_status/<vehicle_id>``                           | 
-| ``/set_vehicle_status/<vehicle_id>``                             | 
-| ``/query_road_congestion/<road_id>/<direction>``                 | 
-| ``/set_road_congestion/<road_id>``                               |
-| ``/query_location/<road_id>/<direction>/<intersection>``         |
-| ``/add_vehicle/<vehicle_id>``                                    |
-| ``/remove_vehicle/<vehicle_id>``                                 |
+|--------------------------------------------------------------|
+| ``/query_signal_light/<intersection>``                       |
+| ``/set_signal_light/<intersection>``                         | 
+| ``/query_vehicle_status/<vehicle_id>``                       | 
+| ``/set_vehicle_status/<vehicle_id>``                         | 
+| ``/query_road_congestion/<road_id>/<direction>``             | 
+| ``/set_road_congestion/<road_id>``                           |
+| ``/query_location/<road_id>/<direction>``                    |
+| ``/add_vehicle/<vehicle_id>``                                |
+| ``/remove_vehicle/<vehicle_id>``                             |
 
 Threads report updated information with HTTP POST method. The payload is in JSON format, as shown in [Database](#database).
 
-The route names are fairly self-explanatory. The ``/query_location`` route is used to get the vehicle records at any road segment or crossroads.
+The route names are fairly self-explanatory. The ``/query_location`` route is used to get the vehicle records at any road segment.
 
 If any vehicle thread or congestion computation thread queries the backend, the backend will query the database and return the information.
 
