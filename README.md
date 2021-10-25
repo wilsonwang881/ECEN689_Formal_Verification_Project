@@ -292,13 +292,16 @@ The backend responses to the requests sent by the threads with the current times
 
 Each vehicle is a single thread:
 
-1. Ask for congestion map.
-2. Ask for traffic light status if at the crossroad.
-3. Ask for whether there are any vehicles ahead.
-4. Make movement decision.
-5. Send the movement decision to the backend.
-6. Once the backend has acknowledged the update, go to the next iteration.
-7. The thread terminates until all locations (B, C and D) are visited.
+1. Ask for permission to enter the map.
+2. If permission granted, start on road segment A.
+3. If not, retry.
+4. Ask for the congestion map.
+5. Ask for traffic light status if at the crossroad.
+6. Ask for whether there are any vehicles ahead.
+7. Make movement decision.
+8. Send the movement decision to the backend.
+9. Once the backend has acknowledged the update, go to the next iteration.
+10. The vehicle resets its location and route completion status and restarts.
 
 The vehicle threads are started by ``vehicle_threads_start_script.py``.
 

@@ -59,22 +59,23 @@ def update(mode, id, value):
         # Compare if the vehicle were on the same road segment
         if (original_vehicle_record["road_segment"] != value["road_segment"]) \
             or (original_vehicle_record["intersection"] != value["intersection"]):
-            if value["road_segment"] == 0:                
-                if ("vehicle_%d" % id) in original_road_segment_record[value["direction"]]["vehicles"]:
+            if value["road_segment"] == 0:     
+                if ("vehicle_%d" % id) in original_road_segment_record[Direction(value["direction"]).name]["vehicles"]:
                     # Moving from road segment to crossroad
                     original_road_segment_record[value["direction"]]["vehicles"].pop("vehicle_%d" % id)
                     current_states[original_vehicle_record["road_segment"]] = original_road_segment_record
                 else:
                     # Moving from cross to road segment
-                    current_states[value["road_segment"]][value["direction"]]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = value["location"]
-                    current_states[value["road_segment"]][value["direction"]]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = value["vehicle_speed"]
+                    current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id] = {}
+                    current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = value["location"]
+                    current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = value["vehicle_speed"]
 
         else:            
             if original_vehicle_record["road_segment"] == value["road_segment"]:
                 # If on the same road segment 
                 current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id] = {}
                 current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = value["location"]
-                current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = value["speed"]
+                current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = value["vehicle_speed"]
 
             # Do not update crossroad->vehicle mapping: no such mapping in the database        
         
@@ -241,7 +242,11 @@ def query_location(road_id, direction, intersection):
 @app.route("/add_vehicle/<int:vehicle_id>")
 def add_vehicle(vehicle_id):
 
-    pass
+    mutex.acquire()
+
+    mutex.release()
+
+    return "No"
 
 
 # Route for removing vehicle from the system

@@ -118,6 +118,10 @@ for id in range(total_number_of_vehicles):
 
     redis_db.set("vehicle_%d" % id, json.dumps(current_states["vehicle_%d" % id]))
 
+# Allow only 1 vehicle to be placed on road segment A
+# And have the enroute state
+current_states["vehicle_waiting"] = {}
+
 mutex.release()
 
 from app import routes

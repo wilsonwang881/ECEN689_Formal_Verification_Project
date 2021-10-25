@@ -17,7 +17,7 @@ vehicle_number = 15
 vehicle_thread_list = list()
 
 for i in range(vehicle_number):
-    thread_object = Vehicle(id=i, starting_location=None, speed=None, route_completion_status=None)
+    thread_object = Vehicle(id=i)
     vehicle_thread_list.append(thread_object)
     thread_object.start()
 
