@@ -11,6 +11,7 @@ from location_speed_encoding import Crossroads
 from location_speed_encoding import Direction
 from location_speed_encoding import Road
 from location_speed_encoding import Signal_light_positions
+from location_speed_encoding import Speed
 
 
 # Shared variables
@@ -94,10 +95,12 @@ def update(mode, id, value):
 
             if current_road_A_record == {}:
                 current_states[Road.ROAD_A.name][Direction.DIRECTION_CLOCKWISE.name]["vehicles"]["vehicle_%d" % id] = {}
+                current_states[Road.ROAD_A.name][Direction.DIRECTION_CLOCKWISE.name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = Road.ROAD_A.value
+                current_states[Road.ROAD_A.name][Direction.DIRECTION_CLOCKWISE.name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = Speed.STOPPED.value
+
                 return True
 
-        else:
-            return False
+        return False
 
     
     # If all threads have reported, update the database
