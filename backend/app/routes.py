@@ -38,7 +38,7 @@ def update(mode, id, value):
     global reported_signal_light
     global vehicle_records
     global congestion_compute_records
-    global clock
+    global clock    
 
     if (mode == "vehicle_report") and (id not in vehicle_records):        
         reported_vehicles += 1
@@ -83,7 +83,22 @@ def update(mode, id, value):
         reported_signal_light += 1
         signal_light_records.append(id)
         current_states[Crossroads(id).name] = value
-        
+
+    elif mode == "add_vehicle":
+        # Check if there were any vehicle on road segment A in the previous time slot
+        previous_road_A_record = json.loads(redis_db.get(Road.ROAD_A.name))[Direction.DIRECTION_CLOCKWISE.name]["vehicles"]
+
+        if previous_road_A_record == {}:
+            # Check if there were any vehicle on road segment A in the current time slot
+            current_road_A_record = current_states[Road.ROAD_A.name][Direction.DIRECTION_CLOCKWISE.name]["vehicles"]
+
+            if current_road_A_record == {}:
+                current_states[Road.ROAD_A.name][Direction.DIRECTION_CLOCKWISE.name]["vehicles"]["vehicle_%d" % id] = {}
+                return True
+
+        else:
+            return False
+
     
     # If all threads have reported, update the database
     if (reported_vehicles == total_vehicles) \
@@ -102,6 +117,8 @@ def update(mode, id, value):
             redis_db.set(key, json.dumps(current_states[key]))
 
         print("Database update! Time = %d" % clock)
+
+    return True
                 
 
 # Test route
@@ -122,7 +139,7 @@ def query_signal_lights(intersection):
 
     mutex.release()
 
-    return str(res)
+    return json.dumps(res)
     
 
 # Route for setting light signals at intersections
@@ -221,9 +238,16 @@ def add_vehicle(vehicle_id):
 
     mutex.acquire()
 
+    result = update("add_vehicle", vehicle_id, value=None)
+
     mutex.release()
 
-    return "No"
+    if result: 
+
+        return "OK"
+    else:
+
+        return "No"
 
 
 # Route for removing vehicle from the system

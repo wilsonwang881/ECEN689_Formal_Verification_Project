@@ -80,7 +80,7 @@ class Vehicle(threading.Thread):
                     
                     time.sleep(polling_interval)
 
-            elif self.route_completion == Route_completion_status.FINISHED:
+            elif self.route_completion_status == Route_completion_status.FINISHED:
             # If the vehicle just finished the route
             # Reset its status to NOT_STARTED
                 while True:
@@ -107,7 +107,7 @@ class Vehicle(threading.Thread):
                     
                     time.sleep(polling_interval)
 
-            elif self.route_completion == Route_completion_status.ENROUTE:
+            elif self.route_completion_status == Route_completion_status.ENROUTE:
             # If yes, proceed                
                 # Make vehicle movement decisions
                 if self.location != 0 and self.location != 29:
@@ -229,7 +229,7 @@ class Vehicle(threading.Thread):
                     response = requests.get("http://127.0.0.1:5000/query_signal_lights/%d" \
                         % crossroad_to_query.value).json()
 
-                    signal_light = Traffic_light(response[traffic_light_orientation.name])                                                                                                
+                    signal_light = Traffic_light[response[traffic_light_orientation.name]]                                                                                                
 
                     if signal_light == Traffic_light.GREEN:
                     # If green light, move into the cross                        
@@ -263,8 +263,7 @@ class Vehicle(threading.Thread):
                 payload["road_segment"] = self.road_segment.value
                 payload["direction"] = self.direction.value
                 payload["location"] = self.location
-                payload["intersection"] = self.intersection.value
-                payload["vehicle_speed"] = self.speed
+                payload["vehicle_speed"] = self.speed.value
                 payload["route_completion"] = self.route_completion_status.value
 
 
