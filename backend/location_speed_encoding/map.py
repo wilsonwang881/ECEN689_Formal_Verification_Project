@@ -174,5 +174,9 @@ MAP = {
     Crossroads.CROSSROAD_C: {
         Signal_light_positions.NORTH: Road.ROAD_N,
         Signal_light_positions.WEST: Road.ROAD_P
-    }
+    },
+    "target_crossroad": [Crossroads.CROSSROAD_B, Crossroads.CROSSROAD_C, Crossroads.CROSSROAD_D],
+    "one_way_crossroad": [Crossroads.CROSSROAD_B, Crossroads.CROSSROAD_C, Crossroads.CROSSROAD_D],
+    "three_way_crossroad": [Crossroads.CROSSROAD_V, Crossroads.CROSSROAD_W, Crossroads.CROSSROAD_X, Crossroads.CROSSROAD_Y, Crossroads.CROSSROAD_Z],
+    "four_way_crossroad": [Crossroads.CROSSROAD_U]
 }

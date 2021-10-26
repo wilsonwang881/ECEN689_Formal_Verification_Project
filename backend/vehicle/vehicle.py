@@ -36,12 +36,97 @@ class Vehicle(threading.Thread):
         self.speed = Speed.STOPPED
         self.location_visited = list()
         self.route_completion_status = Route_completion_status.NOT_STARTED
-        self.current_time = 0                
+        self.current_time = 0   
+
+
+    def update_backend(self):
+
+        payload = {}
+        payload["road_segment"] = self.road_segment.value
+        payload["direction"] = self.direction.value
+        payload["location"] = self.location
+        payload["vehicle_speed"] = self.speed.value
+        payload["route_completion"] = self.route_completion_status.value
+
+        while True:                                
+            response = requests.post("http://127.0.0.1:5000/set_vehicle_status/%d" \
+                % (self.id), json=payload)
+            
+            if response.text != self.current_time:
+                self.current_time = response.text
+                break                                                     
+            
+            time.sleep(polling_interval)        
+
+    
+    def crossroad_reached_check(self, last_road_segment, current_road_segment, target_crossroad):
         
-        target_crossroad = [Crossroads.CROSSROAD_B, Crossroads.CROSSROAD_C, Crossroads.CROSSROAD_D]
-        one_way_crossroad = [Crossroads.CROSSROAD_B, Crossroads.CROSSROAD_C, Crossroads.CROSSROAD_D]
-        three_way_crossroad = [Crossroads.CROSSROAD_V, Crossroads.CROSSROAD_W, Crossroads.CROSSROAD_X, Crossroads.CROSSROAD_Y, Crossroads.CROSSROAD_Z]
-        four_way_crossroad = [Crossroads.CROSSROAD_U]
+        crossroad_list_last_road_segment = list()
+        crossroad_list_current_road_segment = list()
+        
+        if MAP[last_road_segment][Direction.DIRECTION_LEFT] != {}:
+            crossroad_list_last_road_segment.append(MAP[last_road_segment][Direction.DIRECTION_LEFT]["crossroad"])
+
+        if MAP[last_road_segment][Direction.DIRECTION_RIGHT] != {}:
+            crossroad_list_last_road_segment.append(MAP[last_road_segment][Direction.DIRECTION_RIGHT]["crossroad"])
+
+        if MAP[current_road_segment][Direction.DIRECTION_LEFT] != {}:
+            crossroad_list_current_road_segment.append(MAP[last_road_segment][Direction.DIRECTION_LEFT]["crossroad"])
+
+        if MAP[current_road_segment][Direction.DIRECTION_RIGHT] != {}:
+            crossroad_list_current_road_segment.append(MAP[last_road_segment][Direction.DIRECTION_RIGHT]["crossroad"])
+
+        for crossroad in crossroad_list_last_road_segment:
+            if crossroad in crossroad_list_current_road_segment:
+                if crossroad == target_crossroad:
+                    return True
+
+        return False
+
+    
+    def get_road_segment(self, current_road_segment, current_crossroad):
+        
+        for direction in MAP[current_road_segment]:
+            if MAP[current_road_segment][direction]["crossroad"] != current_crossroad:
+                crossroad_to_query = MAP[current_road_segment][direction]["crossroad"]
+                road_segment_dict = MAP[crossroad_to_query]
+                road_segment_list = list()
+
+                for road_segment_position in road_segment_dict:
+                    if road_segment_dict[road_segment_position] == current_road_segment:
+                        road_segment_dict.pop(road_segment_position)
+                    else:
+                        road_segment_list.append(road_segment_dict[road_segment_position])
+
+                return {"road_segment": road_segment_list, "crossroad": crossroad_to_query}
+
+
+    def routing(self, starting_road_segment, current_crossroad, target_crossroad):
+        
+        road_segment_list = []
+        
+        # Generate an exhaustive search of the routes
+        for step_1_road_segment in self.get_road_segment(starting_road_segment, current_crossroad)["road_segment"]:
+
+            step_2_current_crossroad = self.get_road_segment(starting_road_segment, current_crossroad)["crossroad"]
+
+            for step_2_road_segment in self.get_road_segment(step_1_road_segment, step_2_current_crossroad)["road_segment"]:
+
+                step_3_current_crossroad = self.get_road_segment(step_1_road_segment, current_crossroad)["crossroad"]
+
+                for step_3_road_segment in self.get_road_segment(step_2_road_segment, step_3_current_crossroad)["road_segment"]:
+
+                    step_4_current_crossroad = self.get_road_segment(step_2_road_segment, current_crossroad)["crossroad"]
+
+                    for step_4_road_segment in self.get_road_segment(step_3_road_segment, step_4_current_crossroad)["road_segment"]:
+                        tmpp_road_segment_list = [step_1_road_segment, step_2_road_segment, step_3_road_segment, step_4_road_segment]
+                        road_segment_list.append(tmpp_road_segment_list)
+
+        # Check each route
+        for route in road_segment_list:
+            
+
+        return                
 
 
     # Inherited from the threading library
@@ -62,7 +147,7 @@ class Vehicle(threading.Thread):
                     if response.text == "OK":
                         # If permission acquired, set the initial location
                         self.road_segment = Road.ROAD_A
-                        self.direction = Direction.DIRECTION_RIGHT
+                        self.direction = Direction.DIRECTION_LEFT
                         self.location = 0
                         self.speed = Speed.STOPPED
                         self.location_visited.clear()
@@ -82,42 +167,27 @@ class Vehicle(threading.Thread):
                         self.current_time = response.text
                         break                                                     
                     
-                    time.sleep(polling_interval)
+                    time.sleep(polling_interval)                
 
             elif self.route_completion_status == Route_completion_status.FINISHED:
-            # If the vehicle just finished the route
-            # Reset its status to NOT_STARTED
-                while True:
-                    self.road_segment = Road.ROAD_A
-                    self.direction = Direction.DIRECTION_RIGHT
-                    self.location = 0
-                    self.speed = Speed.STOPPED
-                    self.location_visited.clear()
-                    self.route_completion_status = Route_completion_status.NOT_STARTED
+                # If the vehicle just finished the route
+                # Reset its status to NOT_STARTED
+                self.road_segment = Road.ROAD_A
+                self.direction = Direction.DIRECTION_LEFT
+                self.location = 0
+                self.speed = Speed.STOPPED
+                self.location_visited.clear()
+                self.route_completion_status = Route_completion_status.NOT_STARTED
 
-                    payload = {}
-                    payload["road_segment"] = self.road_segment.value
-                    payload["direction"] = self.direction.value
-                    payload["location"] = self.location
-                    payload["vehicle_speed"] = self.speed.value
-                    payload["route_completion"] = self.route_completion_status.value
-
-                    response = requests.post("http://127.0.0.1:5000/set_vehicle_status/%d" \
-                        % (self.id), json=payload)
-                    
-                    if response.text != self.current_time:
-                        self.current_time = response.text
-                        break                                                     
-                    
-                    time.sleep(polling_interval)
+                self.update_backend()
 
             elif self.route_completion_status == Route_completion_status.ENROUTE:
-            # If yes, proceed                
+                # If yes, proceed                
                 # Make vehicle movement decisions
                 if (self.location != 0 and self.location != 29) \
                     or (self.location == 0 and self.direction == Direction.DIRECTION_LEFT) \
                         or (self.location == 29 and self.direction == Direction.DIRECTION_RIGHT):
-                # If not at any crossroad
+                    # If not at any crossroad
                     response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
                         % (self.road_segment.value, self.direction.value)).json()
 
@@ -137,11 +207,10 @@ class Vehicle(threading.Thread):
                                 self.speed = Speed.MOVING
                                 self.location -= 1
                     
-                elif (self.location == 0 and self.direction == Direction.DIRECTION_RIGHT) \
-                    or (self.location == 29 and self.direction == Direction.DIRECTION_LEFT):
+                elif self.location == 0 or self.location == 29:
                     # If the vehicle were at the crossroad
 
-                    # Get the right crossroad to query
+                    # Get the right crossroad to query                    
                     crossroad_to_query = MAP[self.road_segment][self.direction]["crossroad"]
                     traffic_light_orientation = MAP[self.road_segment][self.direction]["traffic_light_orientation"]
                                         
@@ -151,90 +220,131 @@ class Vehicle(threading.Thread):
 
                     signal_light = Traffic_light[response[traffic_light_orientation.name]]                                                                                                
 
-                    if signal_light == Traffic_light.GREEN:
-                    # If green light, route   
+                    if signal_light == Traffic_light.RED:
+                    # If red, do not move
+                        self.speed = Speed.STOPPED    
+
+                    elif signal_light == Traffic_light.GREEN:
+                        # If green light, route   
                         # Get the list of road segments to query    
-                        road_sgment_to_query = MAP[crossroad_to_query]
+                        road_segment_to_query = MAP[crossroad_to_query]
 
-                        for key in road_sgment_to_query:
-                            if road_sgment_to_query[key] == self.road_segment:
-                                road_sgment_to_query.pop(key)
+                        for position_key in road_segment_to_query:
+                            if road_segment_to_query[position_key] == self.road_segment:
+                                road_segment_to_query.pop(position_key) 
 
-                        # Set the direction to query
-                        if self.location == 0 and self.direction == Direction.DIRECTION_RIGHT                        
+                        # Dummy value
+                        self_crossroad_position = Signal_light_positions.NORTH
 
-                        # Check whether any vehicles are at the correspondong road segments
-                        for road in road_sgment_to_query:
+                        # Set self position at the crossroad
+                        for position_key in MAP[crossroad_to_query]:
+                            if MAP[crossroad_to_query][position_key] == self.road_segment:
+                                self_crossroad_position = position_key
+
+                        for position_key in road_segment_to_query:
+                            change_query_direction = False
+
+                            if self_crossroad_position == Signal_light_positions.SOUTH:
+                                if position_key == Signal_light_positions.EAST \
+                                    or position_key == Signal_light_positions.NORTH:
+                                    change_query_direction = False
+                                else:
+                                    change_query_direction = True
+                            elif self_crossroad_position == Signal_light_positions.EAST:
+                                if position_key == Signal_light_positions.WEST \
+                                    or position_key == Signal_light_positions.SOUTH:
+                                    change_query_direction = False
+                                else:
+                                    change_query_direction = True
+                            elif self_crossroad_position == Signal_light_positions.NORTH:
+                                if position_key == Signal_light_positions.SOUTH \
+                                    or position_key == Signal_light_positions.WEST:
+                                    change_query_direction = False
+                                else:
+                                    change_query_direction = True
+                            elif self_crossroad_position == Signal_light_positions.WEST:
+                                if position_key == Signal_light_positions.EAST \
+                                    or position_key == Signal_light_positions.NORTH:
+                                    change_query_direction = False
+                                else:
+                                    change_query_direction = True
+
+                            query_direction = self.direction
+
+                            if change_query_direction:
+                                if self.direction == Direction.DIRECTION_LEFT:
+                                    query_direction = Direction.DIRECTION_RIGHT
+                                elif self.direction == Direction.DIRECTION_RIGHT:
+                                    query_direction = Direction.DIRECTION_LEFT
+                           
                             # Ask if any vehicles were at the other side of the crossroad   
-                                response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
-                                    % (self.road_segment, self.direction))   
-                                
+                            response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
+                                % (road_segment_to_query[position_key].value, query_direction.value)).json()
 
-                        if crossroad_to_query in one_way_crossroad:
-                        # If at crossroads B, C or D                            
-                               
+                            for vehicle_name in response:
+                                if change_query_direction:
+                                    if response[vehicle_name]["vehicle_location"] == self.location:
+                                        road_segment_to_query.pop(position_key)
+                                else:
+                                    if response[vehicle_name]["vehicle_location"] == (29 - self.location):
+                                        road_segment_to_query.pop(position_key)
 
-                            # Make movement decision
+                        # Make movement decision
+                        if road_segment_to_query == {}:
+                            # All other sides of the crossroad have vehicles, stop moving
+                            self.speed = Speed.STOPPED
+
+                        elif len(road_segment_to_query) == 1:
+                            # If only route is available, take the route
+                            self.speed = Speed.MOVING
+                            
+                            # Should be only one key-value pair
+                            for position_key in road_segment_to_query:
+                                self.road_segment = road_segment_to_query[key]
+
+                            # Adjust the square index
+                            if not change_query_direction:
+                                self.location = 29 - self.location
 
                             # If the vehicle goes past the crossroad
-                            
-                            # Update the route completion status  
+                            # Update the route completion status
+                            if crossroad_to_query in MAP["target_crossroad"]:
+                                self.location_visited.append(crossroad_to_query)
 
-                        elif crossroad_to_query in three_way_crossroad:
-                        # If at crossroads V, W, X, Y, Z
+                        else:
+                            # If more than one route is available
+                            # Need to make routing decision
+                            route_candidate = list()                            
 
-                        # Ask if any vehicles were at the other side of the crossroad         
+                            for target in MAP["target_crossroad"]:
+                                if target not in self.location_visited:
+                                    # Avoid routing to the visited target crossroads                                
 
-                        # Make movement decision
+                                    target_reached = False
+                                    
+                                    # for starting_road_segment in road_segment_to_query:
 
-                        # If the vehicle goes past the crossroad
-                        
-                        # Update the route completion status  
+                                    #     current_road_segment = starting_road_segment
+                                    #     tmpp_route = list()
 
-                        elif crossroad_to_query in four_way_crossroad:
-                        # If at crossroad U
+                                    #     while not target_reached:
+                                    #         # Get the next level road segments
 
-                        # Ask if any vehicles were at the other side of the crossroad         
-
-                        # Make movement decision
-
-                        # If the vehicle goes past the crossroad
-                        
-                        # Update the route completion status  
-
-                        self.speed = Speed.MOVING
-                                                            
-
-                        # Ask for the congestion map
-                        for road in Road:
-                            for direction in Direction:
-                                response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d/%d" \
-                                    % (road.value, direction.value))
-                        
-                    elif signal_light == Traffic_light.RED:
-                    # If red, do not move
-                        self.speed = Speed.STOPPED
-                        
-                            
-                                      
-                # Update the backend
-                payload = {}
-                payload["road_segment"] = self.road_segment.value
-                payload["direction"] = self.direction.value
-                payload["location"] = self.location
-                payload["vehicle_speed"] = self.speed.value
-                payload["route_completion"] = self.route_completion_status.value
+                                    #         # Check if the next level road segment has been visited before
 
 
-                # Update the backend
-                while True:
-                    response = requests.post("http://127.0.0.1:5000/set_vehicle_status/%d" \
-                        % (self.id), json=payload)
+                                    #         target_reached = True
+
+
+                            self.speed = Speed.STOPPED                                  
+
+                        # TODO Ask for the congestion map
+                        # for road in Road:
+                        #     for direction in Direction:
+                        #         response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d/%d" \
+                        #             % (road.value, direction.value))
                     
-                    if response.text != self.current_time:
-                        self.current_time = response.text
-                        break
-                    else:
-                        time.sleep(polling_interval)
+                self.update_backend()
+                                                                                                          
             
         
