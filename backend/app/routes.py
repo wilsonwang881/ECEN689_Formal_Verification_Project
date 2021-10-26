@@ -7,6 +7,7 @@ from app import redis_db
 from app import current_states
 from app import clock
 from app import mutex
+from app import total_number_of_vehicles
 from location_speed_encoding import Crossroads
 from location_speed_encoding import Direction
 from location_speed_encoding import Road
@@ -15,7 +16,7 @@ from location_speed_encoding import Speed
 
 
 # Shared variables
-total_vehicles = 15
+total_vehicles = total_number_of_vehicles
 reported_vehicles = 0
 
 total_congestion_compute_workers = 12
@@ -44,6 +45,8 @@ def update(mode, id, value):
     if (mode == "vehicle_report") and (id not in vehicle_records):        
         reported_vehicles += 1
         vehicle_records.append(id)
+        print("Vehicle %d report:" % id)
+        print(value)
 
         # Update the current vehicle record
         current_states["vehicle_%d" % id] = value
@@ -87,15 +90,15 @@ def update(mode, id, value):
 
     elif mode == "add_vehicle":
         # Check if there were any vehicle on road segment A in the previous time slot
-        previous_road_A_record = json.loads(redis_db.get(Road.ROAD_A.name))[Direction.DIRECTION_RIGHT.name]["vehicles"]
+        previous_road_A_record = json.loads(redis_db.get(Road.ROAD_A.name))[Direction.DIRECTION_LEFT.name]["vehicles"]
 
         if previous_road_A_record == {}:
             # Check if there were any vehicle on road segment A in the current time slot
-            current_road_A_record = current_states[Road.ROAD_A.name][Direction.DIRECTION_RIGHT.name]["vehicles"]
+            current_road_A_record = current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]
 
             if current_road_A_record == {}:
                 current_states[Road.ROAD_A.name][Direction.DIRECTION_RIGHT.name]["vehicles"]["vehicle_%d" % id] = {}
-                current_states[Road.ROAD_A.name][Direction.DIRECTION_RIGHT.name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = Road.ROAD_A.value
+                current_states[Road.ROAD_A.name][Direction.DIRECTION_RIGHT.name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = 0
                 current_states[Road.ROAD_A.name][Direction.DIRECTION_RIGHT.name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = Speed.STOPPED.value
 
                 return True
@@ -117,6 +120,8 @@ def update(mode, id, value):
         clock += 2
 
         for key in current_states:
+            # print(key)
+            # print(current_states[key])
             redis_db.set(key, json.dumps(current_states[key]))
 
         print("Database update! Time = %d" % clock)
@@ -248,6 +253,7 @@ def add_vehicle(vehicle_id):
     if result: 
 
         return "OK"
+
     else:
 
         return "No"

@@ -6,7 +6,7 @@ from location_speed_encoding.signal_light_positions import Signal_light_position
 from location_speed_encoding.traffic_light import Traffic_light
 
 
-polling_interval = 0.4
+polling_interval = 3.4
 
 
 class Traffic_signal_control_master:
@@ -28,7 +28,7 @@ class Traffic_signal_control_master:
             # Update traffic light signals
             self.signal_timer += 1
 
-            if self.signal_timer > 2:
+            if self.signal_timer > 1:
                 self.signal_timer = 0
 
             if self.signal_timer == 0:

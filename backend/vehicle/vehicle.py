@@ -18,7 +18,7 @@ from location_speed_encoding import Speed
 from location_speed_encoding import Traffic_light
 
 
-polling_interval = 0.4
+polling_interval = 3.4
 
 
 # Each vehicle in the traffic system is represented by a thread
@@ -86,8 +86,11 @@ class Vehicle(threading.Thread):
 
     
     def get_road_segment(self, current_road_segment, current_crossroad):
+        print(current_road_segment)
+        print(current_crossroad)
         
         for direction in MAP[current_road_segment]:
+            print(MAP[current_road_segment][direction])
             if MAP[current_road_segment][direction]["crossroad"] != current_crossroad:
                 crossroad_to_query = MAP[current_road_segment][direction]["crossroad"]
                 road_segment_dict = MAP[crossroad_to_query]
@@ -100,6 +103,17 @@ class Vehicle(threading.Thread):
                         road_segment_list.append(road_segment_dict[road_segment_position])
 
                 return {"road_segment": road_segment_list, "crossroad": crossroad_to_query}
+
+
+    def remove_self_road_segment_from_dict(self, target_to_remove, dict):
+
+        return_dict = {}
+
+        for position_key in dict:
+            if dict[position_key] != target_to_remove:
+                return_dict[position_key] = dict[position_key]
+
+        return return_dict       
 
 
     def routing(self, starting_road_segment, current_crossroad, next_road_segment, target_crossroad):
@@ -190,7 +204,11 @@ class Vehicle(threading.Thread):
                         self.location = 0
                         self.speed = Speed.STOPPED
                         self.location_visited.clear()
-                        self.route_completion_status = Route_completion_status.ENROUTE                        
+                        self.route_completion_status = Route_completion_status.ENROUTE
+                        print("Vehicle %d added" % self.id)
+
+                    else:
+                        print("Vehicle %d not added" % self.id)
 
                     payload = {}
                     payload["road_segment"] = self.road_segment.value
@@ -224,13 +242,13 @@ class Vehicle(threading.Thread):
                 # If yes, proceed                
                 # Make vehicle movement decisions
                 if (self.location != 0 and self.location != 29) \
-                    or (self.location == 0 and self.direction == Direction.DIRECTION_LEFT) \
-                        or (self.location == 29 and self.direction == Direction.DIRECTION_RIGHT):
+                    or (self.location == 29 and self.direction == Direction.DIRECTION_LEFT) \
+                        or (self.location == 0 and self.direction == Direction.DIRECTION_RIGHT):
                     # If not at any crossroad
                     response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
                         % (self.road_segment.value, self.direction.value)).json()
 
-                    # Handle cases when the vehicle is moving clockwise or anticlockwise
+                    # Handle cases when the vehicle is moving on the right or the left lane
                     # Check whether any other vehicle is immediately before the vehicle itself
                     for key in response:
                         if self.direction == Direction.DIRECTION_RIGHT:
@@ -262,20 +280,18 @@ class Vehicle(threading.Thread):
                     if signal_light == Traffic_light.RED:
                     # If red, do not move
                         self.speed = Speed.STOPPED    
+                        print("Stopping at a red signal at %s" % crossroad_to_query.name)
 
                     elif signal_light == Traffic_light.GREEN:
+                        print("Moving at a green signal at %s" % crossroad_to_query.name)
                         # If green light, route   
-                        # Get the list of road segments to query    
-                        road_segment_to_query = MAP[crossroad_to_query]
-
-                        for position_key in road_segment_to_query:
-                            if road_segment_to_query[position_key] == self.road_segment:
-                                road_segment_to_query.pop(position_key) 
+                        # Get the list of road segments to query                            
+                        road_segment_to_query = self.remove_self_road_segment_from_dict(self.road_segment, MAP[crossroad_to_query])                      
 
                         # Dummy value
                         self_crossroad_position = Signal_light_positions.NORTH
 
-                        # Set self position at the crossroad
+                        # Set self position at the crossroad                        
                         for position_key in MAP[crossroad_to_query]:
                             if MAP[crossroad_to_query][position_key] == self.road_segment:
                                 self_crossroad_position = position_key

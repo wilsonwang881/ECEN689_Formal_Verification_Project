@@ -10,7 +10,6 @@ MAP = {
             "crossroad": Crossroads.CROSSROAD_Z,
             "traffic_light_orientation": Signal_light_positions.EAST
         },
-        Direction.DIRECTION_RIGHT: {}
     },
     Road.ROAD_E: {
         Direction.DIRECTION_LEFT: {
