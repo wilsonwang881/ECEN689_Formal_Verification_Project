@@ -102,46 +102,48 @@ class Vehicle(threading.Thread):
                 return {"road_segment": road_segment_list, "crossroad": crossroad_to_query}
 
 
-    def routing(self, starting_road_segment, current_crossroad, target_crossroad):
+    def routing(self, starting_road_segment, current_crossroad, next_road_segment, target_crossroad):
         
         road_segment_list = []
         
         # Generate an exhaustive search of the routes
         for step_1_road_segment in self.get_road_segment(starting_road_segment, current_crossroad)["road_segment"]:
 
-            step_2_current_crossroad = self.get_road_segment(starting_road_segment, current_crossroad)["crossroad"]
+            if step_1_road_segment == next_road_segment:
 
-            for step_2_road_segment in self.get_road_segment(step_1_road_segment, step_2_current_crossroad)["road_segment"]:
+                step_2_current_crossroad = self.get_road_segment(starting_road_segment, current_crossroad)["crossroad"]
 
-                step_3_current_crossroad = self.get_road_segment(step_1_road_segment, current_crossroad)["crossroad"]
+                for step_2_road_segment in self.get_road_segment(step_1_road_segment, step_2_current_crossroad)["road_segment"]:
 
-                for step_3_road_segment in self.get_road_segment(step_2_road_segment, step_3_current_crossroad)["road_segment"]:
+                    step_3_current_crossroad = self.get_road_segment(step_1_road_segment, current_crossroad)["crossroad"]
 
-                    step_4_current_crossroad = self.get_road_segment(step_2_road_segment, current_crossroad)["crossroad"]
+                    for step_3_road_segment in self.get_road_segment(step_2_road_segment, step_3_current_crossroad)["road_segment"]:
 
-                    for step_4_road_segment in self.get_road_segment(step_3_road_segment, step_4_current_crossroad)["road_segment"]:
+                        step_4_current_crossroad = self.get_road_segment(step_2_road_segment, current_crossroad)["crossroad"]
 
-                        tmpp_road_segment_list = list()
+                        for step_4_road_segment in self.get_road_segment(step_3_road_segment, step_4_current_crossroad)["road_segment"]:
 
-                        if step_2_current_crossroad == target_crossroad:
+                            tmpp_road_segment_list = list()
 
-                            tmpp_road_segment_list = [starting_road_segment, step_1_road_segment]
+                            if step_2_current_crossroad == target_crossroad:
 
-                        elif step_3_current_crossroad == target_crossroad:
+                                tmpp_road_segment_list = [starting_road_segment, step_1_road_segment]
 
-                            tmpp_road_segment_list = [starting_road_segment, step_1_road_segment, step_2_road_segment]
+                            elif step_3_current_crossroad == target_crossroad:
 
-                        elif step_3_current_crossroad == target_crossroad:
+                                tmpp_road_segment_list = [starting_road_segment, step_1_road_segment, step_2_road_segment]
 
-                            tmpp_road_segment_list = [starting_road_segment, step_1_road_segment, step_2_road_segment, step_3_road_segment]
+                            elif step_3_current_crossroad == target_crossroad:
 
-                        elif step_4_current_crossroad == target_crossroad:
+                                tmpp_road_segment_list = [starting_road_segment, step_1_road_segment, step_2_road_segment, step_3_road_segment]
 
-                            tmpp_road_segment_list = [starting_road_segment, step_1_road_segment, step_2_road_segment, step_3_road_segment, step_4_road_segment]
+                            elif step_4_current_crossroad == target_crossroad:
 
-                        if len(tmpp_road_segment_list) != 0:
-                           
-                            road_segment_list.append(tmpp_road_segment_list)
+                                tmpp_road_segment_list = [starting_road_segment, step_1_road_segment, step_2_road_segment, step_3_road_segment, step_4_road_segment]
+
+                            if len(tmpp_road_segment_list) != 0:
+                            
+                                road_segment_list.append(tmpp_road_segment_list)
 
         minimum_route_length = 5
 
@@ -355,12 +357,13 @@ class Vehicle(threading.Thread):
 
                             for target in MAP["target_crossroad"]:
                                 if target not in self.location_visited:
+                                    for next_road in road_segment_to_query:
 
-                                    # Avoid routing to the visited target crossroads                                
-                                    tmpp_route = self.routing(self.road_segment, crossroad_to_query, target)
+                                        # Avoid routing to the visited target crossroads                                
+                                        tmpp_route = self.routing(self.road_segment, crossroad_to_query, next_road, target)
 
-                                    if tmpp_route != []:
-                                        route_candidate.append(tmpp_route)
+                                        if tmpp_route != []:
+                                            route_candidate.append(tmpp_route)
                                     
                             # Choose the shortest route
                             shortest_route_length = 6
@@ -376,14 +379,20 @@ class Vehicle(threading.Thread):
                             route_index = random.randint(0, len(route_candidate) - 1)
 
                             route_to_be_taken = route_candidate[route_index]
-                            
-                            self.speed = Speed.STOPPED                                  
+
+                            self.road_segment = route_to_be_taken[1]
+                            self.speed = Speed.MOVING      
+
+                            # TODO determine the new location index       
+                            # TODO after all target crossroads have been visited, route to exit at road segment A                     
 
                         # TODO Ask for the congestion map
                         # for road in Road:
                         #     for direction in Direction:
                         #         response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d/%d" \
                         #             % (road.value, direction.value))
+
+                        print("here")
                     
                 self.update_backend()
                                                                                                           
