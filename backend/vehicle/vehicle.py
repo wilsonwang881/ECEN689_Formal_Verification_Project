@@ -5,6 +5,7 @@ Description: the code implements vehicles as threads. Each vehicle/thread can ta
 import threading
 import requests
 import time
+import random
 
 
 from location_speed_encoding import Crossroads
@@ -119,14 +120,50 @@ class Vehicle(threading.Thread):
                     step_4_current_crossroad = self.get_road_segment(step_2_road_segment, current_crossroad)["crossroad"]
 
                     for step_4_road_segment in self.get_road_segment(step_3_road_segment, step_4_current_crossroad)["road_segment"]:
-                        tmpp_road_segment_list = [step_1_road_segment, step_2_road_segment, step_3_road_segment, step_4_road_segment]
-                        road_segment_list.append(tmpp_road_segment_list)
 
-        # Check each route
+                        tmpp_road_segment_list = list()
+
+                        if step_2_current_crossroad == target_crossroad:
+
+                            tmpp_road_segment_list = [starting_road_segment, step_1_road_segment]
+
+                        elif step_3_current_crossroad == target_crossroad:
+
+                            tmpp_road_segment_list = [starting_road_segment, step_1_road_segment, step_2_road_segment]
+
+                        elif step_3_current_crossroad == target_crossroad:
+
+                            tmpp_road_segment_list = [starting_road_segment, step_1_road_segment, step_2_road_segment, step_3_road_segment]
+
+                        elif step_4_current_crossroad == target_crossroad:
+
+                            tmpp_road_segment_list = [starting_road_segment, step_1_road_segment, step_2_road_segment, step_3_road_segment, step_4_road_segment]
+
+                        if len(tmpp_road_segment_list) != 0:
+                           
+                            road_segment_list.append(tmpp_road_segment_list)
+
+        minimum_route_length = 5
+
         for route in road_segment_list:
-            
 
-        return                
+            if len(route) < minimum_route_length:
+
+                minimum_route_length = len(route)
+
+                road_segment_list.remove(route)
+
+        if len(road_segment_list) == 1:
+
+            # If only one route available
+            # Return the one route
+            return road_segment_list[0]
+
+        else:
+
+            # If multiple routes available
+            # Use a random number generator to pick
+            return road_segment_list[random.randint(0, len(road_segment_list) -1)]
 
 
     # Inherited from the threading library
@@ -318,24 +355,28 @@ class Vehicle(threading.Thread):
 
                             for target in MAP["target_crossroad"]:
                                 if target not in self.location_visited:
+
                                     # Avoid routing to the visited target crossroads                                
+                                    tmpp_route = self.routing(self.road_segment, crossroad_to_query, target)
 
-                                    target_reached = False
+                                    if tmpp_route != []:
+                                        route_candidate.append(tmpp_route)
                                     
-                                    # for starting_road_segment in road_segment_to_query:
+                            # Choose the shortest route
+                            shortest_route_length = 6
 
-                                    #     current_road_segment = starting_road_segment
-                                    #     tmpp_route = list()
+                            for route in route_candidate:
+                                if len(route) < shortest_route_length:
+                                    shortest_route_length = len(route)
 
-                                    #     while not target_reached:
-                                    #         # Get the next level road segments
+                            for route in route_candidate:
+                                if len(route) > shortest_route_length:
+                                    route_candidate.remove(route)
 
-                                    #         # Check if the next level road segment has been visited before
+                            route_index = random.randint(0, len(route_candidate) - 1)
 
-
-                                    #         target_reached = True
-
-
+                            route_to_be_taken = route_candidate[route_index]
+                            
                             self.speed = Speed.STOPPED                                  
 
                         # TODO Ask for the congestion map
