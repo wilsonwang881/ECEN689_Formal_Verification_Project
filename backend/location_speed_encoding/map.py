@@ -132,47 +132,47 @@ MAP = {
             "traffic_light_orientation": Signal_light_positions.WEST
         }
     },
-    Crossroads.CROSSROAD_Z: [
-        Road.ROAD_A,
-        Road.ROAD_E,
-        Road.ROAD_G
-    ],
-    Crossroads.CROSSROAD_X: [
-        Road.ROAD_E,
-        Road.ROAD_F,
-        Road.ROAD_H
-    ],
-    Crossroads.CROSSROAD_D: [
-        Road.ROAD_F,
-        Road.ROAD_I
-    ],
-    Crossroads.CROSSROAD_Y: [
-        Road.ROAD_G,
-        Road.ROAD_J,
-        Road.ROAD_L
-    ],
-    Crossroads.CROSSROAD_U: [
-        Road.ROAD_H,
-        Road.ROAD_I,
-        Road.ROAD_J,
-        Road.ROAD_M
-    ],
-    Crossroads.CROSSROAD_W: [
-        Road.ROAD_I,
-        Road.ROAD_K,
-        Road.ROAD_N
-    ],
-    Crossroads.CROSSROAD_B: [
-        Road.ROAD_L,
-        Road.ROAD_O
-    ],
-    Crossroads.CROSSROAD_V: [
-        Road.ROAD_M,
-        Road.ROAD_O,
-        Road.ROAD_P
-    ],
-    Crossroads.CROSSROAD_C: [
-        Road.ROAD_N,
-        Road.ROAD_P
-    ]
+    Crossroads.CROSSROAD_Z: {
+        Signal_light_positions.WEST: Road.ROAD_A,
+        Signal_light_positions.EAST: Road.ROAD_E,
+        Signal_light_positions.SOUTH: Road.ROAD_G
+    },
+    Crossroads.CROSSROAD_X: {
+        Signal_light_positions.WEST: Road.ROAD_E,
+        Signal_light_positions.EAST: Road.ROAD_F,
+        Signal_light_positions.SOUTH: Road.ROAD_H
+    },
+    Crossroads.CROSSROAD_D: {
+        Signal_light_positions.WEST: Road.ROAD_F,
+        Signal_light_positions.SOUTH: Road.ROAD_I
+    },
+    Crossroads.CROSSROAD_Y: {
+        Signal_light_positions.NORTH: Road.ROAD_G,
+        Signal_light_positions.EAST: Road.ROAD_J,
+        Signal_light_positions.SOUTH: Road.ROAD_L
+    },
+    Crossroads.CROSSROAD_U: {
+        Signal_light_positions.NORTH: Road.ROAD_H,
+        Signal_light_positions.EAST: Road.ROAD_K,
+        Signal_light_positions.WEST: Road.ROAD_J,
+        Signal_light_positions.SOUTH: Road.ROAD_M
+    },
+    Crossroads.CROSSROAD_W: {
+        Signal_light_positions.NORTH: Road.ROAD_I,
+        Signal_light_positions.WEST: Road.ROAD_K,
+        Signal_light_positions.SOUTH: Road.ROAD_N
+    },
+    Crossroads.CROSSROAD_B: {
+        Signal_light_positions.NORTH: Road.ROAD_L,
+        Signal_light_positions.EAST: Road.ROAD_O
+    },
+    Crossroads.CROSSROAD_V: {
+        Signal_light_positions.NORTH: Road.ROAD_M,
+        Signal_light_positions.WEST: Road.ROAD_O,
+        Signal_light_positions.EAST: Road.ROAD_P
+    },
+    Crossroads.CROSSROAD_C: {
+        Signal_light_positions.NORTH: Road.ROAD_N,
+        Signal_light_positions.WEST: Road.ROAD_P
+    }
 }

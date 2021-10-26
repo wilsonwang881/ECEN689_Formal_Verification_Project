@@ -204,6 +204,31 @@ When a vehicle is moving from square 0 to square 29 on the same road segment, th
 
 When a vehicle is moving from square 29 to square 0 on the same road segment, the vehicle is said to be on the left lane.
 
+The map is encoded in a dictionary with the following format.
+
+```
+{
+    <road_name>: {
+        Direction.DIRECTION_LEFT: {
+            "crossroad": <crossroad_in_this_direction>,
+            "traffic_light_orientation": <traffic_light_orientation_to_query>
+        },
+        Direction.DIRECTION_RIGHT: {
+            "crossroad": <crossroad_in_this_direction>,
+            "traffic_light_orientation": <traffic_light_orientation_to_query>
+        },
+    },
+    ...
+    ...
+    <crossroad_name>: {
+        <traffic_light_orientation>: <road_segment_at_this orientation>,
+        ...
+    }
+    ...
+    ...
+}
+```
+
 
 ## Database
 

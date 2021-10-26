@@ -30,8 +30,7 @@ class Vehicle(threading.Thread):
 
         # Set the object attributes
         self.id = id
-        self.road_segment = Road.ROAD_A
-        self.previous_road_segment = Road.ROAD_A
+        self.road_segment = Road.ROAD_A        
         self.direction = Direction.DIRECTION_LEFT
         self.location = 0
         self.speed = Speed.STOPPED
@@ -153,18 +152,27 @@ class Vehicle(threading.Thread):
                     signal_light = Traffic_light[response[traffic_light_orientation.name]]                                                                                                
 
                     if signal_light == Traffic_light.GREEN:
-                    # If green light, route                     
-                        if crossroad_to_query in one_way_crossroad:
-                        # If at crossroads B, C or D
-                            if crossroad_to_query == Crossroads.CROSSROAD_B:
-                                # road_sgment_to_query = Road.ROAD_O
+                    # If green light, route   
+                        # Get the list of road segments to query    
+                        road_sgment_to_query = MAP[crossroad_to_query]
 
-                            elif crossroad_to_query == Crossroads.CROSSROAD_C:
-                                # road_sgment_to_query = Road.ROAD_O
+                        for key in road_sgment_to_query:
+                            if road_sgment_to_query[key] == self.road_segment:
+                                road_sgment_to_query.pop(key)
 
+                        # Set the direction to query
+                        if self.location == 0 and self.direction == Direction.DIRECTION_RIGHT                        
+
+                        # Check whether any vehicles are at the correspondong road segments
+                        for road in road_sgment_to_query:
                             # Ask if any vehicles were at the other side of the crossroad   
-                            response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
-                                % (traffic_light_orientation))      
+                                response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
+                                    % (self.road_segment, self.direction))   
+                                
+
+                        if crossroad_to_query in one_way_crossroad:
+                        # If at crossroads B, C or D                            
+                               
 
                             # Make movement decision
 
@@ -195,7 +203,7 @@ class Vehicle(threading.Thread):
                         # Update the route completion status  
 
                         self.speed = Speed.MOVING
-                        self.previous_road_segment = self.road_segment                                         
+                                                            
 
                         # Ask for the congestion map
                         for road in Road:
@@ -206,7 +214,7 @@ class Vehicle(threading.Thread):
                     elif signal_light == Traffic_light.RED:
                     # If red, do not move
                         self.speed = Speed.STOPPED
-                        self.previous_road_segment = self.road_segment
+                        
                             
                                       
                 # Update the backend
