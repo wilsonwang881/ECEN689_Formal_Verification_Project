@@ -44,31 +44,29 @@ def update(mode, id, value):
 
     if (mode == "vehicle_report") and (id not in vehicle_records):        
         reported_vehicles += 1
-        vehicle_records.append(id)
-        print("Vehicle %d report:" % id)
-        print(value)
+        vehicle_records.append(id)        
 
         # Update the current vehicle record
         current_states["vehicle_%d" % id] = value
 
         # Get the previous vehicle record
-        original_vehicle_record = json.loads(redis_db.get("vehicle_%d" % id))        
+        # original_vehicle_record = json.loads(redis_db.get("vehicle_%d" % id))        
 
         # Get the previous road segment record 
-        original_road_segment_record = json.loads(redis_db.get(Road(original_vehicle_record["road_segment"]).name))
+        # original_road_segment_record = json.loads(redis_db.get(Road(original_vehicle_record["road_segment"]).name))
 
         # Update the previous road segment record, but in the current record set only
         # Do not commit to the database at this moment
 
         # Compare if the vehicle were on the same road segment
-        if (original_vehicle_record["road_segment"] != value["road_segment"]):            
-            if ("vehicle_%d" % id) in original_road_segment_record[Direction(value["direction"]).name]["vehicles"]:
+        # if (original_vehicle_record["road_segment"] != value["road_segment"]):            
+            # if ("vehicle_%d" % id) in original_road_segment_record[Direction(value["direction"]).name]["vehicles"]:
                 # Moving from road segment to crossroad
-                original_road_segment_record[value["direction"]]["vehicles"].pop("vehicle_%d" % id)
-                current_states[original_vehicle_record["road_segment"]] = original_road_segment_record
-                current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id] = {}
-                current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = value["location"]
-                current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = value["vehicle_speed"]                       
+                # original_road_segment_record[value["direction"]]["vehicles"].pop("vehicle_%d" % id)
+                # current_states[original_vehicle_record["road_segment"]] = original_road_segment_record
+        current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id] = {}
+        current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = value["location"]
+        current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = value["vehicle_speed"]                       
 
         # Do not update crossroad->vehicle mapping: no such mapping in the database        
         
@@ -118,10 +116,13 @@ def update(mode, id, value):
         signal_light_records.clear()
 
         clock += 2
-
+        print(mode)
         for key in current_states:
-            # print(key)
-            # print(current_states[key])
+
+            if key[0:8] == "vehicle_":
+            
+                print(current_states[key])
+
             redis_db.set(key, json.dumps(current_states[key]))
 
         print("Database update! Time = %d" % clock)
