@@ -18,7 +18,7 @@ from location_speed_encoding import Speed
 from location_speed_encoding import Traffic_light
 
 
-polling_interval = 3.4
+polling_interval = 2.4
 
 
 # Each vehicle in the traffic system is represented by a thread
@@ -85,26 +85,6 @@ class Vehicle(threading.Thread):
         return False
 
     
-    def get_road_segment(self, current_road_segment, current_crossroad):
-        print(current_road_segment)
-        print(current_crossroad)
-        
-        for direction in MAP[current_road_segment]:
-            print(MAP[current_road_segment][direction])
-            if MAP[current_road_segment][direction]["crossroad"] != current_crossroad:
-                crossroad_to_query = MAP[current_road_segment][direction]["crossroad"]
-                road_segment_dict = MAP[crossroad_to_query]
-                road_segment_list = list()
-
-                for road_segment_position in road_segment_dict:
-                    if road_segment_dict[road_segment_position] == current_road_segment:
-                        road_segment_dict.pop(road_segment_position)
-                    else:
-                        road_segment_list.append(road_segment_dict[road_segment_position])
-
-                return {"road_segment": road_segment_list, "crossroad": crossroad_to_query}
-
-
     def remove_self_road_segment_from_dict(self, target_to_remove, dict):
 
         return_dict = {}
@@ -113,12 +93,33 @@ class Vehicle(threading.Thread):
             if dict[position_key] != target_to_remove:
                 return_dict[position_key] = dict[position_key]
 
-        return return_dict       
+        return return_dict 
+
+
+    def get_road_segment(self, current_road_segment, current_crossroad):       
+        
+        for direction in MAP[current_road_segment]:
+            print(MAP[current_road_segment][direction])
+            if MAP[current_road_segment][direction]["crossroad"] != current_crossroad:
+                crossroad_to_query = MAP[current_road_segment][direction]["crossroad"]
+                road_segment_dict = MAP[crossroad_to_query]
+                road_segment_list = list()
+
+                road_segment_dict = self.remove_self_road_segment_from_dict(current_road_segment, road_segment_dict)
+
+                for road_segment_position in road_segment_dict:
+                    if road_segment_dict[road_segment_position] == current_road_segment:
+                        # road_segment_dict.pop(road_segment_position)
+                        pass
+                    else:
+                        road_segment_list.append(road_segment_dict[road_segment_position])
+
+                return {"road_segment": road_segment_list, "crossroad": crossroad_to_query}          
 
 
     def routing(self, starting_road_segment, current_crossroad, next_road_segment, target_crossroad):
         
-        road_segment_list = []
+        road_segment_list = list()
         
         # Generate an exhaustive search of the routes
         for step_1_road_segment in self.get_road_segment(starting_road_segment, current_crossroad)["road_segment"]:
@@ -160,6 +161,10 @@ class Vehicle(threading.Thread):
                                 road_segment_list.append(tmpp_road_segment_list)
 
         minimum_route_length = 5
+
+        print("========================")
+        print(road_segment_list)        
+        print("========================")
 
         for route in road_segment_list:
 
@@ -369,14 +374,14 @@ class Vehicle(threading.Thread):
                         else:
                             # If more than one route is available
                             # Need to make routing decision
-                            route_candidate = list()                            
+                            route_candidate = list()                                                    
 
                             for target in MAP["target_crossroad"]:
                                 if target not in self.location_visited:
                                     for next_road in road_segment_to_query:
 
                                         # Avoid routing to the visited target crossroads                                
-                                        tmpp_route = self.routing(self.road_segment, crossroad_to_query, next_road, target)
+                                        tmpp_route = self.routing(road_segment_to_query[next_road], crossroad_to_query, next_road, target)
 
                                         if tmpp_route != []:
                                             route_candidate.append(tmpp_route)

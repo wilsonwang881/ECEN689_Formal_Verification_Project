@@ -181,7 +181,7 @@ The connection information such as **port number** is shown in the terminal.
 
 Each road segment has a name.
 
-Each road segment has two lanes: in clockwise or anti-clockwise direction.
+Each road segment has two lanes: the right lane and the left land.
 
 Encoding order: road segment -> lane direction -> square position.
 
