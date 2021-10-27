@@ -6,7 +6,7 @@ from location_speed_encoding.signal_light_positions import Signal_light_position
 from location_speed_encoding.traffic_light import Traffic_light
 
 
-polling_interval = 1.4
+polling_interval = 0.4
 
 
 class Traffic_signal_control_master:
@@ -25,34 +25,27 @@ class Traffic_signal_control_master:
         print("Traffic light control master running")
 
         while True:    
-            # Update traffic light signals
-            self.signal_timer += 1
+            
+            for crossroad in Crossroads:
+                for signal_light_position in Signal_light_positions:
+                    if signal_light_position == self.green_position:
+                        self.traffic_lights[crossroad.name][self.green_position.name] = Traffic_light.GREEN.name
+                    else:
+                        self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.RED.name
 
-            if self.signal_timer > 1:
-                self.signal_timer = 0
-
-            if self.signal_timer == 0:
-                # Change signal
-                for crossroad in Crossroads:
-                    for signal_light_position in Signal_light_positions:
-                        if signal_light_position == self.green_position:
-                            self.traffic_lights[crossroad.name][self.green_position.name] = Traffic_light.GREEN.name
-                        else:
-                            self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.RED.name
-
-                # Change green light position
-                if self.green_position == Signal_light_positions.NORTH:
-                    print("Changing signal lights from %s to %s" % (Signal_light_positions.NORTH.name, Signal_light_positions.WEST.name))
-                    self.green_position = Signal_light_positions.WEST
-                elif self.green_position == Signal_light_positions.WEST:
-                    print("Changing signal lights from %s to %s" % (Signal_light_positions.WEST.name, Signal_light_positions.SOUTH.name))
-                    self.green_position = Signal_light_positions.SOUTH
-                elif self.green_position == Signal_light_positions.SOUTH:
-                    print("Changing signal lights from %s to %s" % (Signal_light_positions.SOUTH.name, Signal_light_positions.EAST.name))
-                    self.green_position = Signal_light_positions.EAST
-                elif self.green_position == Signal_light_positions.EAST:
-                    print("Changing signal lights from %s to %s" % (Signal_light_positions.EAST.name, Signal_light_positions.NORTH.name))
-                    self.green_position = Signal_light_positions.NORTH
+            # Change green light position
+            if self.green_position == Signal_light_positions.NORTH:
+                print("Changing signal lights from %s to %s" % (Signal_light_positions.NORTH.name, Signal_light_positions.WEST.name))
+                self.green_position = Signal_light_positions.WEST
+            elif self.green_position == Signal_light_positions.WEST:
+                print("Changing signal lights from %s to %s" % (Signal_light_positions.WEST.name, Signal_light_positions.SOUTH.name))
+                self.green_position = Signal_light_positions.SOUTH
+            elif self.green_position == Signal_light_positions.SOUTH:
+                print("Changing signal lights from %s to %s" % (Signal_light_positions.SOUTH.name, Signal_light_positions.EAST.name))
+                self.green_position = Signal_light_positions.EAST
+            elif self.green_position == Signal_light_positions.EAST:
+                print("Changing signal lights from %s to %s" % (Signal_light_positions.EAST.name, Signal_light_positions.NORTH.name))
+                self.green_position = Signal_light_positions.NORTH
             
             
             # Send the updated traffic light signals to the backend

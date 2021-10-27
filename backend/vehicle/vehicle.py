@@ -19,7 +19,7 @@ from location_speed_encoding import Speed
 from location_speed_encoding import Traffic_light
 
 
-polling_interval = 1.4
+polling_interval = 0.4
 
 
 # Each vehicle in the traffic system is represented by a thread
@@ -117,7 +117,39 @@ class Vehicle(threading.Thread):
                 return {"road_segment": road_segment_list, "crossroad": crossroad_to_query}                
 
 
-    def routing(self, starting_road_segment, current_crossroad, next_road_segment, target_crossroad):
+    def check_query_direction(self, self_crossroad_position, position_key):
+
+        change_query_direction = False
+
+        if self_crossroad_position == Signal_light_positions.SOUTH:
+            if position_key == Signal_light_positions.EAST \
+                or position_key == Signal_light_positions.NORTH:
+                change_query_direction = False
+            else:
+                change_query_direction = True
+        elif self_crossroad_position == Signal_light_positions.EAST:
+            if position_key == Signal_light_positions.WEST \
+                or position_key == Signal_light_positions.SOUTH:
+                change_query_direction = False
+            else:
+                change_query_direction = True
+        elif self_crossroad_position == Signal_light_positions.NORTH:
+            if position_key == Signal_light_positions.SOUTH \
+                or position_key == Signal_light_positions.WEST:
+                change_query_direction = False
+            else:
+                change_query_direction = True
+        elif self_crossroad_position == Signal_light_positions.WEST:
+            if position_key == Signal_light_positions.EAST \
+                or position_key == Signal_light_positions.NORTH:
+                change_query_direction = False
+            else:
+                change_query_direction = True        
+
+        return change_query_direction
+
+
+    def routing(self, current_crossroad, next_road_segment, target_crossroad):
         
         road_segment_list = list()       
         
@@ -180,6 +212,10 @@ class Vehicle(threading.Thread):
             # Return the one route            
             return road_segment_list[0]
 
+        elif len(road_segment_list) == 0:
+
+            return road_segment_list
+        
         else:
 
             # If multiple routes available
@@ -249,6 +285,7 @@ class Vehicle(threading.Thread):
                 if (self.location != 0 and self.location != 29) \
                     or (self.location == 29 and self.direction == Direction.DIRECTION_LEFT) \
                         or (self.location == 0 and self.direction == Direction.DIRECTION_RIGHT):
+                    print("Moving at %d" % self.location)
                     # If not at any crossroad
                     response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
                         % (self.road_segment.value, self.direction.value)).json()
@@ -304,32 +341,7 @@ class Vehicle(threading.Thread):
 
                         for position_key in road_segment_to_query:
 
-                            change_query_direction = False
-
-                            if self_crossroad_position == Signal_light_positions.SOUTH:
-                                if position_key == Signal_light_positions.EAST \
-                                    or position_key == Signal_light_positions.NORTH:
-                                    change_query_direction = False
-                                else:
-                                    change_query_direction = True
-                            elif self_crossroad_position == Signal_light_positions.EAST:
-                                if position_key == Signal_light_positions.WEST \
-                                    or position_key == Signal_light_positions.SOUTH:
-                                    change_query_direction = False
-                                else:
-                                    change_query_direction = True
-                            elif self_crossroad_position == Signal_light_positions.NORTH:
-                                if position_key == Signal_light_positions.SOUTH \
-                                    or position_key == Signal_light_positions.WEST:
-                                    change_query_direction = False
-                                else:
-                                    change_query_direction = True
-                            elif self_crossroad_position == Signal_light_positions.WEST:
-                                if position_key == Signal_light_positions.EAST \
-                                    or position_key == Signal_light_positions.NORTH:
-                                    change_query_direction = False
-                                else:
-                                    change_query_direction = True
+                            change_query_direction = self.check_query_direction(self_crossroad_position, position_key)                          
 
                             query_direction = self.direction
 
@@ -347,19 +359,10 @@ class Vehicle(threading.Thread):
                                 if change_query_direction:
                                     if response[vehicle_name]["vehicle_location"] == self.location:
                                         road_segment_to_query_selected.pop(position_key)
-                                    # else:
-                                    #     print("Adding")
-                                    #     road_segment_to_query_selected[position_key] = road_segment_to_query[position_key]
+                                   
                                 else:
                                     if response[vehicle_name]["vehicle_location"] == (29 - self.location):
-                                        road_segment_to_query_selected.pop(position_key)
-                                    # else:
-                                    #     print("Adding")
-                                    #     road_segment_to_query_selected[position_key] = road_segment_to_query[position_key]
-
-                        print("==========")
-                        print(road_segment_to_query_selected)
-                        print("==========")
+                                        road_segment_to_query_selected.pop(position_key)                                                           
                         
                         # Make movement decision
                         if road_segment_to_query_selected == {}:
@@ -371,17 +374,43 @@ class Vehicle(threading.Thread):
                             self.speed = Speed.MOVING
                             
                             # Should be only one key-value pair
+                            # Dummy value
+                            road_segment_to_move_to = Road.ROAD_A
                             for position_key in road_segment_to_query_selected:
-                                self.road_segment = road_segment_to_query_selected[position_key]
-
-                            # Adjust the square index
-                            if not change_query_direction:
-                                self.location = 29 - self.location
+                                road_segment_to_move_to = road_segment_to_query_selected[position_key]                            
 
                             # If the vehicle goes past the crossroad
                             # Update the route completion status
+                            # TODO PAY ATTENTION HERE, THE SELF.LOCATION_VISITED SHOULD BE UPDATED AT OTHER PLACES AS WELL
                             if crossroad_to_query in MAP["target_crossroad"]:
                                 self.location_visited.append(crossroad_to_query)
+                          
+                            # Dummy value
+                            position_key_tmpp = Signal_light_positions.EAST
+
+                            for position_key in MAP[crossroad_to_query]:
+                                if MAP[crossroad_to_query][position_key] == road_segment_to_move_to:
+                                    position_key_tmpp = position_key
+                                    break
+
+                            change_query_direction = self.check_query_direction(self_crossroad_position, position_key_tmpp)                          
+
+                            query_direction = self.direction
+
+                            if change_query_direction:
+                                if self.direction == Direction.DIRECTION_LEFT:
+                                    self.direction = Direction.DIRECTION_RIGHT
+                                elif self.direction == Direction.DIRECTION_RIGHT:
+                                    self.direction = Direction.DIRECTION_LEFT
+
+                            # Adjust the square index                                
+                            if not change_query_direction:
+                                self.location = 29 - self.location
+                            
+                            self.road_segment = road_segment_to_move_to
+                            self.speed = Speed.MOVING 
+                            
+                            print("Moving in one way to %s" % self.road_segment.name)
 
                         else:
                             # If more than one route is available
@@ -393,10 +422,20 @@ class Vehicle(threading.Thread):
                                     for next_road in road_segment_to_query_selected:
 
                                         # Avoid routing to the visited target crossroads                                
-                                        tmpp_route = self.routing(self.road_segment, crossroad_to_query, road_segment_to_query_selected[next_road], target)
+                                        tmpp_route = self.routing(crossroad_to_query, road_segment_to_query_selected[next_road], target)
 
                                         if tmpp_route != []:
                                             route_candidate.append(tmpp_route)
+                                
+                            if len(self.location_visited) == len(MAP["target_crossroad"]):
+                                for next_road in road_segment_to_query_selected:
+
+                                    # Avoid routing to the visited target crossroads                                
+                                    tmpp_route = self.routing(crossroad_to_query, road_segment_to_query_selected[next_road], Road.ROAD_A)
+
+                                    if tmpp_route != []:
+                                        route_candidate.append(tmpp_route)
+
                                     
                             # Choose the shortest route
                             shortest_route_length = 6
@@ -416,11 +455,32 @@ class Vehicle(threading.Thread):
                             print("=======================")
                             print(route_to_be_taken)
                             print("=======================")
+                                                    
+                            # Dummy value
+                            position_key_tmpp = Signal_light_positions.EAST
 
+                            for position_key in MAP[crossroad_to_query]:
+                                if MAP[crossroad_to_query][position_key] == route_to_be_taken[0]:
+                                    position_key_tmpp = position_key
+                                    break
+
+                            change_query_direction = self.check_query_direction(self_crossroad_position, position_key_tmpp)                          
+
+                            query_direction = self.direction
+
+                            if change_query_direction:
+                                if self.direction == Direction.DIRECTION_LEFT:
+                                    self.direction = Direction.DIRECTION_RIGHT
+                                elif self.direction == Direction.DIRECTION_RIGHT:
+                                    self.direction = Direction.DIRECTION_LEFT
+                                                                   
+                            if not change_query_direction:
+                                self.location = 29 - self.location
+                            
                             self.road_segment = route_to_be_taken[0]
-                            self.speed = Speed.MOVING      
-
-                            # TODO determine the new location index       
+                            self.speed = Speed.MOVING 
+                                                      
+                          
                             # TODO after all target crossroads have been visited, route to exit at road segment A                     
 
                         # TODO Ask for the congestion map
@@ -428,7 +488,8 @@ class Vehicle(threading.Thread):
                         #     for direction in Direction:
                         #         response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d/%d" \
                         #             % (road.value, direction.value))                        
-                    
+                
+                print("Road segment: %s" % self.road_segment.name)
                 self.update_backend()
                                                                                                           
             
