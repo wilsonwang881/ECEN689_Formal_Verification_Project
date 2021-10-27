@@ -6,7 +6,7 @@ from location_speed_encoding.signal_light_positions import Signal_light_position
 from location_speed_encoding.traffic_light import Traffic_light
 
 
-polling_interval = 2.4
+polling_interval = 1.4
 
 
 class Traffic_signal_control_master:

@@ -39,6 +39,9 @@ mutex = Lock()
 
 mutex.acquire()
 
+# Flush Redis DB
+redis_db.flushdb()
+
 """
 Initialize the road segment->vehicle information in the database
 All empty
