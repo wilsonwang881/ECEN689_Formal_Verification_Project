@@ -19,7 +19,7 @@ from location_speed_encoding import Speed
 from location_speed_encoding import Traffic_light
 
 
-polling_interval = 0.4
+polling_interval = 0.1
 
 
 # Each vehicle in the traffic system is represented by a thread
@@ -34,7 +34,7 @@ class Vehicle(threading.Thread):
         self.id = id
         self.road_segment = Road.ROAD_A        
         self.direction = Direction.DIRECTION_LEFT
-        self.location = 0
+        self.location = 1
         self.speed = Speed.STOPPED
         self.location_visited = list()
         self.route_completion_status = Route_completion_status.NOT_STARTED
@@ -149,6 +149,66 @@ class Vehicle(threading.Thread):
         return change_query_direction
 
 
+    def query_vehicle_at_location(self, mode, change_direction, target_road_segment):
+
+        if mode == "query_crossroad":
+        
+            direction_to_query = self.direction
+            position_to_query = 29 - self.location
+
+            if change_direction:  
+
+                position_to_query = self.location          
+
+                if self.direction == Direction.DIRECTION_RIGHT:
+
+                    direction_to_query = Direction.DIRECTION_LEFT
+
+                else:
+                    direction_to_query = Direction.DIRECTION_RIGHT
+
+            response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
+                            % (target_road_segment.value, direction_to_query)).json()
+
+            # Return true if vehicle found at that location
+            if response == {}:
+                
+                return False
+
+            for vehicle in response:
+
+                if response[vehicle]["vehicle_location"] == position_to_query:
+                    
+                    return True
+
+            return False
+
+        elif mode == "query_road_segment":           
+
+            response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
+                            % (target_road_segment.value, self.direction.value)).json()
+
+            if response == {}:
+
+                return False
+
+            for vehicle in response:
+
+                if self.direction == Direction.DIRECTION_RIGHT:
+
+                    if response[vehicle]["vehicle_location"] == self.location + 1:
+                        
+                        return True
+
+                elif self.direction == Direction.DIRECTION_LEFT:
+
+                    if response[vehicle] == self.location - 1:
+
+                        return True
+
+            return False  
+
+
     def routing(self, current_crossroad, next_road_segment, target_crossroad):
         
         road_segment_list = list()       
@@ -230,19 +290,23 @@ class Vehicle(threading.Thread):
 
         while True:
 
-            # Check if the vehicle is in the traffic system            
+            # Check if the vehicle is in the traffic system    
+                    
             if self.route_completion_status == Route_completion_status.NOT_STARTED:
+
                 # If not, request permission to enter
                 # Also update its location with dummy value                
                 while True:
+
                     response = requests.get("http://127.0.0.1:5000/add_vehicle/%d" \
                         % (self.id))
                     
                     if response.text == "OK":
+
                         # If permission acquired, set the initial location
                         self.road_segment = Road.ROAD_A
                         self.direction = Direction.DIRECTION_LEFT
-                        self.location = 0
+                        self.location = 1
                         self.speed = Speed.STOPPED
                         self.location_visited.clear()
                         self.route_completion_status = Route_completion_status.ENROUTE
@@ -268,11 +332,13 @@ class Vehicle(threading.Thread):
                     time.sleep(polling_interval)                
 
             elif self.route_completion_status == Route_completion_status.FINISHED:
+
                 # If the vehicle just finished the route
                 # Reset its status to NOT_STARTED
+
                 self.road_segment = Road.ROAD_A
                 self.direction = Direction.DIRECTION_LEFT
-                self.location = 0
+                self.location = 1
                 self.speed = Speed.STOPPED
                 self.location_visited.clear()
                 self.route_completion_status = Route_completion_status.NOT_STARTED
@@ -280,31 +346,47 @@ class Vehicle(threading.Thread):
                 self.update_backend()
 
             elif self.route_completion_status == Route_completion_status.ENROUTE:
+
                 # If yes, proceed                
                 # Make vehicle movement decisions
-                if (self.location != 0 and self.location != 29) \
+
+                if self.road_segment == Road.ROAD_A and self.direction == Direction.DIRECTION_RIGHT:
+
+                    # If moving on the right lane of ROAD_A: the finishing stage
+
+                    if self.position == 1:
+
+                        self.route_completion_status = Route_completion_status.FINISHED                        
+
+                    if self.query_vehicle_at_location("query_road_segment", False, self.road_segment):
+
+                        self.speed = Speed.STOPPED                        
+
+                    else:
+
+                        self.speed = Speed.MOVING
+
+                        self.position += 1                        
+                    
+                elif (self.location != 0 and self.location != 29) \
                     or (self.location == 29 and self.direction == Direction.DIRECTION_LEFT) \
                         or (self.location == 0 and self.direction == Direction.DIRECTION_RIGHT):
-                    print("Moving at %d" % self.location)
-                    # If not at any crossroad
-                    response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
-                        % (self.road_segment.value, self.direction.value)).json()
 
-                    # Handle cases when the vehicle is moving on the right or the left lane
-                    # Check whether any other vehicle is immediately before the vehicle itself
-                    for key in response:
-                        if self.direction == Direction.DIRECTION_RIGHT:
-                            if response[key]["vehicle_location"] == self.location + 1:
-                                self.speed = Speed.STOPPED
-                            else:
-                                self.speed = Speed.MOVING
-                                self.location += 1
-                        elif self.direction == Direction.DIRECTION_LEFT:
-                            if response[key] == self.location - 1:
-                                self.speed = Speed.STOPPED
-                            else:
-                                self.speed = Speed.MOVING
-                                self.location -= 1
+                    if self.query_vehicle_at_location("query_road_segment", False, self.road_segment):
+
+                        self.speed = Speed.STOPPED
+
+                    else:
+
+                        self.speed = Speed.MOVING
+
+                        if self.direction == Direction.DIRECTION_LEFT:
+
+                            self.location -= 1
+
+                        elif self.direction == Direction.DIRECTION_RIGHT:
+
+                            self.location += 1
                     
                 elif (self.location == 0 \
                     and self.road_segment == Road.ROAD_G \
@@ -313,35 +395,44 @@ class Vehicle(threading.Thread):
                                 or (self.location == 29 \
                                     and self.road_segment == Road.ROAD_E \
                                         and self.direction == Direction.DIRECTION_RIGHT \
-                                            and len(self.location_visited) == 3):
+                                            and len(self.location_visited) == 3):                                    
+                        
                     # Waiting to finish the route
                     crossroad_to_query = Crossroads.CROSSROAD_Z
 
-                    direction_to_query = Direction.DIRECTION_RIGHT
+                    direction_to_query = Signal_light_positions.WEST
 
                     if self.road_segment != Road.ROAD_E:
-                        direction_to_query = Direction.DIRECTION_LEFT
+                        direction_to_query = Signal_light_positions.NORTH
                     
                     # Get the traffic light signal
                     response = requests.get("http://127.0.0.1:5000/query_signal_lights/%d" \
                         % crossroad_to_query.value).json()
-
-                    print("response")
-                    print(response)
+                   
                     signal_light = Traffic_light[response[direction_to_query.name]] 
 
                     if signal_light == Traffic_light.RED:
-                    # If red, do not move
+                        # If red, do not move
                         self.speed = Speed.STOPPED    
-                        print("Stopping at a red signal at %s" % crossroad_to_query.name)
+                        print("Here Stopping at a red signal at %s direction %s" % (crossroad_to_query.name, direction_to_query.name))
 
                     elif signal_light == Traffic_light.GREEN:
-                        # TODO Check whether there is a vehicle at ROAD_A.DIRECTION_RIGHT.0
-                        # If not, the vehicle can move
-                        self.speed = Speed.MOVING
-                        print("Moving at a green signal at %s" % crossroad_to_query.name)
+                        
+                        if self.direction == Direction.DIRECTION_RIGHT:
+
+                            if self.query_vehicle_at_location("query_crossroad", False, Road.ROAD_A):
+
+                                self.speed = Speed.STOPPED
+
+                            else:
+
+                                self.speed = Speed.MOVING
+                                self.position = 0
+                                self.road_segment = Road.ROAD_A
+                                self.direction = Direction.DIRECTION_RIGHT                        
 
                 elif self.location == 0 or self.location == 29:
+                    
                     # If the vehicle were at the crossroad
 
                     # Get the right crossroad to query                    
@@ -527,7 +618,8 @@ class Vehicle(threading.Thread):
                         #         response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d/%d" \
                         #             % (road.value, direction.value))                        
                 
-                print("Road segment: %s" % self.road_segment.name)
+                print("Road segment: %s position: %d" % (self.road_segment.name, self.location))
+
                 self.update_backend()
                                                                                                           
             
