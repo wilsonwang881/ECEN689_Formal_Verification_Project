@@ -306,6 +306,41 @@ class Vehicle(threading.Thread):
                                 self.speed = Speed.MOVING
                                 self.location -= 1
                     
+                elif (self.location == 0 \
+                    and self.road_segment == Road.ROAD_G \
+                        and self.direction == Direction.DIRECTION_LEFT \
+                            and len(self.location_visited) == 3) \
+                                or (self.location == 29 \
+                                    and self.road_segment == Road.ROAD_E \
+                                        and self.direction == Direction.DIRECTION_RIGHT \
+                                            and len(self.location_visited) == 3):
+                    # Waiting to finish the route
+                    crossroad_to_query = Crossroads.CROSSROAD_Z
+
+                    direction_to_query = Direction.DIRECTION_RIGHT
+
+                    if self.road_segment != Road.ROAD_E:
+                        direction_to_query = Direction.DIRECTION_LEFT
+                    
+                    # Get the traffic light signal
+                    response = requests.get("http://127.0.0.1:5000/query_signal_lights/%d" \
+                        % crossroad_to_query.value).json()
+
+                    print("response")
+                    print(response)
+                    signal_light = Traffic_light[response[direction_to_query.name]] 
+
+                    if signal_light == Traffic_light.RED:
+                    # If red, do not move
+                        self.speed = Speed.STOPPED    
+                        print("Stopping at a red signal at %s" % crossroad_to_query.name)
+
+                    elif signal_light == Traffic_light.GREEN:
+                        # TODO Check whether there is a vehicle at ROAD_A.DIRECTION_RIGHT.0
+                        # If not, the vehicle can move
+                        self.speed = Speed.MOVING
+                        print("Moving at a green signal at %s" % crossroad_to_query.name)
+
                 elif self.location == 0 or self.location == 29:
                     # If the vehicle were at the crossroad
 
@@ -415,26 +450,29 @@ class Vehicle(threading.Thread):
                         else:
                             # If more than one route is available
                             # Need to make routing decision
-                            route_candidate = list()                                                    
+                            route_candidate = list()   
 
-                            for target in MAP["target_crossroad"]:
-                                if target not in self.location_visited:
-                                    for next_road in road_segment_to_query_selected:
+                            if len(self.location_visited) == 3:
 
-                                        # Avoid routing to the visited target crossroads                                
-                                        tmpp_route = self.routing(crossroad_to_query, road_segment_to_query_selected[next_road], target)
-
-                                        if tmpp_route != []:
-                                            route_candidate.append(tmpp_route)
-                                
-                            if len(self.location_visited) == len(MAP["target_crossroad"]):
                                 for next_road in road_segment_to_query_selected:
 
                                     # Avoid routing to the visited target crossroads                                
-                                    tmpp_route = self.routing(crossroad_to_query, road_segment_to_query_selected[next_road], Road.ROAD_A)
+                                    tmpp_route = self.routing(crossroad_to_query, road_segment_to_query_selected[next_road], Crossroads.CROSSROAD_Z)
 
                                     if tmpp_route != []:
                                         route_candidate.append(tmpp_route)
+
+                            else:
+
+                                for target in MAP["target_crossroad"]:
+                                    if target not in self.location_visited:
+                                        for next_road in road_segment_to_query_selected:
+
+                                            # Avoid routing to the visited target crossroads                                
+                                            tmpp_route = self.routing(crossroad_to_query, road_segment_to_query_selected[next_road], target)
+
+                                            if tmpp_route != []:
+                                                route_candidate.append(tmpp_route)                                                            
 
                                     
                             # Choose the shortest route
