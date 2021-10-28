@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>ECEN 689 Frontend</title>
+    
+</head>
+
+<html>
+    
+    <body>
+
+        <h1>Hello world! Again! </h1>
+        
+        <svg id="svg_base" width="100%" height="1000">
+            <!-- <rect width="300" height="100" style="fill:rgb(0,0,255);stroke-width:3;stroke:rgb(0,0,0)" /> -->
+        </svg>
+
+    </body>    
+
+    <script>
+
+        let svg_base = document.getElementById("svg_base");
+
+        // Draw the horizontal path points
+
+        for (let vertical_index = 0; vertical_index < 3; vertical_index++) {
+
+            for (let horizontal_offset = 1; horizontal_offset <= 2; horizontal_offset++) {
+            
+                let new_road = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+
+                new_road.setAttribute("x", 330 * horizontal_offset + 50);
+                new_road.setAttribute("y", 330 * vertical_index + 10);
+                new_road.setAttribute("width", 300);
+                new_road.setAttribute("height", 10);
+                new_road.style.fill = "#f7b500";
+                new_road.style.stroke = "#f7b500";
+                
+                svg_base.appendChild(new_road);   
+            }
+            
+        }
+
+        // Draw the vertical path points
+
+        for (let horizontal_index = 1; horizontal_index <= 3; horizontal_index++) {
+
+            for (let vertical_offset = 0; vertical_offset < 2; vertical_offset++) {
+
+                let new_road = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                
+                new_road.setAttribute("x", 330 * horizontal_index + 30);
+                new_road.setAttribute("y", 330 * vertical_offset + 30);
+                new_road.setAttribute("width", 10);
+                new_road.setAttribute("height", 300);
+                new_road.style.fill = "#f7b500";
+                new_road.style.stroke = "#f7b500";
+                
+                svg_base.appendChild(new_road);   
+            }
+
+        }
+
+        
+
+        // for (let index = 0; index < 30; index++) {
+
+        //     let new_circle_right_direction = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            
+        //     new_circle_right_direction.setAttribute("cx", (index * 12 + 104)); 
+        //     new_circle_right_direction.setAttribute("cy", 20);
+        //     new_circle_right_direction.setAttribute("r", 4);
+        //     new_circle_right_direction.style.stroke = "green";
+        //     new_circle_right_direction.style.strokeWidth = "2";
+        //     new_circle_right_direction.style.fill = "yellow";            
+            
+        //     svg_base.appendChild(new_circle_right_direction);      
+            
+        //     let new_circle_left_direction = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            
+        //     new_circle_left_direction.setAttribute("cx", (index * 12 + 104)); 
+        //     new_circle_left_direction.setAttribute("cy", 10);
+        //     new_circle_left_direction.setAttribute("r", 4);
+        //     new_circle_left_direction.style.stroke = "blue";
+        //     new_circle_left_direction.style.strokeWidth = "2";
+        //     new_circle_left_direction.style.fill = "red";
+            
+        //     svg_base.appendChild(new_circle_left_direction);
+        // }
+
+        // // Draw the vertical path points
+
+        // for (let index = 0; index < 30; index++) {
+
+        // let new_circle_right_direction = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+
+        // new_circle_right_direction.setAttribute("cx", 96); 
+        // new_circle_right_direction.setAttribute("cy", (index * 12 + 28));
+        // new_circle_right_direction.setAttribute("r", 4);
+        // new_circle_right_direction.style.stroke = "green";
+        // new_circle_right_direction.style.strokeWidth = "2";
+        // new_circle_right_direction.style.fill = "yellow";            
+
+        // svg_base.appendChild(new_circle_right_direction);
+
+        // let new_circle_left_direction = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            
+        // new_circle_left_direction.setAttribute("cx", 86); 
+        // new_circle_left_direction.setAttribute("cy", (index * 12 + 28));
+        // new_circle_left_direction.setAttribute("r", 4);
+        // new_circle_left_direction.style.stroke = "blue";
+        // new_circle_left_direction.style.strokeWidth = "2";
+        // new_circle_left_direction.style.fill = "red";
+        
+        // svg_base.appendChild(new_circle_left_direction);              
+        // }
+
+        
+    </script>
+
+</html>

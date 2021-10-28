@@ -5,6 +5,7 @@ Description: the code implements congestion calculation as threads. Each thread 
 import threading
 import requests
 import time
+
 from location_speed_encoding import Crossroads
 from location_speed_encoding import Direction
 from location_speed_encoding import Road

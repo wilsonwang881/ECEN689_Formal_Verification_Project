@@ -107,8 +107,9 @@ The files are organized as the follows:
 ECEN689_Formal_Verification_Project\    ----------> Root directory
     backend\    ----------------------------------> Python Flask backend
         app\
-            __init__.py
-            routes.py
+            templates\    ------------------------> Frontend webpage
+            __init__.py    -----------------------> Backend startup routine
+            routes.py    -------------------------> Backend route
         congestion_computation\    ---------------> Threaded computation
             __init__.py
             congestion_computation.py            

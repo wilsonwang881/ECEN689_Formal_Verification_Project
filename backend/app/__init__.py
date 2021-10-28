@@ -3,7 +3,9 @@ import redis
 import logging
 import json
 from threading import Lock
+
 from config import Config
+
 from location_speed_encoding.crossroads import Crossroads
 from location_speed_encoding.direction import Direction
 from location_speed_encoding.road import Road

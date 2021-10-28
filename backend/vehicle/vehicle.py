@@ -8,7 +8,6 @@ import time
 import random
 import json
 
-
 from location_speed_encoding import Crossroads
 from location_speed_encoding import Direction
 from location_speed_encoding import MAP
@@ -310,37 +309,8 @@ class Vehicle(threading.Thread):
                     self.location = 1
                     self.speed = Speed.STOPPED
                     self.location_visited.clear()
-                    self.route_completion_status = Route_completion_status.ENROUTE
-                    # print("Vehicle %d added" % self.id)
-
-                    # self.current_time = response["clock"]
-
-                        # break
-
-                    # else:
-                    #     self.update_backend()
-
-                        # print("Vehicle %d not added" % self.id)
-
-                    # time.sleep(polling_interval)   
-
-                # self.update_backend()
-
-                # payload = {}
-                # payload["road_segment"] = self.road_segment.value
-                # payload["direction"] = self.direction.value
-                # payload["location"] = self.location
-                # payload["vehicle_speed"] = self.speed.value
-                # payload["route_completion"] = self.route_completion_status.value
-
-                # response = requests.post("http://127.0.0.1:5000/set_vehicle_status/%d" \
-                #     % (self.id), json=payload)
-                
-                # if response.text != self.current_time:
-
-                #     self.current_time = response.text                                                                                             
+                    self.route_completion_status = Route_completion_status.ENROUTE                                                                               
                                  
-
             elif self.route_completion_status == Route_completion_status.FINISHED:
 
                 # If the vehicle just finished the route

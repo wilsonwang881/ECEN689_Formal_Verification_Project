@@ -1,6 +1,8 @@
 import json
 from os import name
 from flask import request
+from flask import render_template
+
 from app import app
 from app import redis_db
 from app import current_states
@@ -8,6 +10,7 @@ from app import current_states_init
 from app import clock
 from app import mutex
 from app import total_number_of_vehicles
+
 from location_speed_encoding import Crossroads
 from location_speed_encoding import Direction
 from location_speed_encoding import Road
@@ -50,16 +53,7 @@ def update(mode, id, value):
         vehicle_records.append(id)        
 
         # Update the current vehicle record
-        current_states["vehicle_%d" % id] = value
-
-        # Get the previous vehicle record
-        # original_vehicle_record = json.loads(redis_db.get("vehicle_%d" % id))        
-
-        # Get the previous road segment record 
-        # original_road_segment_record = json.loads(redis_db.get(Road(original_vehicle_record["road_segment"]).name))
-
-        # Update the previous road segment record, but in the current record set only
-        # Do not commit to the database at this moment
+        current_states["vehicle_%d" % id] = value       
 
         current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id] = {}
         current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = value["location"]
@@ -91,28 +85,25 @@ def update(mode, id, value):
         # Check if there were any vehicle on slot 1 now
 
         permission_to_add_vehicle = True
-        # print("======%d" % id)
-        # print(previous_road_A_record)
+
         if previous_road_A_record != {}:
 
             for vehicle in previous_road_A_record:
 
                 if previous_road_A_record[vehicle]["vehicle_location"] == 1:
-                    # print("failed A")
+                    
                     permission_to_add_vehicle = False
 
             
         current_road_A_record = current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]
-        # print(current_road_A_record)
+       
         if current_road_A_record != {}:
 
             for vehicle in current_road_A_record:
 
                 if current_road_A_record[vehicle]["vehicle_location"] == 1:
-                    # print("failed B")
-                    permission_to_add_vehicle = False
 
-        # print("======%d" % id)
+                    permission_to_add_vehicle = False
 
         if not permission_to_add_vehicle:
 
@@ -185,7 +176,7 @@ def update(mode, id, value):
 @app.route("/index")
 def index():
 
-    return "Hello world!"
+    return render_template("index.html")
 
 
 # Route for getting light signals at intersections
