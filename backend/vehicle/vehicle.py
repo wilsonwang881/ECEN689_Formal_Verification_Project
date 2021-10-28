@@ -19,7 +19,7 @@ from location_speed_encoding import Speed
 from location_speed_encoding import Traffic_light
 
 
-polling_interval = 0.1
+polling_interval = 5.1
 
 
 # Each vehicle in the traffic system is represented by a thread
@@ -189,23 +189,24 @@ class Vehicle(threading.Thread):
                             % (target_road_segment.value, self.direction.value)).json()
 
             if response == {}:
-
+                
                 return False
 
             for vehicle in response:
+                
 
                 if self.direction == Direction.DIRECTION_RIGHT:
 
                     if response[vehicle]["vehicle_location"] == (self.location + 1):
-                                                
+                              
                         return True
 
                 elif self.direction == Direction.DIRECTION_LEFT:
 
-                    if response[vehicle] == (self.location - 1):
+                    if response[vehicle]["vehicle_location"] == (self.location - 1):
                         
                         return True
-
+            
             return False  
 
 
@@ -296,32 +297,34 @@ class Vehicle(threading.Thread):
 
                 # If not, request permission to enter
                 # Also update its location with dummy value                
-                while True:
+                # while True:
 
-                    response = requests.get("http://127.0.0.1:5000/add_vehicle/%d" \
-                        % (self.id))
-                    
-                    if response.text == "OK":
+                response = requests.get("http://127.0.0.1:5000/add_vehicle/%d" \
+                    % (self.id)).json()
+                
+                if response["response"] == "OK":
 
-                        # If permission acquired, set the initial location
-                        self.road_segment = Road.ROAD_A
-                        self.direction = Direction.DIRECTION_LEFT
-                        self.location = 1
-                        self.speed = Speed.STOPPED
-                        self.location_visited.clear()
-                        self.route_completion_status = Route_completion_status.ENROUTE
-                        print("Vehicle %d added" % self.id)
+                    # If permission acquired, set the initial location
+                    self.road_segment = Road.ROAD_A
+                    self.direction = Direction.DIRECTION_LEFT
+                    self.location = 1
+                    self.speed = Speed.STOPPED
+                    self.location_visited.clear()
+                    self.route_completion_status = Route_completion_status.ENROUTE
+                    # print("Vehicle %d added" % self.id)
 
-                        break
+                    # self.current_time = response["clock"]
 
-                    else:
-                        self.update_backend()
+                        # break
+
+                    # else:
+                    #     self.update_backend()
 
                         # print("Vehicle %d not added" % self.id)
 
-                    time.sleep(polling_interval)   
+                    # time.sleep(polling_interval)   
 
-                self.update_backend()
+                # self.update_backend()
 
                 # payload = {}
                 # payload["road_segment"] = self.road_segment.value
@@ -350,7 +353,7 @@ class Vehicle(threading.Thread):
                 self.location_visited.clear()
                 self.route_completion_status = Route_completion_status.NOT_STARTED
 
-                self.update_backend()
+                # self.update_backend()
 
             elif self.route_completion_status == Route_completion_status.ENROUTE:
 
@@ -380,11 +383,11 @@ class Vehicle(threading.Thread):
                         or (self.location == 0 and self.direction == Direction.DIRECTION_RIGHT):
                     
                     if self.query_vehicle_at_location("query_road_segment", False, self.road_segment):
-
+                        
                         self.speed = Speed.STOPPED
 
                     else:
-
+                        
                         self.speed = Speed.MOVING
 
                         if self.direction == Direction.DIRECTION_LEFT:
@@ -634,11 +637,11 @@ class Vehicle(threading.Thread):
                         # for road in Road:
                         #     for direction in Direction:
                         #         response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d/%d" \
-                        #             % (road.value, direction.value))                        
-                
-                print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (self.id, self.current_time, self.road_segment.name, self.location, self.speed.name, self.direction.name))
+                        #             % (road.value, direction.value))                                        
+            
+            print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (self.id, self.current_time, self.road_segment.name, self.location, self.speed.name, self.direction.name))
 
-                self.update_backend()
+            self.update_backend()            
                                                                                                           
             
         

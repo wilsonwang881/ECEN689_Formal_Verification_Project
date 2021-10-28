@@ -301,13 +301,15 @@ def add_vehicle(vehicle_id):
 
     mutex.release()
 
+    global clock
+
     if result: 
 
-        return "OK"
+        return {"response": "OK", "clock": str(clock)}
 
     else:
 
-        return "No"
+        return {"response": "No", "clock": str(clock)}
 
 
 # Route for removing vehicle from the system
