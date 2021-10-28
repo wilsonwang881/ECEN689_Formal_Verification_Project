@@ -114,7 +114,7 @@ for id in range(total_number_of_vehicles):
     current_states["vehicle_%d" % id] = {}
     current_states["vehicle_%d" % id]["road_segment"] = Road.ROAD_A.value
     current_states["vehicle_%d" % id]["direction"] = 0
-    current_states["vehicle_%d" % id]["location"] = 0
+    current_states["vehicle_%d" % id]["location"] = 1
     current_states["vehicle_%d" % id]["speed"] = 0
     current_states["vehicle_%d" % id]["route_completion"] = Route_completion_status.NOT_STARTED.value
 

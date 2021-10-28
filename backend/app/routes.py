@@ -58,12 +58,6 @@ def update(mode, id, value):
         # Update the previous road segment record, but in the current record set only
         # Do not commit to the database at this moment
 
-        # Compare if the vehicle were on the same road segment
-        # if (original_vehicle_record["road_segment"] != value["road_segment"]):            
-            # if ("vehicle_%d" % id) in original_road_segment_record[Direction(value["direction"]).name]["vehicles"]:
-                # Moving from road segment to crossroad
-                # original_road_segment_record[value["direction"]]["vehicles"].pop("vehicle_%d" % id)
-                # current_states[original_vehicle_record["road_segment"]] = original_road_segment_record
         current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id] = {}
         current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = value["location"]
         current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = value["vehicle_speed"]                       
@@ -90,16 +84,31 @@ def update(mode, id, value):
         # Check if there were any vehicle on road segment A in the previous time slot
         previous_road_A_record = json.loads(redis_db.get(Road.ROAD_A.name))[Direction.DIRECTION_LEFT.name]["vehicles"]
 
+        # TODO change the injection process here, vehicles should be placed at position 1
         if previous_road_A_record == {}:
             # Check if there were any vehicle on road segment A in the current time slot
             current_road_A_record = current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]
 
             if current_road_A_record == {}:
-                current_states[Road.ROAD_A.name][Direction.DIRECTION_RIGHT.name]["vehicles"]["vehicle_%d" % id] = {}
-                current_states[Road.ROAD_A.name][Direction.DIRECTION_RIGHT.name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = 0
-                current_states[Road.ROAD_A.name][Direction.DIRECTION_RIGHT.name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = Speed.STOPPED.value
+                current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]["vehicle_%d" % id] = {}
+                current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = 1
+                current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = Speed.STOPPED.value
 
                 return True
+
+        else:
+            for direction in previous_road_A_record:
+                if direction == Direction.DIRECTION_LEFT.name:
+                    for vehicle in previous_road_A_record[direction]["vehicles"]:
+                        if previous_road_A_record[direction]["vehicles"][vehicle]["vehicle_location"] == 1:
+                            return False
+                    
+           
+            current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]["vehicle_%d" % id] = {}
+            current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = 1
+            current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = Speed.STOPPED.value
+
+            return True
 
         return False
 
