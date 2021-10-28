@@ -11,7 +11,7 @@ from location_speed_encoding import Road
 from location_speed_encoding import Signal_light_positions
 
 # Number of vehicles
-vehicle_number = 1
+vehicle_number = 5
 
 # Start a list of vehicle threads
 vehicle_thread_list = list()

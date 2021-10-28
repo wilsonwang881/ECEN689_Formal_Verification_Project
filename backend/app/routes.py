@@ -1,18 +1,20 @@
-
 import json
 from os import name
 from flask import request
 from app import app
 from app import redis_db
 from app import current_states
+from app import current_states_init
 from app import clock
 from app import mutex
 from app import total_number_of_vehicles
 from location_speed_encoding import Crossroads
 from location_speed_encoding import Direction
 from location_speed_encoding import Road
+from location_speed_encoding import Route_completion_status
 from location_speed_encoding import Signal_light_positions
 from location_speed_encoding import Speed
+from location_speed_encoding import Traffic_light
 
 
 # Shared variables
@@ -41,6 +43,7 @@ def update(mode, id, value):
     global vehicle_records
     global congestion_compute_records
     global clock    
+    global current_states
 
     if (mode == "vehicle_report") and (id not in vehicle_records):        
         reported_vehicles += 1
@@ -84,33 +87,46 @@ def update(mode, id, value):
         # Check if there were any vehicle on road segment A in the previous time slot
         previous_road_A_record = json.loads(redis_db.get(Road.ROAD_A.name))[Direction.DIRECTION_LEFT.name]["vehicles"]
 
-        # TODO change the injection process here, vehicles should be placed at position 1
-        if previous_road_A_record == {}:
-            # Check if there were any vehicle on road segment A in the current time slot
-            current_road_A_record = current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]
+        # Check if there were any vehicle on slot 1 previously
+        # Check if there were any vehicle on slot 1 now
 
-            if current_road_A_record == {}:
-                current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]["vehicle_%d" % id] = {}
-                current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = 1
-                current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = Speed.STOPPED.value
+        permission_to_add_vehicle = True
+        # print("======%d" % id)
+        # print(previous_road_A_record)
+        if previous_road_A_record != {}:
 
-                return True
+            for vehicle in previous_road_A_record:
+
+                if previous_road_A_record[vehicle]["vehicle_location"] == 1:
+                    # print("failed A")
+                    permission_to_add_vehicle = False
+
+            
+        current_road_A_record = current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]
+        # print(current_road_A_record)
+        if current_road_A_record != {}:
+
+            for vehicle in current_road_A_record:
+
+                if current_road_A_record[vehicle]["vehicle_location"] == 1:
+                    # print("failed B")
+                    permission_to_add_vehicle = False
+
+        # print("======%d" % id)
+
+        if not permission_to_add_vehicle:
+
+            return False
 
         else:
-            for direction in previous_road_A_record:
-                if direction == Direction.DIRECTION_LEFT.name:
-                    for vehicle in previous_road_A_record[direction]["vehicles"]:
-                        if previous_road_A_record[direction]["vehicles"][vehicle]["vehicle_location"] == 1:
-                            return False
-                    
-           
+
             current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]["vehicle_%d" % id] = {}
             current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = 1
             current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = Speed.STOPPED.value
 
-            return True
+            print("A at time %d, vehicle %d added" % (clock, id))
 
-        return False
+            return True
 
     
     # If all threads have reported, update the database
@@ -125,14 +141,39 @@ def update(mode, id, value):
         signal_light_records.clear()
 
         clock += 2
-        print(mode)
-        for key in current_states:
-
-            if key[0:8] == "vehicle_":
-            
-                print(current_states[key])
+        
+        for key in current_states:            
 
             redis_db.set(key, json.dumps(current_states[key]))
+
+        current_states.clear()
+        # current_states = current_states_init.copy()
+        # Maybe just use the copy method to copy an initialized dictionary
+
+        for road_segment in Road:
+            tmpp_record = {}
+            for direction in Direction:
+                tmpp_record[direction.name] = {}
+                tmpp_record[direction.name]["vehicles"] = {}
+                tmpp_record[direction.name]["congestion_index"] = 0            
+            current_states[road_segment.name] = tmpp_record
+
+        for crossroad in Crossroads:
+            tmpp_record = {}
+            for signal_light_position in Signal_light_positions:
+                tmpp_record[signal_light_position.name] = Traffic_light.RED.name            
+            current_states[crossroad.name] = tmpp_record
+
+        current_states["vehicles"] = 0
+        current_states["pending_vehicles"] = total_number_of_vehicles
+
+        for id in range(total_number_of_vehicles):
+            current_states["vehicle_%d" % id] = {}
+            current_states["vehicle_%d" % id]["road_segment"] = Road.ROAD_A.value
+            current_states["vehicle_%d" % id]["direction"] = 0
+            current_states["vehicle_%d" % id]["location"] = 1
+            current_states["vehicle_%d" % id]["speed"] = 0
+            current_states["vehicle_%d" % id]["route_completion"] = Route_completion_status.NOT_STARTED.value
 
         print("Database update! Time = %d" % clock)
 
