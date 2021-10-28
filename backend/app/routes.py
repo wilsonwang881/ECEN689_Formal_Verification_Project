@@ -132,6 +132,11 @@ def update(mode, id, value):
         signal_light_records.clear()
 
         clock += 2
+
+        for i in range(total_number_of_vehicles):
+            db_response = json.loads(redis_db.get("vehicle_%d" % i))
+            # print(db_response)
+            print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (i, clock, Road(db_response["road_segment"]).name, db_response["location"], Speed(db_response["vehicle_speed"]).name, Direction(db_response["direction"]).name))
         
         for key in current_states:            
 
@@ -161,9 +166,9 @@ def update(mode, id, value):
         for id in range(total_number_of_vehicles):
             current_states["vehicle_%d" % id] = {}
             current_states["vehicle_%d" % id]["road_segment"] = Road.ROAD_A.value
-            current_states["vehicle_%d" % id]["direction"] = 0
-            current_states["vehicle_%d" % id]["location"] = 1
-            current_states["vehicle_%d" % id]["speed"] = 0
+            current_states["vehicle_%d" % id]["direction"] = 2
+            current_states["vehicle_%d" % id]["location"] = 2
+            current_states["vehicle_%d" % id]["vehicle_speed"] = 2
             current_states["vehicle_%d" % id]["route_completion"] = Route_completion_status.NOT_STARTED.value
 
         print("Database update! Time = %d" % clock)

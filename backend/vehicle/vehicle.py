@@ -42,6 +42,8 @@ class Vehicle(threading.Thread):
 
     def update_backend(self):
 
+        # print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (self.id, self.current_time, self.road_segment.name, self.location, self.speed.name, self.direction.name))
+
         payload = {}
         payload["road_segment"] = self.road_segment.value
         payload["direction"] = self.direction.value
@@ -607,9 +609,7 @@ class Vehicle(threading.Thread):
                         # for road in Road:
                         #     for direction in Direction:
                         #         response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d/%d" \
-                        #             % (road.value, direction.value))                                        
-            
-            print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (self.id, self.current_time, self.road_segment.name, self.location, self.speed.name, self.direction.name))
+                        #             % (road.value, direction.value))                                                            
 
             self.update_backend()            
                                                                                                           
