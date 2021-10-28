@@ -29,7 +29,7 @@ logger.setLevel(logging.ERROR)
 current_states = {}
 
 # Number of vehicles, whether enroute or not
-total_number_of_vehicles = 1
+total_number_of_vehicles = 5
 
 # Clock
 clock = 0
@@ -123,6 +123,8 @@ for id in range(total_number_of_vehicles):
 # Allow only 1 vehicle to be placed on road segment A
 # And have the enroute state
 current_states["vehicle_waiting"] = {}
+
+current_states_init = current_states
 
 mutex.release()
 

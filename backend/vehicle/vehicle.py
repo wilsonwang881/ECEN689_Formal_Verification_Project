@@ -34,7 +34,7 @@ class Vehicle(threading.Thread):
         self.id = id
         self.road_segment = Road.ROAD_A        
         self.direction = Direction.DIRECTION_LEFT
-        self.location = 1
+        self.location = 2
         self.speed = Speed.STOPPED
         self.location_visited = list()
         self.route_completion_status = Route_completion_status.NOT_STARTED
@@ -196,14 +196,14 @@ class Vehicle(threading.Thread):
 
                 if self.direction == Direction.DIRECTION_RIGHT:
 
-                    if response[vehicle]["vehicle_location"] == self.location + 1:
-                        
+                    if response[vehicle]["vehicle_location"] == (self.location + 1):
+                                                
                         return True
 
                 elif self.direction == Direction.DIRECTION_LEFT:
 
-                    if response[vehicle] == self.location - 1:
-
+                    if response[vehicle] == (self.location - 1):
+                        
                         return True
 
             return False  
@@ -312,24 +312,31 @@ class Vehicle(threading.Thread):
                         self.route_completion_status = Route_completion_status.ENROUTE
                         print("Vehicle %d added" % self.id)
 
+                        break
+
                     else:
-                        print("Vehicle %d not added" % self.id)
+                        self.update_backend()
 
-                    payload = {}
-                    payload["road_segment"] = self.road_segment.value
-                    payload["direction"] = self.direction.value
-                    payload["location"] = self.location
-                    payload["vehicle_speed"] = self.speed.value
-                    payload["route_completion"] = self.route_completion_status.value
+                        # print("Vehicle %d not added" % self.id)
 
-                    response = requests.post("http://127.0.0.1:5000/set_vehicle_status/%d" \
-                        % (self.id), json=payload)
-                    
-                    if response.text != self.current_time:
-                        self.current_time = response.text
-                        break                                                     
-                    
-                    time.sleep(polling_interval)                
+                    time.sleep(polling_interval)   
+
+                self.update_backend()
+
+                # payload = {}
+                # payload["road_segment"] = self.road_segment.value
+                # payload["direction"] = self.direction.value
+                # payload["location"] = self.location
+                # payload["vehicle_speed"] = self.speed.value
+                # payload["route_completion"] = self.route_completion_status.value
+
+                # response = requests.post("http://127.0.0.1:5000/set_vehicle_status/%d" \
+                #     % (self.id), json=payload)
+                
+                # if response.text != self.current_time:
+
+                #     self.current_time = response.text                                                                                             
+                                 
 
             elif self.route_completion_status == Route_completion_status.FINISHED:
 
@@ -338,7 +345,7 @@ class Vehicle(threading.Thread):
 
                 self.road_segment = Road.ROAD_A
                 self.direction = Direction.DIRECTION_LEFT
-                self.location = 1
+                self.location = 2
                 self.speed = Speed.STOPPED
                 self.location_visited.clear()
                 self.route_completion_status = Route_completion_status.NOT_STARTED
@@ -351,7 +358,7 @@ class Vehicle(threading.Thread):
                 # Make vehicle movement decisions
 
                 if self.road_segment == Road.ROAD_A and self.direction == Direction.DIRECTION_RIGHT:
-
+                    
                     # If moving on the right lane of ROAD_A: the finishing stage
 
                     if self.location == 1:
@@ -371,7 +378,7 @@ class Vehicle(threading.Thread):
                 elif (self.location != 0 and self.location != 29) \
                     or (self.location == 29 and self.direction == Direction.DIRECTION_LEFT) \
                         or (self.location == 0 and self.direction == Direction.DIRECTION_RIGHT):
-
+                    
                     if self.query_vehicle_at_location("query_road_segment", False, self.road_segment):
 
                         self.speed = Speed.STOPPED
@@ -396,7 +403,7 @@ class Vehicle(threading.Thread):
                                     and self.road_segment == Road.ROAD_E \
                                         and self.direction == Direction.DIRECTION_RIGHT \
                                             and len(self.location_visited) == 3):                                    
-                    # print("Wait to finish the route, on road %s, location %d" % (self.road_segment.name, self.location))
+                    
                     # Waiting to finish the route
                     crossroad_to_query = Crossroads.CROSSROAD_Z
 
@@ -412,12 +419,12 @@ class Vehicle(threading.Thread):
                     signal_light = Traffic_light[response[direction_to_query.name]]                    
 
                     if signal_light == Traffic_light.RED:
+
                         # If red, do not move
-                        self.speed = Speed.STOPPED    
-                        # print("Here Stopping at a red signal at %s direction %s" % (crossroad_to_query.name, direction_to_query.name))
+                        self.speed = Speed.STOPPED                            
 
                     elif signal_light == Traffic_light.GREEN:
-                        # print("Here moving at a green signal at %s direction %s" % (crossroad_to_query.name, direction_to_query.name))
+                        
                         if self.direction == Direction.DIRECTION_RIGHT:
 
                             if self.query_vehicle_at_location("query_crossroad", False, Road.ROAD_A):
@@ -459,12 +466,12 @@ class Vehicle(threading.Thread):
                     signal_light = Traffic_light[response[traffic_light_orientation.name]]                                                                                                
 
                     if signal_light == Traffic_light.RED:
-                    # If red, do not move
-                        self.speed = Speed.STOPPED    
-                        # print("Stopping at a red signal at %s" % crossroad_to_query.name)
+
+                        # If red, do not move
+                        self.speed = Speed.STOPPED                            
 
                     elif signal_light == Traffic_light.GREEN:
-                        # print("Moving at a green signal at %s" % crossroad_to_query.name)
+                        
                         # If green light, route   
                         # Get the list of road segments to query                            
                         road_segment_to_query = self.remove_self_road_segment_from_dict(self.road_segment, MAP[crossroad_to_query])    
@@ -547,9 +554,7 @@ class Vehicle(threading.Thread):
                                 self.location = 29 - self.location
                             
                             self.road_segment = road_segment_to_move_to
-                            self.speed = Speed.MOVING 
-                            
-                            # print("Moving in one way to %s" % self.road_segment.name)
+                            self.speed = Speed.MOVING                                                         
 
                         else:
                             # If more than one route is available
@@ -577,26 +582,29 @@ class Vehicle(threading.Thread):
 
                                             if tmpp_route != []:
                                                 route_candidate.append(tmpp_route)                                                            
-
                                     
                             # Choose the shortest route
                             shortest_route_length = 6
 
                             for route in route_candidate:
+
                                 if len(route) < shortest_route_length:
+
                                     shortest_route_length = len(route)
 
                             for route in route_candidate:
+
                                 if len(route) > shortest_route_length:
+
                                     route_candidate.remove(route)
 
                             route_index = random.randint(0, len(route_candidate) - 1)
 
                             route_to_be_taken = route_candidate[route_index]
 
-                            print("=======================")
-                            print(route_to_be_taken)
-                            print("=======================")
+                            # print("=======================")
+                            # print(route_to_be_taken)
+                            # print("=======================")
                                                     
                             # Dummy value
                             position_key_tmpp = Signal_light_positions.EAST
@@ -620,10 +628,7 @@ class Vehicle(threading.Thread):
                                 self.location = 29 - self.location
                             
                             self.road_segment = route_to_be_taken[0]
-                            self.speed = Speed.MOVING 
-                                                      
-                          
-                            # TODO after all target crossroads have been visited, route to exit at road segment A                     
+                            self.speed = Speed.MOVING                                                                                                                         
 
                         # TODO Ask for the congestion map
                         # for road in Road:
@@ -631,7 +636,7 @@ class Vehicle(threading.Thread):
                         #         response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d/%d" \
                         #             % (road.value, direction.value))                        
                 
-                print("Vehicle %d: road segment: %s, position: %d" % (self.id, self.road_segment.name, self.location))
+                print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (self.id, self.current_time, self.road_segment.name, self.location, self.speed.name, self.direction.name))
 
                 self.update_backend()
                                                                                                           
