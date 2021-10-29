@@ -9,59 +9,299 @@
     
     <body>
 
-        <h1>Hello world! Again! </h1>
+        <h1>ECEN 689 Introduction to Formal Verification Class Project</h1>
         
-        <svg id="svg_base" width="100%" height="1000">
-            <!-- <rect width="300" height="100" style="fill:rgb(0,0,255);stroke-width:3;stroke:rgb(0,0,0)" /> -->
+        <svg id="svg_base" width="100%" height="1000">            
         </svg>
 
     </body>    
 
     <script>
 
+        const Road  = {
+            ROAD_A: 0,
+            ROAD_E: 1,
+            ROAD_F: 2,
+            ROAD_G: 3,
+            ROAD_H: 4,
+            ROAD_I: 5,
+            ROAD_J: 6,
+            ROAD_K: 7,
+            ROAD_L: 8,
+            ROAD_M: 9,
+            ROAD_N: 10,
+            ROAD_O: 11,
+            ROAD_P: 12
+        };
+
+        const Direction = {
+            DIRECTION_RIGHT: 1,
+            DIRECTION_LEFT: 2
+        };
+
+        const start_location_road_section = [
+            // ROAD_A
+            [250, 90, 115],
+
+            // ROAD_E
+            [600, 90, 115],
+
+            // ROAD_F
+            [950, 90, 115],
+
+            // ROAD_G
+            [262.5, 287.5, 127.5],
+           
+            // ROAD_H
+            [612.5, 637.5, 127.5],
+
+            // ROAD_I
+            [962.5, 987.5, 127.5],
+
+            // ROAD_J
+            [600, 440, 465],
+
+            // ROAD_K
+            [950, 440, 465],
+
+            // ROAD_L
+            [262.5, 287.5, 477.5],
+
+            // ROAD_M
+            [612.5, 637.5, 477,5],
+
+            // ROAD_N
+            [962.5, 987.5, 477,5],
+
+            // ROAD_O
+            [600, 790, 815],
+
+            // ROAD_P
+            [950, 790, 815],
+        ];
+
         let svg_base = document.getElementById("svg_base");
 
-        // Draw the horizontal path points
+        // Draw circles to represent vehicles
+        let circle = [];
 
+        for (let index = 0; index < 5; index++) {        
 
+            let new_circle_left_direction = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            
+            new_circle_left_direction.setAttribute("class", "svg_circle");
+            new_circle_left_direction.setAttribute("id", "vehicle_" + index);
+            new_circle_left_direction.setAttribute("cx", 0); 
+            new_circle_left_direction.setAttribute("cy", 0);
+            new_circle_left_direction.setAttribute("r", 4);
+            new_circle_left_direction.style.stroke = "blue";
+            new_circle_left_direction.style.strokeWidth = "2";
+            new_circle_left_direction.style.fill = "red";
+
+            svg_base.appendChild(new_circle_left_direction);            
+            
+            circle.push(new_circle_left_direction);
+        }
+
+        function return_draw_location(road_segment, direction, location) {
+            
+            if ([0, 1, 2, 6, 7, 11, 12].includes(road_segment)) {
+                
+                if (direction == 1) {
+
+                    let x = start_location_road_section[road_segment][0] - location;
+                    let y = start_location_road_section[road_segment][1];                  
+
+                    return [x, y];
+                }
+
+                else if (direction == 2) {
+                   
+                    let x = start_location_road_section[road_segment][0] - location;
+                    let y = start_location_road_section[road_segment][2];
+
+                    return [x, y];
+                }
+
+            }
+
+            else if ([3, 4, 5, 8, 9, 10].includes(road_segment)) {
+
+                if (direction == 1) {
+
+                    let x = start_location_road_section[road_segment][0];
+                    let y = start_location_road_section[road_segment][2] + location;
+
+                    return [x, y];
+                }
+
+                else if (direction == 2) {
+
+                    let x = start_location_road_section[road_segment][1];
+                    let y = start_location_road_section[road_segment][2] + location;
+
+                    return [x, y];
+                }
+
+            }
+
+        }        
+
+        // Timed job for gettin vehicle locations
+        function update_vehicle_location() {
+
+            for (let vehicle_id = 0; vehicle_id < 5; vehicle_id++) {
+                
+                let httpRequest = new XMLHttpRequest();
+                let url = "http://localhost:5000/query_vehicle_status/" + vehicle_id;
+                httpRequest.open("GET", url, false);
+                httpRequest.send(null);
+
+                if (httpRequest.status == 200) {
+
+                    // console.log(httpRequest.responseText);
+                    let response = JSON.parse(httpRequest.responseText);
+
+                    let new_vehicle_location = return_draw_location(response["road_segment"], response["direction"], response["location"] * 10);
+                    // console.log(new_vehicle_location);
+                    // console.log(circle);
+                    let movement = " translate(" + new_vehicle_location[0] + "," + new_vehicle_location[1] + ")"
+                    document.getElementById("vehicle_" + vehicle_id).setAttribute("transform", movement);
+                    // document.getElementById("vehicle_" + vehicle_id).setAttribute("z-index", 1);
+                    // document.getElementById("vehicle_" + vehicle_id).setAttribute("y", new_vehicle_location[1]);
+                    // circle[vehicle_id].setAttribute("x", new_vehicle_location[0]);
+                    // circle[vehicle_id].setAttribute("y", new_vehicle_location[1]);
+                }                     
+
+            }
+
+        }
+
+        // update_vehicle_location();
+
+        window.setInterval(update_vehicle_location, 400);
+
+        // Draw the horizontal road segments
         for (let vertical_index = 0; vertical_index < 3; vertical_index++) {
 
             for (let horizontal_offset = 0; horizontal_offset < 2; horizontal_offset++) {
             
                 let new_road = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 
-                new_road.setAttribute("x", 350 * horizontal_offset + 500);
+                new_road.setAttribute("x", 350 * horizontal_offset + 300);
                 new_road.setAttribute("y", 350 * vertical_index + 100);
                 new_road.setAttribute("width", 300);
                 new_road.setAttribute("height", 5);
                 new_road.style.fill = "#f7b500";
                 new_road.style.stroke = "#f7b500";
-                
+
                 svg_base.appendChild(new_road);   
-            }
-            
+
+                let new_top_road = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+
+                new_top_road.setAttribute("x", 350 * horizontal_offset + 300);
+                new_top_road.setAttribute("y", 350 * vertical_index + 80);
+                new_top_road.setAttribute("width", 300);
+                new_top_road.setAttribute("height", 20);
+                new_top_road.setAttribute("position", "relative");
+                new_top_road.setAttribute("z-index", -1);
+                new_top_road.style.fill = "grey";
+                new_top_road.style.stroke = "grey";
+                
+                // svg_base.appendChild(new_top_road);
+
+                let new_bottom_road = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+
+                new_bottom_road.setAttribute("x", 350 * horizontal_offset + 300);
+                new_bottom_road.setAttribute("y", 350 * vertical_index + 105);
+                new_bottom_road.setAttribute("width", 300);
+                new_bottom_road.setAttribute("height", 20);
+                new_bottom_road.setAttribute("position", "relative");
+                new_bottom_road.setAttribute("z-index", -1);
+                new_bottom_road.style.fill = "grey";
+                new_bottom_road.style.stroke = "grey";
+                
+                // svg_base.appendChild(new_bottom_road);   
+            }            
         }
 
-        // Draw the vertical path points
-
+        // Draw the vertical road segments
         for (let horizontal_index = 0; horizontal_index < 3; horizontal_index++) {
 
             for (let vertical_offset = 0; vertical_offset < 2; vertical_offset++) {
 
                 let new_road = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                 
-                new_road.setAttribute("x", 350 * horizontal_index + 475);
-                new_road.setAttribute("y", 350 * vertical_offset + 122.5);
+                new_road.setAttribute("x", 350 * horizontal_index + 272.5);
+                new_road.setAttribute("y", 350 * vertical_offset + 127.5);
                 new_road.setAttribute("width", 5);
                 new_road.setAttribute("height", 300);
                 new_road.style.fill = "#f7b500";
                 new_road.style.stroke = "#f7b500";
                 
                 svg_base.appendChild(new_road);   
-            }
 
+                let new_left_road = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                
+                new_left_road.setAttribute("x", 350 * horizontal_index + 252.5);
+                new_left_road.setAttribute("y", 350 * vertical_offset + 127.5);
+                new_left_road.setAttribute("width", 20);
+                new_left_road.setAttribute("height", 300);
+                new_left_road.setAttribute("position", "relative");
+                new_left_road.setAttribute("z-index", -1);
+                new_left_road.style.fill = "grey";
+                new_left_road.style.stroke = "grey";
+                
+                // svg_base.appendChild(new_left_road);
+
+                let new_right_road = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                
+                new_right_road.setAttribute("x", 350 * horizontal_index + 277.5);
+                new_right_road.setAttribute("y", 350 * vertical_offset + 127.5);
+                new_right_road.setAttribute("width", 20);
+                new_right_road.setAttribute("height", 300);
+                new_right_road.setAttribute("position", "relative");
+                new_right_road.setAttribute("z-index", -1);
+                new_right_road.style.fill = "grey";
+                new_right_road.style.stroke = "grey";
+                
+                // svg_base.appendChild(new_right_road);   
+            }
         }
 
+        // Draw the top left road segment: ROAD_A
+        let road_a_top = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+
+        road_a_top.setAttribute("x", 230);
+        road_a_top.setAttribute("y", 80);
+        road_a_top.setAttribute("width", 20);
+        road_a_top.setAttribute("height", 20);
+        road_a_top.style.fill = "grey";
+        road_a_top.style.stroke = "grey";
+
+        // svg_base.appendChild(road_a_top);   
+
+        let road_a_mid = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+
+        road_a_mid.setAttribute("x", 230);
+        road_a_mid.setAttribute("y", 100);
+        road_a_mid.setAttribute("width", 20);
+        road_a_mid.setAttribute("height", 5);
+        road_a_mid.style.fill = "#f7b500";
+        road_a_mid.style.stroke = "#f7b500";
+
+        svg_base.appendChild(road_a_mid);   
+
+        let road_a_bottom = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+
+        road_a_bottom.setAttribute("x", 230);
+        road_a_bottom.setAttribute("y", 105);
+        road_a_bottom.setAttribute("width", 20);
+        road_a_bottom.setAttribute("height", 20);
+        road_a_bottom.style.fill = "grey";
+        road_a_bottom.style.stroke = "grey";
+
+        // svg_base.appendChild(road_a_bottom);   
         
 
         // for (let index = 0; index < 30; index++) {
@@ -87,35 +327,7 @@
         //     new_circle_left_direction.style.fill = "red";
             
         //     svg_base.appendChild(new_circle_left_direction);
-        // }
-
-        // // Draw the vertical path points
-
-        // for (let index = 0; index < 30; index++) {
-
-        // let new_circle_right_direction = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-
-        // new_circle_right_direction.setAttribute("cx", 96); 
-        // new_circle_right_direction.setAttribute("cy", (index * 12 + 28));
-        // new_circle_right_direction.setAttribute("r", 4);
-        // new_circle_right_direction.style.stroke = "green";
-        // new_circle_right_direction.style.strokeWidth = "2";
-        // new_circle_right_direction.style.fill = "yellow";            
-
-        // svg_base.appendChild(new_circle_right_direction);
-
-        // let new_circle_left_direction = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            
-        // new_circle_left_direction.setAttribute("cx", 86); 
-        // new_circle_left_direction.setAttribute("cy", (index * 12 + 28));
-        // new_circle_left_direction.setAttribute("r", 4);
-        // new_circle_left_direction.style.stroke = "blue";
-        // new_circle_left_direction.style.strokeWidth = "2";
-        // new_circle_left_direction.style.fill = "red";
-        
-        // svg_base.appendChild(new_circle_left_direction);              
-        // }
-
+        // }        
         
     </script>
 

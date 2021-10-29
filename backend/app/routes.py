@@ -2,6 +2,7 @@ import json
 from os import name
 from flask import request
 from flask import render_template
+from flask import jsonify
 
 from app import app
 from app import redis_db
@@ -220,11 +221,11 @@ def query_vehicle_location(vehicle_id):
 
     mutex.acquire()
 
-    res = json.loads(redis_db.get(vehicle_id))
+    res = json.loads(redis_db.get("vehicle_%d" %vehicle_id))
 
     mutex.release()
 
-    return res
+    return jsonify(res)
 
 
 # Route for setting the status of a vehicle
