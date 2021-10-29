@@ -15,6 +15,7 @@ class Traffic_signal_control_master:
         self.traffic_lights = {}
         self.signal_timer = 0
         self.green_position = Signal_light_positions.NORTH
+        self.timer = 0
 
         for crossroad in Crossroads:
             self.traffic_lights[crossroad.name] = {}
@@ -46,6 +47,27 @@ class Traffic_signal_control_master:
             elif self.green_position == Signal_light_positions.EAST:
                 # print("Changing signal lights from %s to %s" % (Signal_light_positions.EAST.name, Signal_light_positions.NORTH.name))
                 self.green_position = Signal_light_positions.NORTH
+
+            
+
+            if self.timer == 0: 
+                self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.NORTH.name] = Traffic_light.GREEN.name
+                self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name
+                self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name
+                self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name
+                self.timer += 1
+            elif self.timer == 1: 
+                self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.NORTH.name] = Traffic_light.RED.name
+                self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name
+                self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.WEST.name] = Traffic_light.GREEN.name
+                self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name
+                self.timer += 1
+            elif self.timer == 2: 
+                self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.NORTH.name] = Traffic_light.RED.name
+                self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name
+                self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name
+                self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.EAST.name] = Traffic_light.GREEN.name
+                self.timer  = 0
             
             
             # Send the updated traffic light signals to the backend

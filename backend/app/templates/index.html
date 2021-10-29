@@ -85,6 +85,7 @@
 
         // Draw circles to represent vehicles
         let circle = [];
+        let text = [];
 
         for (let index = 0; index < number_of_vehicles; index++) {        
 
@@ -100,9 +101,19 @@
             new_circle_left_direction.style.strokeWidth = "2";
             new_circle_left_direction.style.fill = "red";
 
-            svg_base.appendChild(new_circle_left_direction);            
+                        
+            var txt = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+            txt.setAttribute('x', 0);
+            txt.setAttribute('y', 0);
+            txt.setAttribute('font-size','14');
+            txt.innerHTML = index;
+
+            svg_base.appendChild(txt);
+
+            svg_base.appendChild(new_circle_left_direction);  
             
             circle.push(new_circle_left_direction);
+            text.push(txt);
         }
 
         function return_draw_location(road_segment, direction, location) {
@@ -168,14 +179,37 @@
                             let new_vehicle_location = return_draw_location(response["road_segment"], response["direction"], response["location"] * 10);                        
                             let movement = " translate(" + new_vehicle_location[0] + "," + new_vehicle_location[1] + ")"
 
-                            circle[vehicle_id].setAttribute("transform", movement);                            
+                            if ([0, 1, 2, 6, 7, 11, 12].includes(response["road_segment"])) {
+                                if (response["direction"] == 1) {
+                                    let text_movement = " translate(" + (new_vehicle_location[0] - 5) + "," + (new_vehicle_location[1] - 25) + ")"
+                                    text[vehicle_id].setAttribute("transform", text_movement);       
+                                }
+                                else {
+                                    let text_movement = " translate(" + (new_vehicle_location[0] - 5) + "," + (new_vehicle_location[1] + 25) + ")"
+                                    text[vehicle_id].setAttribute("transform", text_movement);  
+                                }
+                            }
+                            else {
+                                if (response["direction"] == 1) {
+                                    let text_movement = " translate(" + (new_vehicle_location[0] - 25) + "," + (new_vehicle_location[1] + 5) + ")"
+                                    text[vehicle_id].setAttribute("transform", text_movement);       
+                                }
+                                else {
+                                    let text_movement = " translate(" + (new_vehicle_location[0] + 25) + "," + (new_vehicle_location[1] + 5) + ")"
+                                    text[vehicle_id].setAttribute("transform", text_movement);  
+                                }
+                            }
+                            
+                            
+                            circle[vehicle_id].setAttribute("transform", movement);  
+                                               
                         }                        
                     }   
                 }                                  
             }            
         }        
 
-        window.setInterval(update_vehicle_location, 1000);
+        window.setInterval(update_vehicle_location, 2000);
 
         // Draw the horizontal road segments
         for (let vertical_index = 0; vertical_index < 3; vertical_index++) {
