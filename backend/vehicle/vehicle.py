@@ -18,7 +18,7 @@ from location_speed_encoding import Speed
 from location_speed_encoding import Traffic_light
 
 
-polling_interval = 0.5
+polling_interval = 0.2
 
 
 # Each vehicle in the traffic system is represented by a thread

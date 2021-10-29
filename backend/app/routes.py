@@ -189,11 +189,11 @@ def index():
 @app.route("/query_signal_lights/<int:intersection>")
 def query_signal_lights(intersection):
 
-    mutex.acquire()
+    # mutex.acquire()
 
     res = json.loads(redis_db.get(Crossroads(intersection).name))
 
-    mutex.release()
+    # mutex.release()
 
     return json.dumps(res)
     
@@ -219,11 +219,11 @@ def set_signal_lights(intersection):
 @app.route("/query_vehicle_status/<int:vehicle_id>")
 def query_vehicle_location(vehicle_id):
 
-    mutex.acquire()
+    # mutex.acquire()
 
     res = json.loads(redis_db.get("vehicle_%d" %vehicle_id))
 
-    mutex.release()
+    # mutex.release()
 
     return jsonify(res)
 
@@ -279,11 +279,11 @@ def set_road_congestion(road_id):
 @app.route("/query_location/<int:road_id>/<int:direction>")
 def query_location(road_id, direction):
 
-    mutex.acquire()
+    # mutex.acquire()
 
     res = json.loads(redis_db.get(Road(road_id).name))
 
-    mutex.release()
+    # mutex.release()
 
     return res[Direction(direction).name]["vehicles"]
 
