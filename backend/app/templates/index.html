@@ -18,6 +18,8 @@
 
     <script>
 
+        let number_of_vehicles = 100;
+
         const Road  = {
             ROAD_A: 0,
             ROAD_E: 1,
@@ -85,7 +87,7 @@
         // Draw circles to represent vehicles
         let circle = [];
 
-        for (let index = 0; index < 5; index++) {        
+        for (let index = 0; index < number_of_vehicles; index++) {        
 
             let new_circle_left_direction = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             
@@ -94,6 +96,7 @@
             new_circle_left_direction.setAttribute("cx", 0); 
             new_circle_left_direction.setAttribute("cy", 0);
             new_circle_left_direction.setAttribute("r", 4);
+            new_circle_left_direction.setAttribute("transform", "translate(200, 200)")
             new_circle_left_direction.style.stroke = "blue";
             new_circle_left_direction.style.strokeWidth = "2";
             new_circle_left_direction.style.fill = "red";
@@ -142,44 +145,38 @@
 
                     return [x, y];
                 }
-
             }
-
         }        
 
         // Timed job for gettin vehicle locations
         function update_vehicle_location() {
-
-            for (let vehicle_id = 0; vehicle_id < 5; vehicle_id++) {
+            
+            for (let vehicle_id = 0; vehicle_id < number_of_vehicles; vehicle_id++) {
                 
                 let httpRequest = new XMLHttpRequest();
                 let url = "http://localhost:5000/query_vehicle_status/" + vehicle_id;
-                httpRequest.open("GET", url, false);
+                httpRequest.open("GET", url, true);
                 httpRequest.send(null);
 
-                if (httpRequest.status == 200) {
+                httpRequest.onreadystatechange = (e) => {
+                    if (httpRequest.readyState == XMLHttpRequest.DONE) {
 
-                    // console.log(httpRequest.responseText);
-                    let response = JSON.parse(httpRequest.responseText);
+                        let status = httpRequest.status;
 
-                    let new_vehicle_location = return_draw_location(response["road_segment"], response["direction"], response["location"] * 10);
-                    // console.log(new_vehicle_location);
-                    // console.log(circle);
-                    let movement = " translate(" + new_vehicle_location[0] + "," + new_vehicle_location[1] + ")"
-                    document.getElementById("vehicle_" + vehicle_id).setAttribute("transform", movement);
-                    // document.getElementById("vehicle_" + vehicle_id).setAttribute("z-index", 1);
-                    // document.getElementById("vehicle_" + vehicle_id).setAttribute("y", new_vehicle_location[1]);
-                    // circle[vehicle_id].setAttribute("x", new_vehicle_location[0]);
-                    // circle[vehicle_id].setAttribute("y", new_vehicle_location[1]);
-                }                     
+                        if (status == 0 || (status >= 200 && status < 400)) {
+                            
+                            let response = JSON.parse(httpRequest.responseText);
+                            let new_vehicle_location = return_draw_location(response["road_segment"], response["direction"], response["location"] * 10);                        
+                            let movement = " translate(" + new_vehicle_location[0] + "," + new_vehicle_location[1] + ")"
 
-            }
+                            circle[vehicle_id].setAttribute("transform", movement);                            
+                        }                        
+                    }   
+                }                                  
+            }            
+        }        
 
-        }
-
-        // update_vehicle_location();
-
-        window.setInterval(update_vehicle_location, 400);
+        window.setInterval(update_vehicle_location, 1000);
 
         // Draw the horizontal road segments
         for (let vertical_index = 0; vertical_index < 3; vertical_index++) {
@@ -300,34 +297,6 @@
         road_a_bottom.setAttribute("height", 20);
         road_a_bottom.style.fill = "grey";
         road_a_bottom.style.stroke = "grey";
-
-        // svg_base.appendChild(road_a_bottom);   
-        
-
-        // for (let index = 0; index < 30; index++) {
-
-        //     let new_circle_right_direction = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            
-        //     new_circle_right_direction.setAttribute("cx", (index * 12 + 104)); 
-        //     new_circle_right_direction.setAttribute("cy", 20);
-        //     new_circle_right_direction.setAttribute("r", 4);
-        //     new_circle_right_direction.style.stroke = "green";
-        //     new_circle_right_direction.style.strokeWidth = "2";
-        //     new_circle_right_direction.style.fill = "yellow";            
-            
-        //     svg_base.appendChild(new_circle_right_direction);      
-            
-        //     let new_circle_left_direction = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            
-        //     new_circle_left_direction.setAttribute("cx", (index * 12 + 104)); 
-        //     new_circle_left_direction.setAttribute("cy", 10);
-        //     new_circle_left_direction.setAttribute("r", 4);
-        //     new_circle_left_direction.style.stroke = "blue";
-        //     new_circle_left_direction.style.strokeWidth = "2";
-        //     new_circle_left_direction.style.fill = "red";
-            
-        //     svg_base.appendChild(new_circle_left_direction);
-        // }        
         
     </script>
 
