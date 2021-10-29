@@ -17,7 +17,7 @@
 
     <script>
 
-        let number_of_vehicles = 100;
+        let number_of_vehicles = 200;
 
         const Road  = {
             ROAD_A: 0,
@@ -209,7 +209,7 @@
             }            
         }        
 
-        window.setInterval(update_vehicle_location, 1000);
+        window.setInterval(update_vehicle_location, 5000);
 
         // Draw the horizontal road segments
         for (let vertical_index = 0; vertical_index < 3; vertical_index++) {
