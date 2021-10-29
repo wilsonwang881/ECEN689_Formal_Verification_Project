@@ -23,16 +23,17 @@
 
         // Draw the horizontal path points
 
+
         for (let vertical_index = 0; vertical_index < 3; vertical_index++) {
 
-            for (let horizontal_offset = 1; horizontal_offset <= 2; horizontal_offset++) {
+            for (let horizontal_offset = 0; horizontal_offset < 2; horizontal_offset++) {
             
                 let new_road = document.createElementNS("http://www.w3.org/2000/svg", "rect");
 
-                new_road.setAttribute("x", 330 * horizontal_offset + 50);
-                new_road.setAttribute("y", 330 * vertical_index + 10);
+                new_road.setAttribute("x", 350 * horizontal_offset + 500);
+                new_road.setAttribute("y", 350 * vertical_index + 100);
                 new_road.setAttribute("width", 300);
-                new_road.setAttribute("height", 10);
+                new_road.setAttribute("height", 5);
                 new_road.style.fill = "#f7b500";
                 new_road.style.stroke = "#f7b500";
                 
@@ -43,15 +44,15 @@
 
         // Draw the vertical path points
 
-        for (let horizontal_index = 1; horizontal_index <= 3; horizontal_index++) {
+        for (let horizontal_index = 0; horizontal_index < 3; horizontal_index++) {
 
             for (let vertical_offset = 0; vertical_offset < 2; vertical_offset++) {
 
                 let new_road = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                 
-                new_road.setAttribute("x", 330 * horizontal_index + 30);
-                new_road.setAttribute("y", 330 * vertical_offset + 30);
-                new_road.setAttribute("width", 10);
+                new_road.setAttribute("x", 350 * horizontal_index + 475);
+                new_road.setAttribute("y", 350 * vertical_offset + 122.5);
+                new_road.setAttribute("width", 5);
                 new_road.setAttribute("height", 300);
                 new_road.style.fill = "#f7b500";
                 new_road.style.stroke = "#f7b500";
