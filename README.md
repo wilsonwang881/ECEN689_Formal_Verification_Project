@@ -126,6 +126,7 @@ ECEN689_Formal_Verification_Project\    ----------> Root directory
             route_completion_status.py
             signal_light_positions.py
             speed.py
+            traffic_light_sequence.py
             traffic_lights.py
         trafic_signal_control\    ----------------> Single thread signal light control
             __init__.py
@@ -345,6 +346,8 @@ The backend uses Python Flask as the framework and implements the following APIs
 Threads report updated information with HTTP POST method. The payload is in JSON format, as shown in [Database](#database).
 
 The route names are fairly self-explanatory. The ``/query_location`` route is used to get the vehicle records at any road segment.
+
+When ``<vehicle_id>`` in ``/query_vehicle_status/<vehicle_id>`` equals the total number of vehicles, all vehicle records are returned.
 
 If any vehicle thread or congestion computation thread queries the backend, the backend will query the database and return the information.
 

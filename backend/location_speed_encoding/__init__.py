@@ -8,3 +8,4 @@ from .route_completion_status import Route_completion_status
 from .signal_light_positions import Signal_light_positions
 from .speed import Speed
 from .traffic_light import Traffic_light
+from .traffic_light_sequence import traffic_light_direction_sequence

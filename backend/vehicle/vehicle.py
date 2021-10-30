@@ -559,7 +559,7 @@ class Vehicle(threading.Thread):
                                                 route_candidate.append(tmpp_route)                                                            
                                     
                             # Choose the shortest route
-                            shortest_route_length = 6
+                            shortest_route_length = 7
 
                             for route in route_candidate:
 

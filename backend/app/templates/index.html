@@ -160,27 +160,28 @@
 
         // Timed job for gettin vehicle locations
         function update_vehicle_location() {
-            
-            for (let vehicle_id = 0; vehicle_id < number_of_vehicles; vehicle_id++) {
-                
-                let httpRequest = new XMLHttpRequest();
-                let url = "http://localhost:5000/query_vehicle_status/" + vehicle_id;
-                httpRequest.open("GET", url, true);
-                httpRequest.send(null);
+            let httpRequest = new XMLHttpRequest();
+            let url = "http://localhost:5000/query_vehicle_status/" + number_of_vehicles;
+            httpRequest.open("GET", url, true);
+            httpRequest.send(null);
 
-                httpRequest.onreadystatechange = (e) => {
-                    if (httpRequest.readyState == XMLHttpRequest.DONE) {
+            httpRequest.onreadystatechange = (e) => {
+                if (httpRequest.readyState == XMLHttpRequest.DONE) {
 
-                        let status = httpRequest.status;
+                    let status = httpRequest.status;
 
-                        if (status == 0 || (status >= 200 && status < 400)) {
-                            
-                            let response = JSON.parse(httpRequest.responseText);
-                            let new_vehicle_location = return_draw_location(response["road_segment"], response["direction"], response["location"] * 10);                        
+                    if (status == 0 || (status >= 200 && status < 400)) {
+                        
+                        let response = JSON.parse(httpRequest.responseText);                       
+
+                        for (let vehicle_id = 0; vehicle_id < number_of_vehicles; vehicle_id++) {
+
+                            let vehicle_name = "vehicle_" + vehicle_id;
+                            let new_vehicle_location = return_draw_location(response[vehicle_name]["road_segment"], response[vehicle_name]["direction"], response[vehicle_name]["location"] * 10);                        
                             let movement = " translate(" + new_vehicle_location[0] + "," + new_vehicle_location[1] + ")"
 
-                            if ([0, 1, 2, 6, 7, 11, 12].includes(response["road_segment"])) {
-                                if (response["direction"] == 1) {
+                            if ([0, 1, 2, 6, 7, 11, 12].includes(response[vehicle_name]["road_segment"])) {
+                                if (response[vehicle_name]["direction"] == 1) {
                                     let text_movement = " translate(" + (new_vehicle_location[0] - 5) + "," + (new_vehicle_location[1] - 25) + ")"
                                     text[vehicle_id].setAttribute("transform", text_movement);       
                                 }
@@ -190,7 +191,7 @@
                                 }
                             }
                             else {
-                                if (response["direction"] == 1) {
+                                if (response[vehicle_name]["direction"] == 1) {
                                     let text_movement = " translate(" + (new_vehicle_location[0] - 25) + "," + (new_vehicle_location[1] + 5) + ")"
                                     text[vehicle_id].setAttribute("transform", text_movement);       
                                 }
@@ -199,14 +200,13 @@
                                     text[vehicle_id].setAttribute("transform", text_movement);  
                                 }
                             }
-                            
-                            
+                                                        
                             circle[vehicle_id].setAttribute("transform", movement);  
-                                               
-                        }                        
-                    }   
-                }                                  
-            }            
+
+                        }                                                                    
+                    }                        
+                }   
+            }                             
         }        
 
         window.setInterval(update_vehicle_location, 1000);
