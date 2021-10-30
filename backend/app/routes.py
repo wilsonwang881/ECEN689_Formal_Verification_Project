@@ -221,11 +221,28 @@ def query_vehicle_location(vehicle_id):
 
     # mutex.acquire()
 
-    res = json.loads(redis_db.get("vehicle_%d" %vehicle_id))
+    if vehicle_id < total_number_of_vehicles:
+
+        res = json.loads(redis_db.get("vehicle_%d" %vehicle_id))
 
     # mutex.release()
 
-    return jsonify(res)
+        return jsonify(res)
+
+    else:
+
+        return_dict = {}
+
+        mutex.acquire()
+
+        for id in range(total_number_of_vehicles):
+
+            res = json.loads(redis_db.get("vehicle_%d" % id))
+            return_dict["vehicle_%d" % id] = res
+
+        mutex.release()
+
+        return jsonify(return_dict)
 
 
 # Route for setting the status of a vehicle

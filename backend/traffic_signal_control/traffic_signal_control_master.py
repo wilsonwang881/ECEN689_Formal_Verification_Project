@@ -1,9 +1,10 @@
 import requests
 import json
 import time
-from location_speed_encoding.crossroads import Crossroads
-from location_speed_encoding.signal_light_positions import Signal_light_positions
-from location_speed_encoding.traffic_light import Traffic_light
+from location_speed_encoding import Crossroads
+from location_speed_encoding import Signal_light_positions
+from location_speed_encoding import traffic_light_direction_sequence
+from location_speed_encoding import Traffic_light
 
 
 polling_interval = 0.2
