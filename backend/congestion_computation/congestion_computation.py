@@ -12,7 +12,7 @@ from location_speed_encoding import Road
 from location_speed_encoding import Signal_light_positions
 
 
-polling_interval = 0.2
+polling_interval = 0.1
 
 
 class Congestion_Computation(threading.Thread):
