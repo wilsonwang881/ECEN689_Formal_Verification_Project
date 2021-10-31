@@ -18,7 +18,7 @@ from location_speed_encoding import Speed
 from location_speed_encoding import Traffic_light
 
 
-polling_interval = 0.1
+polling_interval = 1.1
 
 
 # Each vehicle in the traffic system is represented by a thread
@@ -57,7 +57,7 @@ class Vehicle(threading.Thread):
             
             if response.text != self.current_time:
                 self.current_time = response.text
-                break                                                     
+                break                                                              
             
             time.sleep(polling_interval)        
 
@@ -195,20 +195,37 @@ class Vehicle(threading.Thread):
                 
                 return False
 
-            for vehicle in response:
-                
+            if change_direction == False:
 
-                if self.direction == Direction.DIRECTION_RIGHT:
+                for vehicle in response:                    
 
-                    if response[vehicle]["vehicle_location"] == (self.location + 1):
-                              
-                        return True
+                    if self.direction == Direction.DIRECTION_RIGHT:
 
-                elif self.direction == Direction.DIRECTION_LEFT:
+                        if response[vehicle]["vehicle_location"] == (self.location + 1):
+                                
+                            return True
 
-                    if response[vehicle]["vehicle_location"] == (self.location - 1):
-                        
-                        return True
+                    elif self.direction == Direction.DIRECTION_LEFT:
+
+                        if response[vehicle]["vehicle_location"] == (self.location - 1):
+                            
+                            return True
+
+            elif change_direction == True:
+
+                for vehicle in response:                    
+
+                    if self.direction == Direction.DIRECTION_RIGHT:
+
+                        if response[vehicle]["vehicle_location"] == (self.location - 1):
+                                
+                            return True
+
+                    elif self.direction == Direction.DIRECTION_LEFT:
+
+                        if response[vehicle]["vehicle_location"] == (self.location + 1):
+                            
+                            return True
             
             return False  
 
@@ -470,17 +487,24 @@ class Vehicle(threading.Thread):
                     elif signal_light == Traffic_light.GREEN:
                         
                         # If green light, route   
-                        # Get the list of road segments to query                            
-                        road_segment_to_query = self.remove_self_road_segment_from_dict(self.road_segment, MAP[crossroad_to_query])    
-                        road_segment_to_query_selected = road_segment_to_query.copy()                   
+                        # Get the list of road segments to query                                    
+
+                        road_segment_to_query = {}
+                        road_segment_to_query_selected = {}     
 
                         # Dummy value
-                        self_crossroad_position = Signal_light_positions.NORTH
+                        self_crossroad_position = Signal_light_positions.NORTH    
 
-                        # Set self position at the crossroad                        
-                        for position_key in MAP[crossroad_to_query]:
-                            if MAP[crossroad_to_query][position_key] == self.road_segment:
-                                self_crossroad_position = position_key
+                        for direction in MAP[crossroad_to_query]:
+
+                            if MAP[crossroad_to_query][direction] != self.road_segment:
+
+                                road_segment_to_query[direction] = MAP[crossroad_to_query][direction]
+                                road_segment_to_query_selected[direction] = MAP[crossroad_to_query][direction]
+
+                            if MAP[crossroad_to_query][direction] == self.road_segment:
+
+                                self_crossroad_position = direction                                                              
 
                         for position_key in road_segment_to_query:
 
@@ -496,7 +520,7 @@ class Vehicle(threading.Thread):
                            
                             # Ask if any vehicles were at the other side of the crossroad   
                             response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \
-                                % (road_segment_to_query[position_key].value, query_direction.value)).json()
+                                % (road_segment_to_query[position_key].value, query_direction.value)).json()                           
 
                             for vehicle_name in response:
 
@@ -504,13 +528,35 @@ class Vehicle(threading.Thread):
 
                                     if response[vehicle_name]["vehicle_location"] == self.location:
 
-                                        road_segment_to_query_selected.pop(position_key)
+                                        # print(response)
+
+                                        # print("1 vehicle_%d popping %s" % (self.id, vehicle_name))
+
+                                        try:
+                                            road_segment_to_query_selected.pop(position_key)
+                                        except ValueError as e:
+                                            print(response)
+                                            print(road_segment_to_query)
+                                            print("vehicle_%d   %s   " % (self.id, str(road_segment_to_query_selected)))
+                                            print("1 vehicle_%d popping %s" % (self.id, vehicle_name))
+                                            print(position_key)
                                    
                                 else:
 
                                     if response[vehicle_name]["vehicle_location"] == (29 - self.location):
 
-                                        road_segment_to_query_selected.pop(position_key)                                                           
+                                        # print(response)
+
+                                        # print("2 vehicle_%d popping %s" % (self.id, vehicle_name))
+
+                                        try:
+                                            road_segment_to_query_selected.pop(position_key)
+                                        except ValueError as e:
+                                            print(response)
+                                            print(road_segment_to_query)
+                                            print("vehicle_%d   %s   " % (self.id, str(road_segment_to_query_selected)))
+                                            print("1 vehicle_%d popping %s" % (self.id, vehicle_name))
+                                            print(position_key)                                                      
                         
                         # Make movement decision
                         if road_segment_to_query_selected == {}:
@@ -532,6 +578,7 @@ class Vehicle(threading.Thread):
                             # Update the route completion status
                             # TODO PAY ATTENTION HERE, THE SELF.LOCATION_VISITED SHOULD BE UPDATED AT OTHER PLACES AS WELL
                             if crossroad_to_query in MAP["target_crossroad"] and crossroad_to_query not in self.location_visited:
+
                                 self.location_visited.append(crossroad_to_query)
                           
                             # Dummy value
@@ -586,12 +633,13 @@ class Vehicle(threading.Thread):
                                             tmpp_route = self.routing(crossroad_to_query, road_segment_to_query_selected[next_road], target)
 
                                             if tmpp_route != []:
+                                                
                                                 route_candidate.append(tmpp_route)                                                            
                                     
                             # Choose the shortest route
                             shortest_route_length = 7
 
-                            print("vehicle id %d location visited %d" % (self.id, len(self.location_visited)))
+                            # print("vehicle id %d location visited %d" % (self.id, len(self.location_visited)))
 
                             for route in route_candidate:
 
