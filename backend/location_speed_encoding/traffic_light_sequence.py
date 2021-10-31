@@ -5,9 +5,12 @@ traffic_light_direction_sequence = {
     Crossroads.CROSSROAD_Z: [
         Signal_light_positions.WEST,
         Signal_light_positions.EAST,
+        Signal_light_positions.EAST,
         Signal_light_positions.NORTH
     ],
     Crossroads.CROSSROAD_X: [
+        Signal_light_positions.WEST,        
+        Signal_light_positions.EAST,
         Signal_light_positions.WEST,
         Signal_light_positions.EAST,
         Signal_light_positions.NORTH
@@ -18,8 +21,10 @@ traffic_light_direction_sequence = {
     ],
     Crossroads.CROSSROAD_Y: [
         Signal_light_positions.NORTH,
-        Signal_light_positions.WEST,
-        Signal_light_positions.SOUTH
+        Signal_light_positions.SOUTH,
+        Signal_light_positions.NORTH,
+        Signal_light_positions.SOUTH,
+        Signal_light_positions.WEST
     ],
     Crossroads.CROSSROAD_U: [
         Signal_light_positions.NORTH,
@@ -29,7 +34,9 @@ traffic_light_direction_sequence = {
     ],
     Crossroads.CROSSROAD_W: [
         Signal_light_positions.NORTH,
+        Signal_light_positions.SOUTH,
         Signal_light_positions.EAST,
+        Signal_light_positions.NORTH,
         Signal_light_positions.SOUTH
     ],
     Crossroads.CROSSROAD_B: [
@@ -38,6 +45,8 @@ traffic_light_direction_sequence = {
     ],
     Crossroads.CROSSROAD_V: [
         Signal_light_positions.SOUTH,
+        Signal_light_positions.WEST,
+        Signal_light_positions.EAST,
         Signal_light_positions.WEST,
         Signal_light_positions.EAST
     ],

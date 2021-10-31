@@ -49,7 +49,8 @@ def update(mode, id, value):
     global clock    
     global current_states
 
-    if (mode == "vehicle_report") and (id not in vehicle_records):        
+    if (mode == "vehicle_report") and (id not in vehicle_records):    
+
         reported_vehicles += 1
         vehicle_records.append(id)        
 
@@ -62,23 +63,31 @@ def update(mode, id, value):
 
         # Do not update crossroad->vehicle mapping: no such mapping in the database        
         
-    elif (mode == "congestion_compute_report") and (id not in congestion_compute_records):        
+    elif (mode == "congestion_compute_report") and (id not in congestion_compute_records):     
+
         reported_congestion_compute += 1
         congestion_compute_records.append(id)
+
         for key in current_states[Road(id).name]:
+
             if key == Direction.DIRECTION_RIGHT.name:
+
                 current_states[Road(id).name][Direction.DIRECTION_RIGHT.name]["congestion_index"] = \
                     value[Direction.DIRECTION_RIGHT.name]["congestion_index"]
+
             elif key == Direction.DIRECTION_LEFT.name:
+
                 current_states[Road(id).name][Direction.DIRECTION_LEFT.name]["congestion_index"] = \
                     value[Direction.DIRECTION_LEFT.name]["congestion_index"]
         
-    elif (mode == "signal_lights") and (id not in signal_light_records):        
+    elif (mode == "signal_lights") and (id not in signal_light_records):    
+
         reported_signal_light += 1
         signal_light_records.append(id)
         current_states[Crossroads(id).name] = value
 
-    elif mode == "add_vehicle":
+    elif (mode == "add_vehicle"):
+
         # Check if there were any vehicle on road segment A in the previous time slot
         previous_road_A_record = json.loads(redis_db.get(Road.ROAD_A.name))[Direction.DIRECTION_LEFT.name]["vehicles"]
 
@@ -92,6 +101,8 @@ def update(mode, id, value):
             for vehicle in previous_road_A_record:
 
                 if previous_road_A_record[vehicle]["vehicle_location"] == 1:
+
+                    # print("adding vehicle failed here 1")
                     
                     permission_to_add_vehicle = False
 
@@ -104,13 +115,11 @@ def update(mode, id, value):
 
                 if current_road_A_record[vehicle]["vehicle_location"] == 1:
 
+                    # print("adding vehicle failed here 2")
+
                     permission_to_add_vehicle = False
 
-        if not permission_to_add_vehicle:
-
-            return False
-
-        else:
+        if permission_to_add_vehicle:
 
             current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]["vehicle_%d" % id] = {}
             current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = 1
@@ -118,8 +127,7 @@ def update(mode, id, value):
 
             print("A at time %d, vehicle %d added" % (clock, id))
 
-            return True
-
+        return permission_to_add_vehicle
     
     # If all threads have reported, update the database
     if (reported_vehicles == total_vehicles) \
@@ -135,9 +143,12 @@ def update(mode, id, value):
         clock += 2
 
         for i in range(total_number_of_vehicles):
+
             db_response = json.loads(redis_db.get("vehicle_%d" % i))
-            # print(db_response)
-            print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (i, clock, Road(db_response["road_segment"]).name, db_response["location"], Speed(db_response["vehicle_speed"]).name, Direction(db_response["direction"]).name))
+            
+            if Road(db_response["road_segment"]) == Road.ROAD_A and db_response["location"] != 2 and Direction(db_response["direction"]) == Direction.DIRECTION_LEFT:
+
+                print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (i, clock, Road(db_response["road_segment"]).name, db_response["location"], Speed(db_response["vehicle_speed"]).name, Direction(db_response["direction"]).name))
         
         for key in current_states:            
 

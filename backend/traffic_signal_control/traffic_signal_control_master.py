@@ -35,7 +35,7 @@ class Traffic_signal_control_master:
 
             self.timer += 1
 
-            if self.timer >= 11:
+            if self.timer >= 19:
                 
                 self.timer = 0
             
