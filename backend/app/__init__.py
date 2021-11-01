@@ -31,7 +31,7 @@ logger.setLevel(logging.ERROR)
 current_states = {}
 
 # Number of vehicles, whether enroute or not
-total_number_of_vehicles = 100
+total_number_of_vehicles = 400
 
 # Clock
 clock = 2
@@ -124,7 +124,8 @@ for id in range(total_number_of_vehicles):
 
 # Allow only 1 vehicle to be placed on road segment A
 # And have the enroute state
-current_states["vehicle_waiting"] = {}
+current_states["all_vehicles"] = {}
+redis_db.set("all_vehicles", json.dumps(current_states["all_vehicles"]))
 
 current_states_init = current_states
 
