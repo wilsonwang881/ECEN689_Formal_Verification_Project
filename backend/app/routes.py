@@ -7,13 +7,13 @@ from flask import jsonify
 from app import app
 from app import redis_db
 from app import current_states
-from app import current_states_init
 from app import clock
 from app import mutex
 from app import total_number_of_vehicles
 
 from location_speed_encoding import Crossroads
 from location_speed_encoding import Direction
+from location_speed_encoding import MAP
 from location_speed_encoding import Road
 from location_speed_encoding import Route_completion_status
 from location_speed_encoding import Signal_light_positions
@@ -87,6 +87,7 @@ def update(mode, id, value):
         reported_signal_light += 1
         signal_light_records.append(id)
         current_states[Crossroads(id).name] = value
+        current_states["all_traffic_lights"][Crossroads(id).name] = value
 
     elif (mode == "add_vehicle"):
 
@@ -102,12 +103,9 @@ def update(mode, id, value):
 
             for vehicle in previous_road_A_record:
 
-                if previous_road_A_record[vehicle]["vehicle_location"] == 1:
-
-                    # print("adding vehicle failed here 1")
+                if previous_road_A_record[vehicle]["vehicle_location"] == 1:                    
                     
                     permission_to_add_vehicle = False
-
             
         current_road_A_record = current_states[Road.ROAD_A.name][Direction.DIRECTION_LEFT.name]["vehicles"]
        
@@ -115,9 +113,7 @@ def update(mode, id, value):
 
             for vehicle in current_road_A_record:
 
-                if current_road_A_record[vehicle]["vehicle_location"] == 1:
-
-                    # print("adding vehicle failed here 2")
+                if current_road_A_record[vehicle]["vehicle_location"] == 1:                    
 
                     permission_to_add_vehicle = False
 
@@ -156,9 +152,7 @@ def update(mode, id, value):
 
             redis_db.set(key, json.dumps(current_states[key]))
 
-        current_states.clear()
-        # current_states = current_states_init.copy()
-        # Maybe just use the copy method to copy an initialized dictionary
+        current_states.clear()                
 
         for road_segment in Road:
             tmpp_record = {}
@@ -170,8 +164,13 @@ def update(mode, id, value):
 
         for crossroad in Crossroads:
             tmpp_record = {}
+            
             for signal_light_position in Signal_light_positions:
-                tmpp_record[signal_light_position.name] = Traffic_light.RED.name            
+
+                if signal_light_position in MAP[crossroad]:
+
+                    tmpp_record[signal_light_position.name] = Traffic_light.RED.name
+                # tmpp_record[signal_light_position.name] = Traffic_light.RED.name            
             current_states[crossroad.name] = tmpp_record
 
         current_states["vehicles"] = 0
@@ -187,6 +186,7 @@ def update(mode, id, value):
             current_states["vehicle_%d" % id]["route_completion"] = Route_completion_status.NOT_STARTED.value
 
         current_states["all_vehicles"] = {}
+        current_states["all_traffic_lights"] = {}
 
         print("Database update! Time = %d" % clock)
 
@@ -249,18 +249,18 @@ def query_vehicle_location(vehicle_id):
 
     else:
 
-        # return_dict = {}
+        mutex.acquire()
 
-        # mutex.acquire()
+        res_vehicle = json.loads(redis_db.get("all_vehicles"))
+        res_traffic_light = redis_db.get("all_traffic_lights")          
 
-        # for id in range(total_number_of_vehicles):
+        mutex.release()        
 
-        res = json.loads(redis_db.get("all_vehicles"))
-            # return_dict["vehicle_%d" % id] = res
+        if res_traffic_light != {}:
 
-        # mutex.release()
+            res_vehicle.update(json.loads(res_traffic_light))
 
-        return jsonify(res)
+        return jsonify(res_vehicle)
 
 
 # Route for setting the status of a vehicle

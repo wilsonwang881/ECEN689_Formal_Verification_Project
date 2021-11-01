@@ -6,12 +6,13 @@ from threading import Lock
 
 from config import Config
 
-from location_speed_encoding.crossroads import Crossroads
-from location_speed_encoding.direction import Direction
-from location_speed_encoding.road import Road
-from location_speed_encoding.route_completion_status import Route_completion_status
-from location_speed_encoding.signal_light_positions import Signal_light_positions
-from location_speed_encoding.traffic_light import Traffic_light
+from location_speed_encoding import Crossroads
+from location_speed_encoding import Direction
+from location_speed_encoding import MAP
+from location_speed_encoding import Road
+from location_speed_encoding import Route_completion_status
+from location_speed_encoding import Signal_light_positions
+from location_speed_encoding import Traffic_light
 
 
 app = Flask(__name__)
@@ -31,7 +32,7 @@ logger.setLevel(logging.ERROR)
 current_states = {}
 
 # Number of vehicles, whether enroute or not
-total_number_of_vehicles = 400
+total_number_of_vehicles = 150
 
 # Clock
 clock = 2
@@ -44,43 +45,6 @@ mutex.acquire()
 # Flush Redis DB
 redis_db.flushdb()
 
-"""
-Initialize the road segment->vehicle information in the database
-All empty
-
-Initialize the road segment->congestion index information in the database
-All 0 (no congestion)
-
-Initialize the (exact) location->vehicle information in the database
-All empty
-JSON format:
-<road_segment_name>: {
-    direction_name<clockwise>: {
-        "vehicles": {
-            <vehicle_name>: {
-                "vehicle_location": <vehicle_location>,
-                "vehicle_speed": <vehicle_speed>
-            }
-        },
-        "congestion_index": <computed_value>
-    },
-    direction_name<anti-clockwise>: {
-        "vehicles": {
-            <vehicle_name>: {
-                "vehicle_location": <vehicle_location>,
-                "vehicle_speed": <vehicle_speed>
-            }
-        },
-        "congestion_index": <computed_value>
-    }
-}
-
-Vehicle_location:
-on vertical road segments: the top is the 0th position
-                           the bottom is the 29th position
-on the horizontal road segments: the leftmost is the 0th position
-                                 the rightmost is the 29th position
-"""
 for road_segment in Road:
     tmpp_record = {}
     for direction in Direction:
@@ -102,7 +66,11 @@ JSON format:
 for crossroad in Crossroads:
     tmpp_record = {}
     for signal_light_position in Signal_light_positions:
-        tmpp_record[signal_light_position.name] = Traffic_light.RED.name
+
+        if signal_light_position in MAP[crossroad]:
+
+            tmpp_record[signal_light_position.name] = Traffic_light.RED.name
+
     redis_db.set(crossroad.name, json.dumps(tmpp_record))
     current_states[crossroad.name] = tmpp_record
 
@@ -127,7 +95,8 @@ for id in range(total_number_of_vehicles):
 current_states["all_vehicles"] = {}
 redis_db.set("all_vehicles", json.dumps(current_states["all_vehicles"]))
 
-current_states_init = current_states
+current_states["all_traffic_lights"] = {}
+redis_db.set("all_traffic_lights", json.dumps(current_states["all_traffic_lights"]))
 
 mutex.release()
 

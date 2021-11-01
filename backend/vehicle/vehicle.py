@@ -6,7 +6,6 @@ import threading
 import requests
 import time
 import random
-import json
 
 from location_speed_encoding import Crossroads
 from location_speed_encoding import Direction
@@ -48,14 +47,12 @@ class Vehicle(threading.Thread):
         payload["location"] = self.location
         payload["vehicle_speed"] = self.speed.value
         payload["route_completion"] = self.route_completion_status.value
-
-        # while True:                                
+            
         response = requests.post("http://127.0.0.1:5000/set_vehicle_status/%d" \
             % (self.id), json=payload)
         
         if response.text != self.current_time:
-            self.current_time = response.text
-            # break                                                              
+            self.current_time = response.text                                                                         
             
         time.sleep(polling_interval)        
 
@@ -327,7 +324,7 @@ class Vehicle(threading.Thread):
             if self.route_completion_status == Route_completion_status.NOT_STARTED:
 
                 # If not, request permission to enter
-                # Also update its location with dummy value                
+                # Also update its location with dummy value
                 while True:
 
                     response = requests.get("http://127.0.0.1:5000/add_vehicle/%d" \
@@ -684,13 +681,7 @@ class Vehicle(threading.Thread):
                                 self.location = 29 - self.location
                             
                             self.road_segment = route_to_be_taken[0]
-                            self.speed = Speed.MOVING                                                                                                                         
-
-                        # TODO Ask for the congestion map
-                        # for road in Road:
-                        #     for direction in Direction:
-                        #         response = requests.get("http://127.0.0.1:5000/query_road_congestion/%d/%d" \
-                        #             % (road.value, direction.value))                                                            
+                            self.speed = Speed.MOVING                                                                           
 
             self.update_backend()            
                                                                                                           
