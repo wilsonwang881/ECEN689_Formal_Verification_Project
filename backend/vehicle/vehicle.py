@@ -49,15 +49,15 @@ class Vehicle(threading.Thread):
         payload["vehicle_speed"] = self.speed.value
         payload["route_completion"] = self.route_completion_status.value
 
-        while True:                                
-            response = requests.post("http://127.0.0.1:5000/set_vehicle_status/%d" \
-                % (self.id), json=payload)
+        # while True:                                
+        response = requests.post("http://127.0.0.1:5000/set_vehicle_status/%d" \
+            % (self.id), json=payload)
+        
+        if response.text != self.current_time:
+            self.current_time = response.text
+            # break                                                              
             
-            if response.text != self.current_time:
-                self.current_time = response.text
-                break                                                              
-            
-            time.sleep(polling_interval)        
+        time.sleep(polling_interval)        
 
     
     def crossroad_reached_check(self, last_road_segment, current_road_segment, target_crossroad):
