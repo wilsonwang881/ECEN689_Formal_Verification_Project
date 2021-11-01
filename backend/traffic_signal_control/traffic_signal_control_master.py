@@ -8,7 +8,7 @@ from location_speed_encoding import traffic_light_direction_sequence
 from location_speed_encoding import Traffic_light
 
 
-polling_interval = 0.1
+polling_interval = 1.5
 
 
 class Traffic_signal_control_master:

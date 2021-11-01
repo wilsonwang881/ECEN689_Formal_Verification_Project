@@ -18,7 +18,7 @@ from location_speed_encoding import Speed
 from location_speed_encoding import Traffic_light
 
 
-polling_interval = 1.1
+polling_interval = 1.0
 
 
 # Each vehicle in the traffic system is represented by a thread
@@ -40,9 +40,7 @@ class Vehicle(threading.Thread):
         self.current_time = 0   
 
 
-    def update_backend(self):
-
-        # print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (self.id, self.current_time, self.road_segment.name, self.location, self.speed.name, self.direction.name))
+    def update_backend(self):        
 
         payload = {}
         payload["road_segment"] = self.road_segment.value
@@ -297,10 +295,7 @@ class Vehicle(threading.Thread):
 
             if len(route) > minimum_route_length:
 
-                road_segment_list.remove(route)        
-
-        # print("vehicle %d" % self.id)
-        # print(road_segment_list)        
+                road_segment_list.remove(route)              
 
         if len(road_segment_list) == 1:
 
@@ -527,36 +522,44 @@ class Vehicle(threading.Thread):
                                 if change_query_direction:
 
                                     if response[vehicle_name]["vehicle_location"] == self.location:
-
-                                        # print(response)
-
-                                        # print("1 vehicle_%d popping %s" % (self.id, vehicle_name))
-
+                                       
                                         try:
                                             road_segment_to_query_selected.pop(position_key)
-                                        except ValueError as e:
+
+                                            # If the postion_key has been removed once
+                                            # Do not remove again
+                                            break
+                                        except KeyError as e:
+                                            print("====================================")
+                                            print("response")
                                             print(response)
+                                            print("road_segment_to_query")
                                             print(road_segment_to_query)
                                             print("vehicle_%d   %s   " % (self.id, str(road_segment_to_query_selected)))
                                             print("1 vehicle_%d popping %s" % (self.id, vehicle_name))
                                             print(position_key)
+                                            print("====================================")
                                    
                                 else:
 
                                     if response[vehicle_name]["vehicle_location"] == (29 - self.location):
-
-                                        # print(response)
-
-                                        # print("2 vehicle_%d popping %s" % (self.id, vehicle_name))
-
+                                   
                                         try:
                                             road_segment_to_query_selected.pop(position_key)
-                                        except ValueError as e:
+
+                                            # If the postion_key has been removed once
+                                            # Do not remove again
+                                            break
+                                        except KeyError as e:
+                                            print("====================================")
+                                            print("response")
                                             print(response)
+                                            print("road_segment_to_query")
                                             print(road_segment_to_query)
                                             print("vehicle_%d   %s   " % (self.id, str(road_segment_to_query_selected)))
-                                            print("1 vehicle_%d popping %s" % (self.id, vehicle_name))
-                                            print(position_key)                                                      
+                                            print("2 vehicle_%d popping %s" % (self.id, vehicle_name))
+                                            print(position_key)
+                                            print("====================================")                                              
                         
                         # Make movement decision
                         if road_segment_to_query_selected == {}:
@@ -637,9 +640,7 @@ class Vehicle(threading.Thread):
                                                 route_candidate.append(tmpp_route)                                                            
                                     
                             # Choose the shortest route
-                            shortest_route_length = 7
-
-                            # print("vehicle id %d location visited %d" % (self.id, len(self.location_visited)))
+                            shortest_route_length = 7                            
 
                             for route in route_candidate:
 
@@ -659,11 +660,7 @@ class Vehicle(threading.Thread):
 
                                 route_index = random.randint(0, len(route_candidate) - 1)                                            
 
-                            route_to_be_taken = route_candidate[route_index]
-
-                            # print("=======================")
-                            # print(route_to_be_taken)
-                            # print("=======================")
+                            route_to_be_taken = route_candidate[route_index]                          
                                                     
                             # Dummy value
                             position_key_tmpp = Signal_light_positions.EAST

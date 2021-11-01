@@ -38,6 +38,7 @@ signal_light_records = list()
 
 # Function to update the database and store temporary records
 def update(mode, id, value):
+
     global total_vehicles
     global reported_vehicles
     global total_congestion_compute_workers
@@ -60,6 +61,7 @@ def update(mode, id, value):
         current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id] = {}
         current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_location"] = value["location"]
         current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = value["vehicle_speed"]                       
+        current_states["all_vehicles"]["vehicle_%d" % id] = value
 
         # Do not update crossroad->vehicle mapping: no such mapping in the database        
         
@@ -142,13 +144,13 @@ def update(mode, id, value):
 
         clock += 2
 
-        for i in range(total_number_of_vehicles):
+        # for i in range(total_number_of_vehicles):
 
-            db_response = json.loads(redis_db.get("vehicle_%d" % i))
+        #     db_response = json.loads(redis_db.get("vehicle_%d" % i))
             
-            if Road(db_response["road_segment"]) == Road.ROAD_A and db_response["location"] != 2 and Direction(db_response["direction"]) == Direction.DIRECTION_LEFT:
+        #     if Road(db_response["road_segment"]) == Road.ROAD_A and db_response["location"] != 2 and Direction(db_response["direction"]) == Direction.DIRECTION_LEFT:
 
-                print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (i, clock, Road(db_response["road_segment"]).name, db_response["location"], Speed(db_response["vehicle_speed"]).name, Direction(db_response["direction"]).name))
+        #         print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (i, clock, Road(db_response["road_segment"]).name, db_response["location"], Speed(db_response["vehicle_speed"]).name, Direction(db_response["direction"]).name))
         
         for key in current_states:            
 
@@ -176,12 +178,15 @@ def update(mode, id, value):
         current_states["pending_vehicles"] = total_number_of_vehicles
 
         for id in range(total_number_of_vehicles):
+
             current_states["vehicle_%d" % id] = {}
             current_states["vehicle_%d" % id]["road_segment"] = Road.ROAD_A.value
             current_states["vehicle_%d" % id]["direction"] = 2
             current_states["vehicle_%d" % id]["location"] = 2
             current_states["vehicle_%d" % id]["vehicle_speed"] = 2
             current_states["vehicle_%d" % id]["route_completion"] = Route_completion_status.NOT_STARTED.value
+
+        current_states["all_vehicles"] = {}
 
         print("Database update! Time = %d" % clock)
 
@@ -214,16 +219,18 @@ def query_signal_lights(intersection):
 def set_signal_lights(intersection):
 
     payload = request.get_json()
+
+    global clock
+
+    clock_tmpp = clock
     
     mutex.acquire()
 
     update("signal_lights", intersection, payload)
 
     mutex.release()
-
-    global clock
     
-    return str(clock)
+    return str(clock_tmpp)
 
 
 # Route for getting the location of a vehicle
@@ -242,18 +249,18 @@ def query_vehicle_location(vehicle_id):
 
     else:
 
-        return_dict = {}
+        # return_dict = {}
 
         mutex.acquire()
 
-        for id in range(total_number_of_vehicles):
+        # for id in range(total_number_of_vehicles):
 
-            res = json.loads(redis_db.get("vehicle_%d" % id))
-            return_dict["vehicle_%d" % id] = res
+        res = json.loads(redis_db.get("all_vehicles"))
+            # return_dict["vehicle_%d" % id] = res
 
         mutex.release()
 
-        return jsonify(return_dict)
+        return jsonify(res)
 
 
 # Route for setting the status of a vehicle
@@ -262,15 +269,17 @@ def set_vehicle_location(id):
 
     payload = request.get_json()
 
+    global clock
+
+    clock_tmpp = clock
+
     mutex.acquire()
 
     update("vehicle_report", id, payload)
 
-    mutex.release()
-
-    global clock
+    mutex.release()    
     
-    return str(clock)
+    return str(clock_tmpp)
 
 
 # Route for getting the road congestion status
@@ -291,16 +300,18 @@ def query_road_congestion(road_id, direction):
 def set_road_congestion(road_id):
 
     payload = request.get_json()
+    
+    global clock
+
+    clock_tmpp = clock
 
     mutex.acquire()
 
     update("congestion_compute_report", road_id, payload)
 
     mutex.release()
-    
-    global clock
-    
-    return str(clock)
+            
+    return str(clock_tmpp)
 
 
 # Route for getting the vehicles at one location
@@ -320,21 +331,23 @@ def query_location(road_id, direction):
 @app.route("/add_vehicle/<int:vehicle_id>")
 def add_vehicle(vehicle_id):
 
+    global clock
+
+    clock_tmpp = clock
+
     mutex.acquire()
 
     result = update("add_vehicle", vehicle_id, value=None)
 
-    mutex.release()
-
-    global clock
+    mutex.release()    
 
     if result: 
 
-        return {"response": "OK", "clock": str(clock)}
+        return {"response": "OK", "clock": str(clock_tmpp)}
 
     else:
 
-        return {"response": "No", "clock": str(clock)}
+        return {"response": "No", "clock": str(clock_tmpp)}
 
 
 # Route for removing vehicle from the system
