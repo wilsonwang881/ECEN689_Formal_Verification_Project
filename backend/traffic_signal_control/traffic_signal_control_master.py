@@ -8,7 +8,7 @@ from location_speed_encoding import traffic_light_direction_sequence
 from location_speed_encoding import Traffic_light
 
 
-polling_interval = 1.5
+polling_interval = 1.0
 
 
 class Traffic_signal_control_master:
@@ -31,11 +31,9 @@ class Traffic_signal_control_master:
         
         print("Traffic light control master running")
 
-        while True:    
+        while True:                
 
-            self.timer += 1
-
-            if self.timer >= 19:
+            if self.timer >= 60:
                 
                 self.timer = 0
             
@@ -51,7 +49,9 @@ class Traffic_signal_control_master:
 
                     else:
 
-                        self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.RED.name          
+                        self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.RED.name    
+
+            self.timer += 1      
             
             # Send the updated traffic light signals to the backend
             while True:

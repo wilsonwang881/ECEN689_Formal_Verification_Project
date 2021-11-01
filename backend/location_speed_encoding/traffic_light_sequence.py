@@ -4,8 +4,7 @@ from .signal_light_positions import Signal_light_positions
 traffic_light_direction_sequence = {
     Crossroads.CROSSROAD_Z: [
         Signal_light_positions.WEST,
-        Signal_light_positions.EAST,
-        Signal_light_positions.EAST,
+        Signal_light_positions.EAST,        
         Signal_light_positions.NORTH
     ],
     Crossroads.CROSSROAD_X: [
