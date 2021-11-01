@@ -17,7 +17,7 @@
 
     <script>
 
-        let number_of_vehicles = 400;
+        let number_of_vehicles = 150;
 
         const Road  = {
             ROAD_A: 0,
@@ -33,6 +33,64 @@
             ROAD_N: 10,
             ROAD_O: 11,
             ROAD_P: 12
+        };
+
+        const Crossroads = [
+            "CROSSROAD_B",
+            "CROSSROAD_C",
+            "CROSSROAD_D",
+            "CROSSROAD_U",
+            "CROSSROAD_V",
+            "CROSSROAD_W",
+            "CROSSROAD_X",
+            "CROSSROAD_Y",
+            "CROSSROAD_Z"
+        ];
+
+        const Crossroad_Connections = {
+            "CROSSROAD_Z": [
+                "WEST",
+                "EAST",
+                "SOUTH"
+            ],
+            "CROSSROAD_X": [
+                "WEST",
+                "EAST",
+                "SOUTH"
+            ],
+            "CROSSROAD_D": [
+                "WEST",
+                "SOUTH"
+            ],
+            "CROSSROAD_Y": [
+                "NORTH",
+                "EAST",
+                "SOUTH"
+            ],
+            "CROSSROAD_U": [
+                "NORTH",
+                "EAST",
+                "WEST",
+                "SOUTH"
+            ],
+            "CROSSROAD_W": [
+                "NORTH",
+                "WEST",
+                "SOUTH"
+            ],
+            "CROSSROAD_B": [
+                "NORTH",
+                "EAST"
+            ],
+            "CROSSROAD_V": [
+                "NORTH",
+                "WEST",
+                "EAST"
+            ],
+            "CROSSROAD_C": [
+                "NORTH",
+                "WEST"
+            ]
         };
 
         const Direction = {
@@ -81,12 +139,41 @@
             [950, 790, 815],
         ]; 
 
+        const traffic_light_positions_center = [
+            // CROSSROAD_B
+            [275, 802.5],
+
+            // CROSSROAD_C
+            [975, 800],
+
+            // CROSSROAD_D
+            [975, 100],
+            
+            // CROSSROAD_U
+            [625, 452.5],
+            
+            // CROSSROAD_V
+            [625, 802.5],
+            
+            // CROSSROAD_W
+            [975, 450],
+            
+            // CROSSROAD_X
+            [625, 102.5],
+            
+            // CROSSROAD_Y
+            [275, 452.5],
+            
+            // CROSSROAD_Z
+            [275, 102.5]            
+        ];
+
         let svg_base = document.getElementById("svg_base");
 
         // Draw circles to represent vehicles
         let circle = [];
         let text = [];
-
+        
         for (let index = 0; index < number_of_vehicles; index++) {        
 
             let new_circle_left_direction = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -96,7 +183,7 @@
             new_circle_left_direction.setAttribute("cx", 0); 
             new_circle_left_direction.setAttribute("cy", 0);
             new_circle_left_direction.setAttribute("r", 4);
-            new_circle_left_direction.setAttribute("transform", "translate(200, 200)")
+            new_circle_left_direction.setAttribute("transform", "translate(200, 200)");
             new_circle_left_direction.style.stroke = "blue";
             new_circle_left_direction.style.strokeWidth = "2";
             new_circle_left_direction.style.fill = "red";
@@ -114,6 +201,68 @@
             
             circle.push(new_circle_left_direction);
             text.push(txt);
+        }
+
+        // Draw the initial positions for traffic lights
+        let traffic_light = [];
+
+        for (let i = 0; i < 9; i++) {            
+
+            let east_traffic_light = document.createElementNS("http://www.w3.org/2000/svg", "circle");          
+            
+            east_traffic_light.setAttribute("class", "svg_circle");
+            east_traffic_light.setAttribute("id", Crossroads[i]);
+            east_traffic_light.setAttribute("cx", traffic_light_positions_center[i][0]-8); 
+            east_traffic_light.setAttribute("cy", traffic_light_positions_center[i][1]);
+            east_traffic_light.setAttribute("r", 5);            
+            east_traffic_light.style.stroke = "white";
+            east_traffic_light.style.strokeWidth = "0";
+            east_traffic_light.style.fill = "white";
+
+            svg_base.appendChild(east_traffic_light);  
+
+            let south_traffic_light = document.createElementNS("http://www.w3.org/2000/svg", "circle");     
+            
+            south_traffic_light.setAttribute("class", "svg_circle");
+            south_traffic_light.setAttribute("id", Crossroads[i]);
+            south_traffic_light.setAttribute("cx", traffic_light_positions_center[i][0]); 
+            south_traffic_light.setAttribute("cy", traffic_light_positions_center[i][1]-8);
+            south_traffic_light.setAttribute("r", 5);            
+            south_traffic_light.style.stroke = "white";
+            south_traffic_light.style.strokeWidth = "0";
+            south_traffic_light.style.fill = "white";
+
+            svg_base.appendChild(south_traffic_light);  
+
+            let west_traffic_light = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+
+            west_traffic_light.setAttribute("class", "svg_circle");
+            west_traffic_light.setAttribute("id", Crossroads[i]);
+            west_traffic_light.setAttribute("cx", traffic_light_positions_center[i][0]+8); 
+            west_traffic_light.setAttribute("cy", traffic_light_positions_center[i][1]);
+            west_traffic_light.setAttribute("r", 5);            
+            west_traffic_light.style.stroke = "white";
+            west_traffic_light.style.strokeWidth = "0";
+            west_traffic_light.style.fill = "white";
+
+            svg_base.appendChild(west_traffic_light);  
+
+            let north_traffic_light = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+
+            north_traffic_light.setAttribute("class", "svg_circle");
+            north_traffic_light.setAttribute("id", Crossroads[i]);
+            north_traffic_light.setAttribute("cx", traffic_light_positions_center[i][0]); 
+            north_traffic_light.setAttribute("cy", traffic_light_positions_center[i][1]+8);
+            north_traffic_light.setAttribute("r", 5);            
+            north_traffic_light.style.stroke = "white";
+            north_traffic_light.style.strokeWidth = "0";
+            north_traffic_light.style.fill = "white";
+
+            svg_base.appendChild(north_traffic_light);  
+
+            let crossroad_traffic_light_group = [east_traffic_light, south_traffic_light, west_traffic_light, north_traffic_light];            
+
+            traffic_light.push(crossroad_traffic_light_group);
         }
 
         function return_draw_location(road_segment, direction, location) {
@@ -174,8 +323,40 @@
 
                     if (status == 0 || (status >= 200 && status < 400)) {
                         
-                        let response = JSON.parse(httpRequest.responseText);                       
+                        let response = JSON.parse(httpRequest.responseText);       
+                        
+                        // Set the traffic light signals
+                        for (let traffic_light_id = 0; traffic_light_id < 9; traffic_light_id++) {
+                            
+                            let crossroad_name = Crossroads[traffic_light_id];                            
+                            let crossroad_traffic_light_status= response[crossroad_name];                            
 
+                            if ("EAST" in crossroad_traffic_light_status && Crossroad_Connections[crossroad_name].includes("WEST")) {
+
+                                traffic_light[traffic_light_id][0].style.fill = crossroad_traffic_light_status["EAST"];
+
+                            }
+
+                            if ("SOUTH" in crossroad_traffic_light_status && Crossroad_Connections[crossroad_name].includes("NORTH")) {
+
+                                traffic_light[traffic_light_id][1].style.fill = crossroad_traffic_light_status["SOUTH"];
+
+                            }
+
+                            if ("WEST" in crossroad_traffic_light_status && Crossroad_Connections[crossroad_name].includes("EAST")) {
+
+                                traffic_light[traffic_light_id][2].style.fill = crossroad_traffic_light_status["WEST"];
+                                
+                            }
+
+                            if ("NORTH" in crossroad_traffic_light_status && Crossroad_Connections[crossroad_name].includes("SOUTH")) {
+
+                                traffic_light[traffic_light_id][3].style.fill = crossroad_traffic_light_status["NORTH"];
+                                
+                            }                            
+                        }
+
+                        // Set the vehicle positions
                         for (let vehicle_id = 0; vehicle_id < number_of_vehicles; vehicle_id++) {
 
                             let vehicle_name = "vehicle_" + vehicle_id;
@@ -209,7 +390,7 @@
                                                         
                             circle[vehicle_id].setAttribute("transform", movement);  
 
-                        }                                                                    
+                        }                                                              
                     }   
                     
                     console.log("Stale vehicles: " + stale_vehicles);
