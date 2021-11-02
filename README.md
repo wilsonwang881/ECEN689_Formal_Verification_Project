@@ -18,6 +18,7 @@
 - [Vehicle Workflow](#vehicle-workflow)
 - [Congestion Computation Workflow](#congestion-computation-workflow)
 - [Traffic Light Control Workflow](#traffic-light-control-workflow)
+- [Frontend Webpage Implementation](#frontend-webpage-implementation)
 - [Unit Test Workflow](#unit-test-workflow)
 - [Tutorials](#tutorials)
 
@@ -25,6 +26,7 @@
 ## Demo
 
 ![Demo](demo.gif)
+
 
 ## Map
 
@@ -65,11 +67,9 @@ All vehicles on the map start and finish at the same position.
 
 All vehicles have the same constraints.
 
-The infrastructure group develop the traffic light control system.
+The infrastructure group develops the traffic light control system.
 
-The vehicle group simulate the vehicles in the traffic system.
-
-The congestion information is shared across all vehicles.
+The vehicle group simulates the vehicles in the traffic system.
 
 Maximize the number of vehicles completing the route per unit time.
 
@@ -77,6 +77,8 @@ Maximize the number of vehicles completing the route per unit time.
 ## Constraints
 
 Each road segment is divided into 30 slots.
+
+Eacept road segment A, which has 2 slots only.
 
 Each vehicle can move one slot at a time.
 
@@ -113,34 +115,33 @@ ECEN689_Formal_Verification_Project\    ----------> Root directory
         app\
             templates\    ------------------------> Frontend webpage
             __init__.py    -----------------------> Backend startup routine
-            routes.py    -------------------------> Backend route
+            routes.py    -------------------------> Backend routes
         congestion_computation\    ---------------> Threaded computation
-            __init__.py
-            congestion_computation.py            
-        location_speed_encoding\    --------------> Location and speed representation
-            __init__.py
-            crossroads.py
-            direction.py
-            map.py
-            road.py
-            route_completion_status.py
-            signal_light_positions.py
-            speed.py
-            traffic_light_sequence.py
-            traffic_lights.py
+            __init__.py    -----------------------> Export the folder as module
+            congestion_computation.py    ---------> Compute congestion index
+        location_speed_encoding\    --------------> Encodings for map and vehicles
+            __init__.py    -----------------------> Export the folder as module
+            crossroads.py    ---------------------> Crossroads
+            direction.py    ----------------------> Lane directions
+            map.py    ----------------------------> Road/crossroad interconnections
+            road.py    ---------------------------> Roads
+            route_completion_status.py    --------> Vehicle route completion status
+            signal_light_positions.py    ---------> Traffic light orientations
+            speed.py    --------------------------> Vehicle moving speeds
+            traffic_light_sequence.py    ---------> Sequences for toggling traffic lights
+            traffic_lights.py    -----------------> Traffic light status
         trafic_signal_control\    ----------------> Single thread signal light control
-            __init__.py
-            traffic_signal_control_master.py
+            __init__.py    -----------------------> Export the folder as module
+            traffic_signal_control_master.py    --> Traffic light control
         vehicle\    ------------------------------> One vehicle object per thread
-            __init__.py
-            vehicle.py  
+            __init__.py    -----------------------> Export the folder as module
+            vehicle.py    ------------------------> Vehicle implementation
         .flaskenv    -----------------------------> Python flask environment variables
-        backend.py
-        config.py
+        backend.py    ----------------------------> Flask app
+        config.py    -----------------------------> Flask app configurations
         run_threads.py    ------------------------> Start vehicle and congestion computation
-    unit_tests\    -------------------------------> Automated tests    
-    .gitignore 
-    README.md
+    .gitignore    --------------------------------> Used by Git to exclude files
+    README.md    ---------------------------------> Documentation
     requirements.txt    --------------------------> Python library requirements
 ```
 
@@ -181,6 +182,10 @@ Remember to start **Redis** with:
 ``redis-server``
 
 The connection information such as **port number** is shown in the terminal.
+
+Commands to start backend, threads and Redis database should run in separate terminals.
+
+Restart the computer or the virtual machine if things do not work after first time environment configuration.
 
 
 ## Location Encoding
@@ -235,10 +240,12 @@ The map is encoded in a dictionary with the following format.
 }
 ```
 
+Each lane on the same road segment has an assigned crossroad and traffic light orientation to check.
+
 
 ## Database
 
-All records are in JSON format.
+All records are in JSON/Python dictionary format.
 
 
 ### Road Segment Record
@@ -300,7 +307,7 @@ JSON format:
 
 ### Database Structure
 
-**Redis** is primarily a key-value pair database system. Compared with any SQL based database system such as **MySQL**, which has a strict on the structure, ** Redis** allows more flexibility. The content in **Redis** used by the project is listed below.
+**Redis** is primarily a key-value pair database system. Compared with any SQL based database system such as **MySQL**, which has a strict on the structure, **Redis** allows more flexibility. The content in **Redis** used by the project is listed below.
 
 
 ```
@@ -349,13 +356,13 @@ The route names are fairly self-explanatory. The ``/query_location`` route is us
 
 When ``<vehicle_id>`` in ``/query_vehicle_status/<vehicle_id>`` equals the total number of vehicles, all vehicle records are returned.
 
-If any vehicle thread or congestion computation thread queries the backend, the backend will query the database and return the information.
+When ``intersection`` in ``/query_signal_light/<intersection>`` equals the total number of crossroads, all crossroad signal light records are returned.
+
+If any vehicle thread or congestion computation thread queries the backend, the backend gets information from the database and returns to the querying threads.
 
 If any thread sends the updated information to the backend, the backend will temporarily hold the information until all threads have reported. After all the information is gathered, the backend will temporarily block all requests, update the database then resume operation.
 
 To ensure data consistency, all operations to the database are protected with mutex, including queries.
-
-The backend responses to the requests sent by the threads with the current timestamp. If the threads receive timestamps that are different from their own ones, the threads then know their requests have been fullfilled and can move to the next decision making process.
 
 
 ## Vehicle Workflow
@@ -365,15 +372,17 @@ Each vehicle is a single thread:
 1. Ask for permission to enter the map.
 2. If permission granted, start on road segment A.
 3. If not, retry.
-4. Ask for the congestion map.
-5. Ask for traffic light status if at the crossroad.
-6. Ask for whether there are any vehicles ahead.
-7. Make movement decision.
-8. Send the movement decision to the backend.
-9. Once the backend has acknowledged the update, go to the next iteration.
-10. The vehicle resets its location and route completion status and restarts.
+4. Ask for traffic light status if at the crossroad.
+5. Ask for whether there are any vehicles ahead.
+6. Make movement decision.
+7. Send the movement decision to the backend.
+8. Once the vehicle completes the route and exits, it resets its location and route completion status and restarts.
 
-The number of vehicles can be changed.
+The number of vehicles is fixed.
+
+All vehicles compete against each other to get into the traffic system to complete the route.
+
+Vehicles will search for all possible combinations of routes starting from the current road segment. Among those routes, the ones that reach the target crossroad are ranked according to route length. The shortest one is picked. If multiple shortest route exists, pick randomly.
 
 
 ## Congestion Computation Workflow
@@ -385,31 +394,34 @@ Each congestion computation thread is responsible for one road segment, not the 
 3. Compute the congestion index.
 4. Send the updated congestion index to the backend.
 5. Once the backend has acknowledged the update, go to the next iteration.
-6. The thread terminates only with manual exit of the program.
 
-The number of congestion computation threads is fixed, because the map does not change. The number of road segments is fixed.
+The number of congestion computation threads is fixed, because the map does not change. 
 
-Formula to calculate the congestion index:
+The number of road segments is also fixed.
 
-1. Once a vehicle shows up on the road segment, put the car and the timestamp into an array.
-2. Sum up the difference between the current time and the timestamp for each vehicle.
-3. Divide the sum by the number of vehicles.
-4. Once the vehicle leaves the road segment, remove the record from the array.
+Currently, the congestion index is simply how many vehicles there are on either lanes of the road segment.
 
 
 ## Traffic Light Control Workflow
 
+Current implementation is to have the traffic lights toggled at fixed sequence and fixed time interval.
+
 One single thread exists for doing traffic light control.
+
+Ideally, the traffic light control workflow should be the following.
 
 1. Ask for road congestion information.
 2. Check where there are any vehicles at the cross roads.
 3. Make decision on changing the traffic lights.
 4. Send the updated traffic light status to the backend.
 5. Wait for the backend to acknowledge, go to the next iteration.
-6. The thread terminates only with manual exit of the program.
 
 
-## Unit Test Workflow
+## Frontend Webpage Implementation
+
+The frontend page polls the backed at fixed time interval to get vehicle and traffic light status.
+
+Once the backend responses, the front page adjusts vehicle positions and traffic lights.
 
 
 ## Tutorials

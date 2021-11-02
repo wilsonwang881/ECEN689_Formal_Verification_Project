@@ -63,6 +63,14 @@ def update(mode, id, value):
         current_states[Road(value["road_segment"]).name][Direction(value["direction"]).name]["vehicles"]["vehicle_%d" % id]["vehicle_speed"] = value["vehicle_speed"]                       
         current_states["all_vehicles"]["vehicle_%d" % id] = value
 
+        current_states["vehicles"] += 1
+
+        if value["road_segment"] == Road.ROAD_A.value \
+            and value["location"] == 2 \
+                and value["direction"] == Direction.DIRECTION_LEFT.value:
+
+            current_states["pending_vehicles"] += 1
+
         # Do not update crossroad->vehicle mapping: no such mapping in the database        
         
     elif (mode == "congestion_compute_report") and (id not in congestion_compute_records):     
@@ -140,13 +148,13 @@ def update(mode, id, value):
 
         clock += 2
 
-        # for i in range(total_number_of_vehicles):
+        for i in range(total_number_of_vehicles):
 
-        #     db_response = json.loads(redis_db.get("vehicle_%d" % i))
+            db_response = json.loads(redis_db.get("vehicle_%d" % i))
             
-        #     if Road(db_response["road_segment"]) == Road.ROAD_A and db_response["location"] != 2 and Direction(db_response["direction"]) == Direction.DIRECTION_LEFT:
+            # if Road(db_response["road_segment"]) == Road.ROAD_A and db_response["location"] != 2 and Direction(db_response["direction"]) == Direction.DIRECTION_LEFT:
 
-        #         print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (i, clock, Road(db_response["road_segment"]).name, db_response["location"], Speed(db_response["vehicle_speed"]).name, Direction(db_response["direction"]).name))
+            # print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (i, clock, Road(db_response["road_segment"]).name, db_response["location"], Speed(db_response["vehicle_speed"]).name, Direction(db_response["direction"]).name))
         
         for key in current_states:            
 
@@ -163,6 +171,7 @@ def update(mode, id, value):
             current_states[road_segment.name] = tmpp_record
 
         for crossroad in Crossroads:
+
             tmpp_record = {}
             
             for signal_light_position in Signal_light_positions:
@@ -170,7 +179,7 @@ def update(mode, id, value):
                 if signal_light_position in MAP[crossroad]:
 
                     tmpp_record[signal_light_position.name] = Traffic_light.RED.name
-                # tmpp_record[signal_light_position.name] = Traffic_light.RED.name            
+                        
             current_states[crossroad.name] = tmpp_record
 
         current_states["vehicles"] = 0
@@ -205,11 +214,11 @@ def index():
 @app.route("/query_signal_lights/<int:intersection>")
 def query_signal_lights(intersection):
 
-    # mutex.acquire()
+    mutex.acquire()
 
     res = json.loads(redis_db.get(Crossroads(intersection).name))
 
-    # mutex.release()
+    mutex.release()
 
     return json.dumps(res)
     
@@ -235,15 +244,15 @@ def set_signal_lights(intersection):
 
 # Route for getting the location of a vehicle
 @app.route("/query_vehicle_status/<int:vehicle_id>")
-def query_vehicle_location(vehicle_id):
-
-    # mutex.acquire()
+def query_vehicle_location(vehicle_id):    
 
     if vehicle_id < total_number_of_vehicles:
 
+        mutex.acquire()
+
         res = json.loads(redis_db.get("vehicle_%d" %vehicle_id))
 
-    # mutex.release()
+        mutex.release()
 
         return jsonify(res)
 
@@ -318,11 +327,11 @@ def set_road_congestion(road_id):
 @app.route("/query_location/<int:road_id>/<int:direction>")
 def query_location(road_id, direction):
 
-    # mutex.acquire()
+    mutex.acquire()
 
     res = json.loads(redis_db.get(Road(road_id).name))
 
-    # mutex.release()
+    mutex.release()
 
     return res[Direction(direction).name]["vehicles"]
 
