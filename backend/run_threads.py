@@ -44,5 +44,3 @@ for thread_object in vehicle_thread_list:
 # Wait for threads to terminate
 for thread_object in congestion_compute_thread_list:
     thread_object.join()
-
-# TODO: talk to the backend and allow dynamically adjust the number of vehicles injected to the traffic system.
