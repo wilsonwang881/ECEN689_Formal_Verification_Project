@@ -66,7 +66,6 @@ for crossroad in Crossroads:
     current_states[crossroad.name] = tmpp_record
 
 # Record the number of vehicles in the database
-# TODO: change the vehicle injection process to one at a time
 redis_db.set("vehicles", 0)
 current_states["vehicles"] = 0
 current_states["pending_vehicles"] = total_number_of_vehicles

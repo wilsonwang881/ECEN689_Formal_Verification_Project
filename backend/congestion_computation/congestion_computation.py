@@ -36,8 +36,6 @@ class Congestion_Computation(threading.Thread):
 
         while True:
 
-            # TODO: change the congestion computation to: average vehicle speed
-
             # Get a list of vehicles on the road            
             for direction in Direction:
                 response = requests.get("http://127.0.0.1:5000/query_location/%d/%d" \

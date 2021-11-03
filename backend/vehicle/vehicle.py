@@ -576,7 +576,6 @@ class Vehicle(threading.Thread):
 
                             # If the vehicle goes past the crossroad
                             # Update the route completion status
-                            # TODO PAY ATTENTION HERE, THE SELF.LOCATION_VISITED SHOULD BE UPDATED AT OTHER PLACES AS WELL
                             if crossroad_to_query in MAP["target_crossroad"] and crossroad_to_query not in self.location_visited:
 
                                 self.location_visited.append(crossroad_to_query)
