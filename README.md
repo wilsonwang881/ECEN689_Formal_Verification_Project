@@ -141,6 +141,9 @@ ECEN689_Formal_Verification_Project\    ----------> Root directory
         config.py    -----------------------------> Flask app configurations
         run_threads.py    ------------------------> Start vehicle and congestion computation
     .gitignore    --------------------------------> Used by Git to exclude files
+    verification    ------------------------------> Promela and Spin model checking
+        backend.pml    ---------------------------> Main Promela code
+        lock.h    --------------------------------> Mutex macros
     README.md    ---------------------------------> Documentation
     requirements.txt    --------------------------> Python library requirements
 ```
