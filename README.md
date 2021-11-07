@@ -19,7 +19,7 @@
 - [Congestion Computation Workflow](#congestion-computation-workflow)
 - [Traffic Light Control Workflow](#traffic-light-control-workflow)
 - [Frontend Webpage Implementation](#frontend-webpage-implementation)
-- [Unit Test Workflow](#unit-test-workflow)
+- [Model Checking](#model-checking)
 - [Tutorials](#tutorials)
 
 
@@ -424,6 +424,42 @@ The frontend page polls the backed at fixed time interval to get vehicle and tra
 Once the backend responses, the front page adjusts vehicle positions and traffic lights.
 
 
+## Model Checking
+
+The project uses [Spin](http://spinroot.com/spin/whatispin.html) for verifying the integerity of the application.
+
+[Spin](http://spinroot.com/spin/whatispin.html) is a verification tool for multi-threaded software that suits our design of the traffic simulation software.
+
+iSpin is one of the GUIs for [Spin](http://spinroot.com/spin/whatispin.html) and requires Tck/Tk and wish to use.
+
+After installing both [Spin](http://spinroot.com/spin/whatispin.html) and iSpin, remember to copy both binaries to  ``/usr/local/bin`` for easy access from terminals.
+
+THe verification tool replies on a modeling language called Promela.
+
+The verification replies on re-writing the application in Promela, including the constraints such as no collision or U-turn.
+
+The communication between threads and the backend can be modeled with communication channels in Promela.
+
+The mutex locking behaviour, though has no direct implementation in Promela, can be modeled with macros from this [post](https://lwn.net/Articles/243851/):
+
+```
+#define spin_lock(mutex) \
+  do \
+  :: 1 -> atomic { \
+      if \
+      :: mutex == 0 -> \
+        mutex = 1; \
+        break \
+      :: else -> skip \
+      fi \
+    } \
+  od
+ 
+#define spin_unlock(mutex) \
+  mutex = 0
+```
+
+
 ## Tutorials
 
 [The Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world) by Miguel Grinberg.
@@ -433,3 +469,13 @@ Once the backend responses, the front page adjusts vehicle positions and traffic
 [Python - Multithreaded Programming](https://www.tutorialspoint.com/python/python_multithreading.htm).
 
 [Object-Oriented Programming (OOP) in Python 3](https://realpython.com/python3-object-oriented-programming/)
+
+[Using Promela and Spin to verify parallel algorithms](https://lwn.net/Articles/243851/)
+
+[SPIN README](http://spinroot.com/spin/Man/README.html)
+
+[Spin GitHub](https://github.com/nimble-code/Spin)
+
+[Tcl Developer Xchange](https://www.tcl.tk/software/tcltk/)
+
+[Basic Spin Manual](https://spinroot.com/spin/Man/Manual.html)
