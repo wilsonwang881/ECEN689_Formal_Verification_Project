@@ -366,9 +366,3 @@ def add_vehicle(vehicle_id):
 
         return {"response": "No", "clock": str(clock_tmpp)}
 
-
-# Route for removing vehicle from the system
-@app.route("/remove_vehicle/<int:vehicle_id>")
-def remove_vehicle(vehicle_id):
-
-    pass

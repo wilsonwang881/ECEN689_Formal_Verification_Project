@@ -351,7 +351,6 @@ The backend uses Python Flask as the framework and implements the following APIs
 | ``/set_road_congestion/<road_id>``                           |
 | ``/query_location/<road_id>/<direction>``                    |
 | ``/add_vehicle/<vehicle_id>``                                |
-| ``/remove_vehicle/<vehicle_id>``                             |
 
 Threads report updated information with HTTP POST method. The payload is in JSON format, as shown in [Database](#database).
 
@@ -437,11 +436,17 @@ iSpin is one of the GUIs for [Spin](http://spinroot.com/spin/whatispin.html) and
 
 After installing both [Spin](http://spinroot.com/spin/whatispin.html) and iSpin, remember to copy both binaries to  ``/usr/local/bin`` for easy access from terminals.
 
+``Examples/`` folder from the [Spin](http://spinroot.com/spin/whatispin.html) source code should be looked into to get familiarized with Promela syntax.
+
 THe verification tool replies on a modeling language called Promela.
 
 The verification replies on re-writing the application in Promela, including the constraints such as no collision or U-turn.
 
 The communication between threads and the backend can be modeled with communication channels in Promela.
+
+In other words, ``route`` in Python Flask = ``chan`` in Promela.
+
+One ``proctype`` definition corresponds to one type of threads.
 
 The mutex locking behaviour, though has no direct implementation in Promela, can be modeled with macros from this [post](https://lwn.net/Articles/243851/):
 
