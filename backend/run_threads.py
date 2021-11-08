@@ -2,13 +2,11 @@
 Date: 10/19/2021
 Description: the code starts a list of vehicle threads.
 """
+
 from vehicle import Vehicle
 from congestion_computation import Congestion_Computation
 from traffic_signal_control import Traffic_signal_control_master 
-from location_speed_encoding import Crossroads
-from location_speed_encoding import Direction
 from location_speed_encoding import Road
-from location_speed_encoding import Signal_light_positions
 
 # Number of vehicles
 vehicle_number = 150

@@ -141,8 +141,8 @@ ECEN689_Formal_Verification_Project\    ----------> Root directory
         config.py    -----------------------------> Flask app configurations
         run_threads.py    ------------------------> Start vehicle and congestion computation
     .gitignore    --------------------------------> Used by Git to exclude files
-    verification    ------------------------------> Promela and Spin model checking
-        backend.pml    ---------------------------> Main Promela code
+    verification\   ------------------------------> Promela and Spin model checking
+        main.pml    ------------------------------> Main Promela code
         lock.h    --------------------------------> Mutex macros
     README.md    ---------------------------------> Documentation
     requirements.txt    --------------------------> Python library requirements
@@ -334,6 +334,9 @@ JSON format:
 ...
 "vehicles": <number_of_vehicles_in_the_system>,
 "pending_vehicles": <number_of_vehicles_waiting_to_enter_the_system>
+"vehicle_collisions": <number_of_collisions>
+"u_turns": <number_of_u_turns>
+"throughput": <number_of_vehicles_finished_route_within_past_120_seconds>
 ```
 
 
@@ -356,7 +359,7 @@ Threads report updated information with HTTP POST method. The payload is in JSON
 
 The route names are fairly self-explanatory. The ``/query_location`` route is used to get the vehicle records at any road segment.
 
-When ``<vehicle_id>`` in ``/query_vehicle_status/<vehicle_id>`` equals the total number of vehicles, all vehicle records are returned.
+When ``<vehicle_id>`` in ``/query_vehicle_status/<vehicle_id>`` equals the total number of vehicles, all vehicle records are returned. U-turn, collision and throughtput are also returned.
 
 When ``intersection`` in ``/query_signal_light/<intersection>`` equals the total number of crossroads, all crossroad signal light records are returned.
 

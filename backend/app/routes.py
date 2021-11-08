@@ -10,6 +10,7 @@ from app import current_states
 from app import clock
 from app import mutex
 from app import total_number_of_vehicles
+from app import number_of_vehicles_finished
 
 from location_speed_encoding import Crossroads
 from location_speed_encoding import Direction
@@ -147,12 +148,73 @@ def update(mode, id, value):
         signal_light_records.clear()
 
         clock += 2
+    
+        # Check vehicle collision
+        collision = 0
+        
+        for road_segment in Road:
+
+            for direction in Direction:                
+
+                current_road_segment_vehicles = current_states[road_segment.name][direction.name]["vehicles"]
+
+                tmpp_position_list = list()
+
+                for key in current_road_segment_vehicles:
+
+                    if road_segment != Road.ROAD_A and current_road_segment_vehicles[key]["vehicle_location"] != 2:
+
+                        if current_road_segment_vehicles[key]["vehicle_location"] in tmpp_position_list:
+
+                            collision += 1
+
+                        else:
+
+                            tmpp_position_list.append(current_road_segment_vehicles[key]["vehicle_location"]) 
+
+        current_states["vehicle_collisions"] = collision
+
+        # Check vehicle U-turn, throughput and traffic light violation
+        u_turn = 0
+
+        has_vehicle_finished = False
+
+        traffic_light_violation = 0
+
+        for i in range(total_number_of_vehicles):
+
+            past_position = json.loads(redis_db.get("vehicle_%d" % i))
+            current_position = current_states["vehicle_%d" % i]
+
+            if past_position["road_segment"] == current_position["road_segment"] \
+                and past_position["location"] == current_position["location"] \
+                    and past_position["direction"] != current_position["direction"] \
+                        and (past_position["road_segment"] != Road.ROAD_A.value and past_position["location"] != 2):
+
+                u_turn += 1
+
+            if current_states["vehicle_%d" % i]["road_segment"] == Road.ROAD_A.value \
+                and current_states["vehicle_%d" % i]["direction"] == Direction.DIRECTION_RIGHT.value \
+                    and current_states["vehicle_%d" % i]["location"] == 1:
+
+                has_vehicle_finished = True
+                
+        if has_vehicle_finished:
+            
+            number_of_vehicles_finished[clock % 120] = 1
+
+        else:
+
+            number_of_vehicles_finished[clock % 120] = 0
+
+        current_states["u_turns"] = u_turn  
+        current_states["throughput"] = sum(number_of_vehicles_finished) * 30    
 
         for i in range(total_number_of_vehicles):
 
             db_response = json.loads(redis_db.get("vehicle_%d" % i))                        
 
-            print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (i, clock, Road(db_response["road_segment"]).name, db_response["location"], Speed(db_response["vehicle_speed"]).name, Direction(db_response["direction"]).name))
+            print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (i, clock, Road(db_response["road_segment"]).name, db_response["location"], Speed(db_response["vehicle_speed"]).name, Direction(db_response["direction"]).name))            
 
         for crossroad in Crossroads:
 
@@ -164,7 +226,7 @@ def update(mode, id, value):
 
                 print("orientation: %s, status %s" % (orientation, db_response[orientation]))
         
-        for key in current_states:            
+        for key in current_states:                                
 
             redis_db.set(key, json.dumps(current_states[key]))
 
@@ -269,13 +331,20 @@ def query_vehicle_location(vehicle_id):
         mutex.acquire()
 
         res_vehicle = json.loads(redis_db.get("all_vehicles"))
-        res_traffic_light = redis_db.get("all_traffic_lights")          
+        res_traffic_light = redis_db.get("all_traffic_lights")
+        res_collisions = redis_db.get("vehicle_collisions")
+        res_u_turns = redis_db.get("u_turns")
+        res_throughtput = redis_db.get("throughput")
 
         mutex.release()        
 
         if res_traffic_light != {}:
 
-            res_vehicle.update(json.loads(res_traffic_light))
+            res_vehicle.update(json.loads(res_traffic_light))        
+
+        res_vehicle["vehicle_collisions"] = int(res_collisions)
+        res_vehicle["u_turns"] = int(res_u_turns)
+        res_vehicle["throughput"] = int(res_throughtput)
 
         return jsonify(res_vehicle)
 
