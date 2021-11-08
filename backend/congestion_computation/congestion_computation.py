@@ -26,7 +26,6 @@ class Congestion_Computation(threading.Thread):
         self.congestion_index_anticlockwise = 0
         self.vehicle_list_clockwise = {}
         self.vehicle_list_anticlockwise = {}
-        self.current_time = 0
 
     
     # Inherited from the threading library
@@ -58,17 +57,11 @@ class Congestion_Computation(threading.Thread):
             payload[Direction.DIRECTION_RIGHT.name]["congestion_index"] = self.congestion_index_clockwise
             payload[Direction.DIRECTION_LEFT.name] = {}
             payload[Direction.DIRECTION_LEFT.name]["congestion_index"] = self.congestion_index_anticlockwise
-
-            while True:
-                # for direction in Direction:
-                response = requests.post("http://127.0.0.1:5000/set_road_congestion/%d" % \
-                    (self.road_segment.value), json=payload)
-
-                if response.text != self.current_time:
-                    self.current_time = response.text
-                    break
-                else:                    
-                    time.sleep(polling_interval)
+          
+            response = requests.post("http://127.0.0.1:5000/set_road_congestion/%d" % \
+                (self.road_segment.value), json=payload)
+                             
+            time.sleep(polling_interval)
             
             
             

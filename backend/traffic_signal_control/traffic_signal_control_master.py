@@ -13,7 +13,7 @@ polling_interval = 1.0
 
 class Traffic_signal_control_master:
     def __init__(self) -> None:
-        self.current_time = 0
+        
         self.traffic_lights = {}
         self.signal_timer = 0
         self.green_position = Signal_light_positions.NORTH
@@ -54,16 +54,12 @@ class Traffic_signal_control_master:
             self.timer += 1      
             
             # Send the updated traffic light signals to the backend
-            while True:
-                for crossroad in Crossroads:
-                    response = requests.post("http://127.0.0.1:5000/set_signal_lights/%d" % crossroad.value, \
-                        json=self.traffic_lights[crossroad.name])
+            for crossroad in Crossroads:
+                
+                response = requests.post("http://127.0.0.1:5000/set_signal_lights/%d" % crossroad.value, \
+                    json=self.traffic_lights[crossroad.name])
 
-                if response.text != self.current_time:
-                    self.current_time = response.text
-                    break
-                else:
-                    time.sleep(polling_interval)
+            time.sleep(polling_interval)
 
 
 

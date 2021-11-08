@@ -382,7 +382,7 @@ The number of vehicles is fixed.
 
 All vehicles compete against each other to get into the traffic system to complete the route.
 
-Vehicles will search for all possible combinations of routes starting from the current road segment. Among those routes, the ones that reach the target crossroad are ranked according to route length. The shortest one is picked. If multiple shortest route exists, pick randomly.
+Vehicles will search for all possible combinations of routes starting from the current road segment for up to the next 6 possible road segments. Among those routes, the ones that reach the target crossroad are ranked according to route length. The shortest one is picked. If multiple shortest route exists, pick randomly.
 
 
 ## Congestion Computation Workflow
@@ -423,6 +423,8 @@ The frontend page polls the backed at fixed time interval to get vehicle and tra
 
 Once the backend responses, the front page adjusts vehicle positions and traffic lights.
 
+Open the developer tool in any browser and change to the console. The number of vehicles that are waiting to enter the map is printed out in the console.
+
 
 ## Tutorials
 
@@ -433,3 +435,5 @@ Once the backend responses, the front page adjusts vehicle positions and traffic
 [Python - Multithreaded Programming](https://www.tutorialspoint.com/python/python_multithreading.htm).
 
 [Object-Oriented Programming (OOP) in Python 3](https://realpython.com/python3-object-oriented-programming/)
+
+[Verifying Multi-threaded Software with Spin](http://spinroot.com/spin/whatispin.html)
