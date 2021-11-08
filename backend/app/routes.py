@@ -150,11 +150,19 @@ def update(mode, id, value):
 
         for i in range(total_number_of_vehicles):
 
-            db_response = json.loads(redis_db.get("vehicle_%d" % i))
-            
-            # if Road(db_response["road_segment"]) == Road.ROAD_A and db_response["location"] != 2 and Direction(db_response["direction"]) == Direction.DIRECTION_LEFT:
+            db_response = json.loads(redis_db.get("vehicle_%d" % i))                        
 
-            # print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (i, clock, Road(db_response["road_segment"]).name, db_response["location"], Speed(db_response["vehicle_speed"]).name, Direction(db_response["direction"]).name))
+            print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (i, clock, Road(db_response["road_segment"]).name, db_response["location"], Speed(db_response["vehicle_speed"]).name, Direction(db_response["direction"]).name))
+
+        for crossroad in Crossroads:
+
+            print("Crossroad: %s" % crossroad.name)
+
+            db_response = json.loads(redis_db.get(crossroad.name))
+
+            for orientation in db_response:                
+
+                print("orientation: %s, status %s" % (orientation, db_response[orientation]))
         
         for key in current_states:            
 
@@ -358,9 +366,3 @@ def add_vehicle(vehicle_id):
 
         return {"response": "No", "clock": str(clock_tmpp)}
 
-
-# Route for removing vehicle from the system
-@app.route("/remove_vehicle/<int:vehicle_id>")
-def remove_vehicle(vehicle_id):
-
-    pass

@@ -19,7 +19,7 @@
 - [Congestion Computation Workflow](#congestion-computation-workflow)
 - [Traffic Light Control Workflow](#traffic-light-control-workflow)
 - [Frontend Webpage Implementation](#frontend-webpage-implementation)
-- [Unit Test Workflow](#unit-test-workflow)
+- [Model Checking](#model-checking)
 - [Tutorials](#tutorials)
 
 
@@ -141,6 +141,9 @@ ECEN689_Formal_Verification_Project\    ----------> Root directory
         config.py    -----------------------------> Flask app configurations
         run_threads.py    ------------------------> Start vehicle and congestion computation
     .gitignore    --------------------------------> Used by Git to exclude files
+    verification    ------------------------------> Promela and Spin model checking
+        backend.pml    ---------------------------> Main Promela code
+        lock.h    --------------------------------> Mutex macros
     README.md    ---------------------------------> Documentation
     requirements.txt    --------------------------> Python library requirements
 ```
@@ -348,7 +351,6 @@ The backend uses Python Flask as the framework and implements the following APIs
 | ``/set_road_congestion/<road_id>``                           |
 | ``/query_location/<road_id>/<direction>``                    |
 | ``/add_vehicle/<vehicle_id>``                                |
-| ``/remove_vehicle/<vehicle_id>``                             |
 
 Threads report updated information with HTTP POST method. The payload is in JSON format, as shown in [Database](#database).
 
@@ -426,6 +428,48 @@ Once the backend responses, the front page adjusts vehicle positions and traffic
 Open the developer tool in any browser and change to the console. The number of vehicles that are waiting to enter the map is printed out in the console.
 
 
+## Model Checking
+
+The project uses [Spin](http://spinroot.com/spin/whatispin.html) for verifying the integerity of the application.
+
+[Spin](http://spinroot.com/spin/whatispin.html) is a verification tool for multi-threaded software that suits our design of the traffic simulation software.
+
+iSpin is one of the GUIs for [Spin](http://spinroot.com/spin/whatispin.html) and requires Tck/Tk and wish to use.
+
+After installing both [Spin](http://spinroot.com/spin/whatispin.html) and iSpin, remember to copy both binaries to  ``/usr/local/bin`` for easy access from terminals.
+
+``Examples/`` folder from the [Spin](http://spinroot.com/spin/whatispin.html) source code should be looked into to get familiarized with Promela syntax.
+
+THe verification tool replies on a modeling language called Promela.
+
+The verification replies on re-writing the application in Promela, including the constraints such as no collision or U-turn.
+
+The communication between threads and the backend can be modeled with communication channels in Promela.
+
+In other words, ``route`` in Python Flask = ``chan`` in Promela.
+
+One ``proctype`` definition corresponds to one type of threads.
+
+The mutex locking behaviour, though has no direct implementation in Promela, can be modeled with macros from this [post](https://lwn.net/Articles/243851/):
+
+```
+#define spin_lock(mutex) \
+  do \
+  :: 1 -> atomic { \
+      if \
+      :: mutex == 0 -> \
+        mutex = 1; \
+        break \
+      :: else -> skip \
+      fi \
+    } \
+  od
+ 
+#define spin_unlock(mutex) \
+  mutex = 0
+```
+
+
 ## Tutorials
 
 [The Flask Mega-Tutorial](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-i-hello-world) by Miguel Grinberg.
@@ -437,3 +481,12 @@ Open the developer tool in any browser and change to the console. The number of 
 [Object-Oriented Programming (OOP) in Python 3](https://realpython.com/python3-object-oriented-programming/)
 
 [Verifying Multi-threaded Software with Spin](http://spinroot.com/spin/whatispin.html)
+[Using Promela and Spin to verify parallel algorithms](https://lwn.net/Articles/243851/)
+
+[SPIN README](http://spinroot.com/spin/Man/README.html)
+
+[Spin GitHub](https://github.com/nimble-code/Spin)
+
+[Tcl Developer Xchange](https://www.tcl.tk/software/tcltk/)
+
+[Basic Spin Manual](https://spinroot.com/spin/Man/Manual.html)
