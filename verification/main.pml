@@ -35,6 +35,12 @@ proctype Congestion_Computation(short crossroad_id) {
     short self_id = crossroad_id;
     printf("Congestion computation worker %d running\n", self_id);
 
+    byte congestion_index = 0;
+
+    do
+    ::set_road_congestion!congestion_index;
+    od
+
 }
 
 proctype Vehicle(short id) {
@@ -53,6 +59,12 @@ proctype Traffic_Signal_Control_Master() {
 proctype Backend() {
 
     printf("Backend running\n");
+
+    byte congestion_index[NUMBER_OF_ROAD_SEGMENTS];
+
+    do
+    ::set_road_congestion?congestion_index[0];
+    od
 
 }
 
