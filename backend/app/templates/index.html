@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <head>
     <meta charset="utf-8">
-    <title>ECEN 689 Frontend</title>
+    <title>ECEN 689 Project</title>
     <link rel="icon" href="data:,">
 </head>
 
@@ -9,7 +9,7 @@
     
     <body>
 
-        <h1>ECEN 689 Introduction to Formal Verification Class Project</h1>
+        <h2>ECEN 689 Introduction to Formal Verification Class Project</h2>
         
         <svg id="svg_base" width="100%" height="1000"></svg>
 
@@ -307,6 +307,47 @@
             }
         }        
 
+        // Add texts for reporting traffic system information   
+        var throughtput_report_txt = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        throughtput_report_txt.setAttribute('x', 10);
+        throughtput_report_txt.setAttribute('y', 25);
+        throughtput_report_txt.setAttribute('font-size','20');
+        throughtput_report_txt.innerHTML = "Throughput: ";
+
+        svg_base.appendChild(throughtput_report_txt);
+
+        var stale_vehicles_report_txt = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        stale_vehicles_report_txt.setAttribute('x', 10);
+        stale_vehicles_report_txt.setAttribute('y', 50);
+        stale_vehicles_report_txt.setAttribute('font-size','20');
+        stale_vehicles_report_txt.innerHTML = "Stale vehicles: ";
+
+        svg_base.appendChild(stale_vehicles_report_txt);
+
+        var collision_report_txt = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        collision_report_txt.setAttribute('x', 10);
+        collision_report_txt.setAttribute('y', 75);
+        collision_report_txt.setAttribute('font-size','20');
+        collision_report_txt.innerHTML = "Collisions: ";
+
+        svg_base.appendChild(collision_report_txt);
+
+        var u_turn_report_txt = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        u_turn_report_txt.setAttribute('x', 10);
+        u_turn_report_txt.setAttribute('y', 100);
+        u_turn_report_txt.setAttribute('font-size','20');
+        u_turn_report_txt.innerHTML = "U-turns: ";
+
+        svg_base.appendChild(u_turn_report_txt);     
+        
+        var red_light_violation_report_txt = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        red_light_violation_report_txt.setAttribute('x', 10);
+        red_light_violation_report_txt.setAttribute('y', 125);
+        red_light_violation_report_txt.setAttribute('font-size','20');
+        red_light_violation_report_txt.innerHTML = "Red light violations: ";
+
+        svg_base.appendChild(red_light_violation_report_txt);     
+
         // Timed job for gettin vehicle locations
         function update_vehicle_location() {
             let httpRequest = new XMLHttpRequest();
@@ -321,9 +362,25 @@
 
                     let stale_vehicles = 0;
 
+                    let vehicle_collisions = 0;
+
+                    let vehicle_u_turns = 0;
+
+                    let throughput = 0;
+
+                    let red_light_violations = 0;
+
                     if (status == 0 || (status >= 200 && status < 400)) {
                         
-                        let response = JSON.parse(httpRequest.responseText);       
+                        let response = JSON.parse(httpRequest.responseText);      
+                        
+                        vehicle_collisions = response["vehicle_collisions"];
+
+                        vehicle_u_turns = response["u_turns"];
+
+                        throughput = response["throughput"];
+
+                        red_light_violations = response["red_light_violation"]
                         
                         // Set the traffic light signals
                         for (let traffic_light_id = 0; traffic_light_id < 9; traffic_light_id++) {
@@ -393,8 +450,15 @@
                         }                                                              
                     }   
                     
-                    console.log("Stale vehicles: " + stale_vehicles);
+                    stale_vehicles_report_txt.innerHTML = "Stale vehicles: " + stale_vehicles;                    
 
+                    collision_report_txt.innerHTML = "Collisions: " + vehicle_collisions;                
+
+                    u_turn_report_txt.innerHTML = "U-turns: " + vehicle_u_turns;                    
+
+                    throughtput_report_txt.innerHTML = "Throughput: " + throughput + " vehicles/h"; 
+                    
+                    red_light_violation_report_txt.innerHTML = "Red light violations: " + red_light_violations;
                 }   
             }                             
         }        

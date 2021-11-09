@@ -88,6 +88,19 @@ redis_db.set("all_vehicles", json.dumps(current_states["all_vehicles"]))
 current_states["all_traffic_lights"] = {}
 redis_db.set("all_traffic_lights", json.dumps(current_states["all_traffic_lights"]))
 
+current_states["vehicle_collisions"] = 0
+redis_db.set("vehicle_collisions", 0)
+
+current_states["u_turns"] = 0
+redis_db.set("u_turns", 0)
+
+number_of_vehicles_finished = [0] * 120
+current_states["throughput"] = 0
+redis_db.set("throughput", 0)
+
+current_states["red_light_violation"] = 0
+redis_db.set("red_light_violation", 0)
+
 mutex.release()
 
 from app import routes
