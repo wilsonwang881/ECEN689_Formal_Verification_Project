@@ -216,15 +216,23 @@ def update(mode, id, value):
                     finished_vehicle_id = i
 
             # Check traffic light violations
-            if (past_position["location"] == 0 and past_position["direction"] != Direction.DIRECTION_RIGHT \
-                or past_position["location"] == 29 and past_position["direction"] != Direction.DIRECTION_LEFT) \
-                    and (past_position["road_segment"] != Road.ROAD_A.value \
-                        and past_position["direction"] != Direction.DIRECTION_RIGHT.value):
+            if (past_position["location"] == 0 \
+                or past_position["location"] == 29): # \
+                    
 
-                crossroad_to_query = MAP[Road(past_position["road_segment"])][Direction(past_position["direction"])]["crossroad"]
-                traffic_light_orientation = MAP[Road(past_position["road_segment"])][Direction(past_position["direction"])]["traffic_light_orientation"]                             
+                crossroad_to_query = Crossroads.CROSSROAD_B
+                traffic_light_orientation = Signal_light_positions.EAST
+                # Get the right crossroad to query    
+                try:                
+                    crossroad_to_query = MAP[Road(past_position["road_segment"])][Direction(past_position["direction"])]["crossroad"]
+                    traffic_light_orientation = MAP[Road(past_position["road_segment"])][Direction(past_position["direction"])]["traffic_light_orientation"]               
+                except:
+                    print(crossroad_to_query)
+                    print(traffic_light_orientation)
+                    print(past_position)
+                    print(current_position)
 
-                response = traffic_control_master.return_traffic_light_status(crossroad_to_query.name) #json.loads(redis_db.get(crossroad_to_query.name))
+                response = json.loads(redis_db.get(crossroad_to_query.name))
 
                 signal_light = Traffic_light[response[traffic_light_orientation.name]] 
 
@@ -268,6 +276,11 @@ def update(mode, id, value):
 
         #         print("orientation: %s, status %s" % (orientation, db_response[orientation]))       
 
+        # Flush Redis DB
+        redis_db.flushdb()
+
+                # print("orientation: %s, status %s" % (orientation, db_response[orientation]))
+        
         # Flush Redis DB
         redis_db.flushdb()
 
