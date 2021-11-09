@@ -337,6 +337,7 @@ JSON format:
 "vehicle_collisions": <number_of_collisions>
 "u_turns": <number_of_u_turns>
 "throughput": <number_of_vehicles_finished_route_within_past_120_seconds>
+"red_light_violation": <number_of_red_light_violations>
 ```
 
 
@@ -359,7 +360,7 @@ Threads report updated information with HTTP POST method. The payload is in JSON
 
 The route names are fairly self-explanatory. The ``/query_location`` route is used to get the vehicle records at any road segment.
 
-When ``<vehicle_id>`` in ``/query_vehicle_status/<vehicle_id>`` equals the total number of vehicles, all vehicle records are returned. U-turn, collision and throughtput are also returned.
+When ``<vehicle_id>`` in ``/query_vehicle_status/<vehicle_id>`` equals the total number of vehicles, all vehicle records are returned. U-turn, collision, throughtput and red light violations are also returned.
 
 When ``intersection`` in ``/query_signal_light/<intersection>`` equals the total number of crossroads, all crossroad signal light records are returned.
 

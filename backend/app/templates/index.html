@@ -338,7 +338,15 @@
         u_turn_report_txt.setAttribute('font-size','20');
         u_turn_report_txt.innerHTML = "U-turns: ";
 
-        svg_base.appendChild(u_turn_report_txt);      
+        svg_base.appendChild(u_turn_report_txt);     
+        
+        var red_light_violation_report_txt = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        red_light_violation_report_txt.setAttribute('x', 10);
+        red_light_violation_report_txt.setAttribute('y', 125);
+        red_light_violation_report_txt.setAttribute('font-size','20');
+        red_light_violation_report_txt.innerHTML = "Red light violations: ";
+
+        svg_base.appendChild(red_light_violation_report_txt);     
 
         // Timed job for gettin vehicle locations
         function update_vehicle_location() {
@@ -360,6 +368,8 @@
 
                     let throughput = 0;
 
+                    let red_light_violations = 0;
+
                     if (status == 0 || (status >= 200 && status < 400)) {
                         
                         let response = JSON.parse(httpRequest.responseText);      
@@ -369,6 +379,8 @@
                         vehicle_u_turns = response["u_turns"];
 
                         throughput = response["throughput"];
+
+                        red_light_violations = response["red_light_violation"]
                         
                         // Set the traffic light signals
                         for (let traffic_light_id = 0; traffic_light_id < 9; traffic_light_id++) {
@@ -444,7 +456,9 @@
 
                     u_turn_report_txt.innerHTML = "U-turns: " + vehicle_u_turns;                    
 
-                    throughtput_report_txt.innerHTML = "Throughput: " + throughput + " vehicles/h";                    
+                    throughtput_report_txt.innerHTML = "Throughput: " + throughput + " vehicles/h"; 
+                    
+                    red_light_violation_report_txt.innerHTML = "Red light violations: " + red_light_violations;
                 }   
             }                             
         }        

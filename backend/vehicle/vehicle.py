@@ -601,6 +601,8 @@ class Vehicle(threading.Thread):
                             # Adjust the square index                                
                             if not change_query_direction:
                                 self.location = 29 - self.location
+                            else:
+                                self.location = self.location
                             
                             self.road_segment = road_segment_to_move_to
                             self.speed = Speed.MOVING                                                         
@@ -678,6 +680,8 @@ class Vehicle(threading.Thread):
                                                                    
                             if not change_query_direction:
                                 self.location = 29 - self.location
+                            else:
+                                self.location = self.location
                             
                             self.road_segment = route_to_be_taken[0]
                             self.speed = Speed.MOVING                                                                           

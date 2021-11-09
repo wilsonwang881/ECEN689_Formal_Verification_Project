@@ -186,6 +186,7 @@ def update(mode, id, value):
             past_position = json.loads(redis_db.get("vehicle_%d" % i))
             current_position = current_states["vehicle_%d" % i]
 
+            # Check U-turn
             if past_position["road_segment"] == current_position["road_segment"] \
                 and past_position["location"] == current_position["location"] \
                     and past_position["direction"] != current_position["direction"] \
@@ -193,11 +194,43 @@ def update(mode, id, value):
 
                 u_turn += 1
 
+            # Check throughput
             if current_states["vehicle_%d" % i]["road_segment"] == Road.ROAD_A.value \
                 and current_states["vehicle_%d" % i]["direction"] == Direction.DIRECTION_RIGHT.value \
                     and current_states["vehicle_%d" % i]["location"] == 1:
 
                 has_vehicle_finished = True
+
+            # Check traffic light violations
+            if past_position["location"] == 0 \
+                or past_position["location"] == 29:
+
+                crossroad_to_query = Crossroads.CROSSROAD_B
+                traffic_light_orientation = Signal_light_positions.EAST
+                # Get the right crossroad to query    
+                try:                
+                    crossroad_to_query = MAP[Road(past_position["road_segment"])][Direction(past_position["direction"])]["crossroad"]
+                    traffic_light_orientation = MAP[Road(past_position["road_segment"])][Direction(past_position["direction"])]["traffic_light_orientation"]               
+                except:
+                    print(crossroad_to_query)
+                    print(traffic_light_orientation)
+                    print(past_position)
+                    print(current_position)
+
+                response = json.loads(redis_db.get(crossroad_to_query.name))
+
+                signal_light = Traffic_light[response[traffic_light_orientation.name]] 
+
+                if signal_light == Traffic_light.RED:
+
+                    # Check if the vehicle moves when the traffic light signal is red
+                    if past_position["road_segment"] != current_position["road_segment"]:
+
+                        traffic_light_violation += 1
+
+                        print("vehicle_%d" % i)
+                        print(past_position)
+                        print(current_position)
                 
         if has_vehicle_finished:
             
@@ -208,23 +241,24 @@ def update(mode, id, value):
             number_of_vehicles_finished[clock % 120] = 0
 
         current_states["u_turns"] = u_turn  
-        current_states["throughput"] = sum(number_of_vehicles_finished) * 30    
+        current_states["throughput"] = sum(number_of_vehicles_finished) * 30
+        current_states["red_light_violation"] = traffic_light_violation
 
-        for i in range(total_number_of_vehicles):
+        # for i in range(total_number_of_vehicles):
 
-            db_response = json.loads(redis_db.get("vehicle_%d" % i))                        
+            # db_response = json.loads(redis_db.get("vehicle_%d" % i))                        
 
-            print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (i, clock, Road(db_response["road_segment"]).name, db_response["location"], Speed(db_response["vehicle_speed"]).name, Direction(db_response["direction"]).name))            
+            # print("Vehicle %d: time: %s, road segment: %s, position: %d, status: %s, direction: %s" % (i, clock, Road(db_response["road_segment"]).name, db_response["location"], Speed(db_response["vehicle_speed"]).name, Direction(db_response["direction"]).name))            
 
-        for crossroad in Crossroads:
+        # for crossroad in Crossroads:
 
-            print("Crossroad: %s" % crossroad.name)
+            # print("Crossroad: %s" % crossroad.name)
 
-            db_response = json.loads(redis_db.get(crossroad.name))
+            # db_response = json.loads(redis_db.get(crossroad.name))
 
-            for orientation in db_response:                
+            # for orientation in db_response:                
 
-                print("orientation: %s, status %s" % (orientation, db_response[orientation]))
+                # print("orientation: %s, status %s" % (orientation, db_response[orientation]))
         
         for key in current_states:                                
 
@@ -335,6 +369,7 @@ def query_vehicle_location(vehicle_id):
         res_collisions = redis_db.get("vehicle_collisions")
         res_u_turns = redis_db.get("u_turns")
         res_throughtput = redis_db.get("throughput")
+        res_red_light_violation = redis_db.get("red_light_violation")
 
         mutex.release()        
 
@@ -345,6 +380,7 @@ def query_vehicle_location(vehicle_id):
         res_vehicle["vehicle_collisions"] = int(res_collisions)
         res_vehicle["u_turns"] = int(res_u_turns)
         res_vehicle["throughput"] = int(res_throughtput)
+        res_vehicle["red_light_violation"] = int(res_red_light_violation)
 
         return jsonify(res_vehicle)
 
