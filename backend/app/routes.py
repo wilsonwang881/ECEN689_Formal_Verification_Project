@@ -202,8 +202,9 @@ def update(mode, id, value):
                 has_vehicle_finished = True
 
             # Check traffic light violations
-            if past_position["location"] == 0 \
-                or past_position["location"] == 29:
+            if (past_position["location"] == 0 \
+                or past_position["location"] == 29) \
+                    and :
 
                 crossroad_to_query = Crossroads.CROSSROAD_B
                 traffic_light_orientation = Signal_light_positions.EAST
@@ -260,6 +261,9 @@ def update(mode, id, value):
 
                 # print("orientation: %s, status %s" % (orientation, db_response[orientation]))
         
+        # Flush Redis DB
+        redis_db.flushdb()
+
         for key in current_states:                                
 
             redis_db.set(key, json.dumps(current_states[key]))
