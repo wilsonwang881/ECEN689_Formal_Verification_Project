@@ -317,33 +317,25 @@ class Vehicle(threading.Thread):
 
         print("Vehicle %d running" % (self.id))
 
-        while True:
-
-            # Check if the vehicle is in the traffic system    
+        while True:             
                     
             if self.route_completion_status == Route_completion_status.NOT_STARTED:
 
-                # If not, request permission to enter
-                # Also update its location with dummy value
-                while True:
+                # Check if the vehicle is in the traffic system   
+                # If not, request permission to enter                
 
-                    response = requests.get("http://127.0.0.1:5000/add_vehicle/%d" \
-                        % (self.id)).json()
-                    
-                    if response["response"] == "OK":
+                response = requests.get("http://127.0.0.1:5000/add_vehicle/%d" \
+                    % (self.id)).json()
+                
+                if response["response"] == "OK":
 
-                        # If permission acquired, set the initial location
-                        self.road_segment = Road.ROAD_A
-                        self.direction = Direction.DIRECTION_LEFT
-                        self.location = 1
-                        self.speed = Speed.STOPPED
-                        self.location_visited.clear()
-                        self.route_completion_status = Route_completion_status.ENROUTE   
-                        break;
-
-                    else:
-
-                        self.update_backend()                                                                            
+                    # If permission acquired, set the initial location
+                    self.road_segment = Road.ROAD_A
+                    self.direction = Direction.DIRECTION_LEFT
+                    self.location = 1
+                    self.speed = Speed.STOPPED
+                    self.location_visited.clear()
+                    self.route_completion_status = Route_completion_status.ENROUTE                                                                                                
                                  
             elif self.route_completion_status == Route_completion_status.FINISHED:
 
@@ -468,6 +460,11 @@ class Vehicle(threading.Thread):
                     # Get the traffic light signal
                     response = requests.get("http://127.0.0.1:5000/query_signal_lights/%d" \
                         % crossroad_to_query.value).json()
+
+                    # print(crossroad_to_query)
+                    # print(response)
+                    # print(traffic_light_orientation)
+                    # print(response[traffic_light_orientation.name])
 
                     signal_light = Traffic_light[response[traffic_light_orientation.name]]                                                                                                
 

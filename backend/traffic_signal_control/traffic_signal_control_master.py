@@ -1,5 +1,4 @@
 import requests
-import json
 import time
 
 from location_speed_encoding import Crossroads
@@ -54,10 +53,8 @@ class Traffic_signal_control_master:
             self.timer += 1      
             
             # Send the updated traffic light signals to the backend
-            for crossroad in Crossroads:
-                
-                response = requests.post("http://127.0.0.1:5000/set_signal_lights/%d" % crossroad.value, \
-                    json=self.traffic_lights[crossroad.name])
+            response = requests.post("http://127.0.0.1:5000/set_signal_lights", \
+                json=self.traffic_lights)
 
             time.sleep(polling_interval)
 
