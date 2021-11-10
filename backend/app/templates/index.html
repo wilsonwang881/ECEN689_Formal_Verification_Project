@@ -346,7 +346,15 @@
         red_light_violation_report_txt.setAttribute('font-size','20');
         red_light_violation_report_txt.innerHTML = "Red light violations: ";
 
-        svg_base.appendChild(red_light_violation_report_txt);     
+        svg_base.appendChild(red_light_violation_report_txt);
+
+        var time_report_txt = document.createElementNS("http://www.w3.org/2000/svg", 'text');
+        time_report_txt.setAttribute('x', 10);
+        time_report_txt.setAttribute('y', 150);
+        time_report_txt.setAttribute('font-size','20');
+        time_report_txt.innerHTML = "Time: ";
+
+        svg_base.appendChild(time_report_txt);     
 
         // Timed job for gettin vehicle locations
         function update_vehicle_location() {
@@ -370,6 +378,8 @@
 
                     let red_light_violations = 0;
 
+                    let time = 0;
+
                     if (status == 0 || (status >= 200 && status < 400)) {
                         
                         let response = JSON.parse(httpRequest.responseText);      
@@ -381,6 +391,8 @@
                         throughput = response["throughput"];
 
                         red_light_violations = response["red_light_violation"]
+
+                        time = response["clock"]
                         
                         // Set the traffic light signals
                         for (let traffic_light_id = 0; traffic_light_id < 9; traffic_light_id++) {
@@ -459,6 +471,8 @@
                     throughtput_report_txt.innerHTML = "Throughput: " + throughput + " vehicles/h"; 
                     
                     red_light_violation_report_txt.innerHTML = "Red light violations: " + red_light_violations;
+
+                    time_report_txt.innerHTML = "Time: " + time;
                 }   
             }                             
         }        

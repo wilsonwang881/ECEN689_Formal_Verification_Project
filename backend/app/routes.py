@@ -31,6 +31,8 @@ reported_congestion_compute = 0
 vehicle_records = list()
 congestion_compute_records = list()
 
+vehicle_timestamp = list()
+
 finished_vehicle_id = 0
 
 
@@ -47,8 +49,11 @@ def update(mode, id, value):
     global clock    
     global current_states
     global finished_vehicle_id
+    global vehicle_timestamp
 
-    if (mode == "vehicle_report") and (id not in vehicle_records):    
+    if (mode == "vehicle_report") and (id not in vehicle_records): 
+
+        vehicle_timestamp.append(int(value["clock"]))
 
         reported_vehicles += 1
         vehicle_records.append(id)        
@@ -131,6 +136,14 @@ def update(mode, id, value):
     if (reported_vehicles == total_number_of_vehicles) \
         and (reported_congestion_compute == total_congestion_compute_workers):
 
+        print("Sum of timestamps %d" % sum(vehicle_timestamp))
+
+        if sum(vehicle_timestamp) != (total_number_of_vehicles * clock):
+            
+            print("Does not equal!")
+
+        vehicle_timestamp.clear()
+
         reported_vehicles = 0
         reported_congestion_compute = 0    
 
@@ -163,7 +176,8 @@ def update(mode, id, value):
 
                             print("Collision")
                             print(road_segment)
-                            print(current_road_segment_vehicles[key])                            
+                            print(current_road_segment_vehicles[key])
+                            print(current_road_segment_vehicles)
 
                         else:
 
@@ -364,6 +378,8 @@ def query_vehicle_location(vehicle_id):
 
         mutex.acquire()
 
+        global clock
+
         res_vehicle = json.loads(redis_db.get("all_vehicles"))
         res_traffic_light = traffic_control_master.return_all_traffic_light_status() # redis_db.get("all_traffic_lights")
         res_collisions = redis_db.get("vehicle_collisions")
@@ -381,6 +397,7 @@ def query_vehicle_location(vehicle_id):
         res_vehicle["u_turns"] = int(res_u_turns)
         res_vehicle["throughput"] = int(res_throughtput)
         res_vehicle["red_light_violation"] = int(res_red_light_violation)
+        res_vehicle["clock"] = int(clock)
 
         return jsonify(res_vehicle)
 
@@ -393,11 +410,13 @@ def set_vehicle_location(id):
 
     global clock
 
-    clock_tmpp = clock
+    mutex.acquire()    
 
-    mutex.acquire()
+    # if (int(payload["clock"])) == int(clock):
 
     update("vehicle_report", id, payload)
+
+    clock_tmpp = clock
 
     mutex.release()    
     

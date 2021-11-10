@@ -36,7 +36,7 @@ current_states = {}
 total_number_of_vehicles = 150
 
 # Clock
-clock = 2
+clock = 0
 
 # Synchronization construct
 mutex = Lock()
