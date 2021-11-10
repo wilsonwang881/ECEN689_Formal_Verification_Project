@@ -54,7 +54,7 @@ class Vehicle(threading.Thread):
         if response.text != self.current_time:
             self.current_time = response.text                                                                         
             
-        # time.sleep(polling_interval)        
+        time.sleep(polling_interval)        
 
     
     def crossroad_reached_check(self, last_road_segment, current_road_segment, target_crossroad):
@@ -459,12 +459,7 @@ class Vehicle(threading.Thread):
                                         
                     # Get the traffic light signal
                     response = requests.get("http://127.0.0.1:5000/query_signal_lights/%d" \
-                        % crossroad_to_query.value).json()
-
-                    # print(crossroad_to_query)
-                    # print(response)
-                    # print(traffic_light_orientation)
-                    # print(response[traffic_light_orientation.name])
+                        % crossroad_to_query.value).json()                 
 
                     signal_light = Traffic_light[response[traffic_light_orientation.name]]
 
@@ -690,6 +685,4 @@ class Vehicle(threading.Thread):
                             self.speed = Speed.MOVING                                                                           
 
             self.update_backend()            
-                                                                                                          
-            
-        
+                                                                                                                          

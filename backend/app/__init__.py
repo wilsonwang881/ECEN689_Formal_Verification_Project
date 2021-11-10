@@ -13,6 +13,7 @@ from location_speed_encoding import Road
 from location_speed_encoding import Route_completion_status
 from location_speed_encoding import Signal_light_positions
 from location_speed_encoding import Traffic_light
+from traffic_signal_control import Traffic_signal_control_master
 
 
 app = Flask(__name__)
@@ -100,6 +101,10 @@ redis_db.set("throughput", 0)
 
 current_states["red_light_violation"] = 0
 redis_db.set("red_light_violation", 0)
+
+# Start the traffic light control master
+traffic_control_master = Traffic_signal_control_master()
+# traffic_control_master.run_traffic_light_control()
 
 mutex.release()
 

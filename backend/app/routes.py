@@ -1,5 +1,4 @@
 import json
-import time
 from flask import request
 from flask import render_template
 from flask import jsonify
@@ -11,6 +10,7 @@ from app import clock
 from app import mutex
 from app import total_number_of_vehicles
 from app import number_of_vehicles_finished
+from app import traffic_control_master
 
 from location_speed_encoding import Crossroads
 from location_speed_encoding import Direction
@@ -31,11 +31,12 @@ reported_congestion_compute = 0
 vehicle_records = list()
 congestion_compute_records = list()
 
-traffic_light_reported = False
+finished_vehicle_id = 0
 
 
-# Function to update the database and store temporary records
 def update(mode, id, value):
+
+    # Function to update the database and store temporary records
 
     global total_number_of_vehicles
     global reported_vehicles
@@ -43,9 +44,9 @@ def update(mode, id, value):
     global reported_congestion_compute
     global vehicle_records
     global congestion_compute_records
-    global traffic_light_reported
     global clock    
     global current_states
+    global finished_vehicle_id
 
     if (mode == "vehicle_report") and (id not in vehicle_records):    
 
@@ -87,13 +88,6 @@ def update(mode, id, value):
                 current_states[Road(id).name][Direction.DIRECTION_LEFT.name]["congestion_index"] = \
                     value[Direction.DIRECTION_LEFT.name]["congestion_index"]
         
-    elif (mode == "signal_lights") and (not traffic_light_reported):
-
-        for key in value:
-            current_states[key] = value[key]
-            current_states["all_traffic_lights"][key] = value[key]
-
-        traffic_light_reported = True
 
     elif (mode == "add_vehicle"):
 
@@ -135,10 +129,7 @@ def update(mode, id, value):
     
     # If all threads have reported, update the database
     if (reported_vehicles == total_number_of_vehicles) \
-        and (reported_congestion_compute == total_congestion_compute_workers) \
-            and traffic_light_reported:
-
-        time.sleep(1)
+        and (reported_congestion_compute == total_congestion_compute_workers):
 
         reported_vehicles = 0
         reported_congestion_compute = 0    
@@ -148,7 +139,6 @@ def update(mode, id, value):
 
         vehicle_records.clear()
         congestion_compute_records.clear()    
-        traffic_light_reported = False    
 
         clock += 2
     
@@ -206,7 +196,10 @@ def update(mode, id, value):
                 and current_states["vehicle_%d" % i]["direction"] == Direction.DIRECTION_RIGHT.value \
                     and current_states["vehicle_%d" % i]["location"] == 1:
 
-                has_vehicle_finished = True
+                if i != finished_vehicle_id:
+
+                    has_vehicle_finished = True
+                    finished_vehicle_id = i
 
             # Check traffic light violations
             if (past_position["location"] == 0 and past_position["direction"] != Direction.DIRECTION_RIGHT \
@@ -217,7 +210,7 @@ def update(mode, id, value):
                 crossroad_to_query = MAP[Road(past_position["road_segment"])][Direction(past_position["direction"])]["crossroad"]
                 traffic_light_orientation = MAP[Road(past_position["road_segment"])][Direction(past_position["direction"])]["traffic_light_orientation"]                             
 
-                response = json.loads(redis_db.get(crossroad_to_query.name))
+                response = traffic_control_master.return_traffic_light_status(crossroad_to_query.name) #json.loads(redis_db.get(crossroad_to_query.name))
 
                 signal_light = Traffic_light[response[traffic_light_orientation.name]] 
 
@@ -305,7 +298,9 @@ def update(mode, id, value):
         current_states["all_vehicles"] = {}
         current_states["all_traffic_lights"] = {}
 
-        print("Database update! Time = %d" % clock)
+        traffic_control_master.run_traffic_light_control()
+
+        print("Database update! Time = %d" % clock)        
 
     return True
                 
@@ -324,7 +319,8 @@ def query_signal_lights(intersection):
 
     mutex.acquire()
 
-    res = json.loads(redis_db.get(Crossroads(intersection).name))
+    # res = json.loads(redis_db.get(Crossroads(intersection).name))
+    res = traffic_control_master.return_traffic_light_status(Crossroads(intersection).name)
 
     mutex.release()
 
@@ -369,7 +365,7 @@ def query_vehicle_location(vehicle_id):
         mutex.acquire()
 
         res_vehicle = json.loads(redis_db.get("all_vehicles"))
-        res_traffic_light = redis_db.get("all_traffic_lights")
+        res_traffic_light = traffic_control_master.return_all_traffic_light_status() # redis_db.get("all_traffic_lights")
         res_collisions = redis_db.get("vehicle_collisions")
         res_u_turns = redis_db.get("u_turns")
         res_throughtput = redis_db.get("throughput")
@@ -379,7 +375,7 @@ def query_vehicle_location(vehicle_id):
 
         if res_traffic_light != {}:
 
-            res_vehicle.update(json.loads(res_traffic_light))        
+            res_vehicle.update(res_traffic_light)        
 
         res_vehicle["vehicle_collisions"] = int(res_collisions)
         res_vehicle["u_turns"] = int(res_u_turns)

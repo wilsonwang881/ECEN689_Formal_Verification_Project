@@ -1,6 +1,3 @@
-import requests
-import time
-
 from location_speed_encoding import Crossroads
 from location_speed_encoding import Signal_light_positions
 from location_speed_encoding import traffic_light_direction_sequence
@@ -12,7 +9,7 @@ polling_interval = 1.0
 
 class Traffic_signal_control_master:
     def __init__(self) -> None:
-        
+
         self.traffic_lights = {}
         self.signal_timer = 0
         self.green_position = Signal_light_positions.NORTH
@@ -28,44 +25,38 @@ class Traffic_signal_control_master:
 
                     self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.RED.name
 
-    def run_traffic_light_control(self):
+    def return_traffic_light_status(self, crossroad):
+
+        return self.traffic_lights[crossroad]
+
+    def return_all_traffic_light_status(self):
+
+        return self.traffic_lights
+
+    def run_traffic_light_control(self):                    
+
+        if self.timer >= 12:
+            
+            self.timer = 0
         
-        print("Traffic light control master running")
+        for crossroad in Crossroads:
 
-        while True:                
+            number_of_signals = len(traffic_light_direction_sequence[crossroad])
 
-            if self.timer >= 12:
-                
-                self.timer = 0
+            for signal_light_position in Signal_light_positions:
 
-            print("Time = %d" % self.timer)
-            
-            for crossroad in Crossroads:
+                if signal_light_position in traffic_light_direction_sequence[crossroad]:
 
-                number_of_signals = len(traffic_light_direction_sequence[crossroad])
+                    if signal_light_position == traffic_light_direction_sequence[crossroad][self.timer % number_of_signals]:
 
-                for signal_light_position in Signal_light_positions:
+                        self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.GREEN.name
 
-                    if signal_light_position in traffic_light_direction_sequence[crossroad]:
+                    else:
 
-                        if signal_light_position == traffic_light_direction_sequence[crossroad][self.timer % number_of_signals]:
+                        self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.RED.name  
 
-                            self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.GREEN.name
+            # print(crossroad)
+            # print(self.traffic_lights[crossroad.name])  
 
-                        else:
-
-                            self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.RED.name  
-
-                print(crossroad)
-                print(self.traffic_lights[crossroad.name])  
-
-            self.timer += 1      
-            
-            # Send the updated traffic light signals to the backend
-            response = requests.post("http://127.0.0.1:5000/set_signal_lights", \
-                json=self.traffic_lights)
-
-            # time.sleep(polling_interval)
-
-
-
+        self.timer += 1      
+                       

@@ -9,7 +9,6 @@ import time
 from location_speed_encoding import Crossroads
 from location_speed_encoding import Direction
 from location_speed_encoding import Road
-from location_speed_encoding import Signal_light_positions
 
 
 polling_interval = 1.0

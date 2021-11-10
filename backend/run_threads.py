@@ -5,7 +5,6 @@ Description: the code starts a list of vehicle threads.
 
 from vehicle import Vehicle
 from congestion_computation import Congestion_Computation
-from traffic_signal_control import Traffic_signal_control_master 
 from location_speed_encoding import Road
 
 # Number of vehicles
@@ -30,10 +29,6 @@ for road in Road:
         thread_object = Congestion_Computation(road.value)
         congestion_compute_thread_list.append(thread_object)
         thread_object.start()
-
-# Start the traffic light control master
-traffic_control_master = Traffic_signal_control_master()
-traffic_control_master.run_traffic_light_control()
 
 # Wait for threads to terminate
 for thread_object in vehicle_thread_list:
