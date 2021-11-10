@@ -54,7 +54,7 @@ class Vehicle(threading.Thread):
         if response.text != self.current_time:
             self.current_time = response.text                                                                         
             
-        time.sleep(polling_interval)        
+        # time.sleep(polling_interval)        
 
     
     def crossroad_reached_check(self, last_road_segment, current_road_segment, target_crossroad):
@@ -466,7 +466,7 @@ class Vehicle(threading.Thread):
                     # print(traffic_light_orientation)
                     # print(response[traffic_light_orientation.name])
 
-                    signal_light = Traffic_light[response[traffic_light_orientation.name]]                                                                                                
+                    signal_light = Traffic_light[response[traffic_light_orientation.name]]
 
                     if signal_light == Traffic_light.RED:
 
@@ -479,7 +479,7 @@ class Vehicle(threading.Thread):
                         # Get the list of road segments to query                                    
 
                         road_segment_to_query = {}
-                        road_segment_to_query_selected = {}     
+                        road_segment_to_query_selected = {}
 
                         # Dummy value
                         self_crossroad_position = Signal_light_positions.NORTH    
@@ -596,9 +596,12 @@ class Vehicle(threading.Thread):
                                     self.direction = Direction.DIRECTION_LEFT
 
                             # Adjust the square index                                
-                            if not change_query_direction:
+                            if not change_query_direction: 
+
                                 self.location = 29 - self.location
+
                             else:
+
                                 self.location = self.location
                             
                             self.road_segment = road_segment_to_move_to
@@ -676,8 +679,11 @@ class Vehicle(threading.Thread):
                                     self.direction = Direction.DIRECTION_LEFT
                                                                    
                             if not change_query_direction:
+                                
                                 self.location = 29 - self.location
+                                
                             else:
+
                                 self.location = self.location
                             
                             self.road_segment = route_to_be_taken[0]

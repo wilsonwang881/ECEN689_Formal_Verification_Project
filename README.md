@@ -348,7 +348,7 @@ The backend uses Python Flask as the framework and implements the following APIs
 | Route                                                                       
 |--------------------------------------------------------------|
 | ``/query_signal_light/<intersection>``                       |
-| ``/set_signal_light                                          | 
+| ``/set_signal_light``                                        | 
 | ``/query_vehicle_status/<vehicle_id>``                       | 
 | ``/set_vehicle_status/<vehicle_id>``                         | 
 | ``/query_road_congestion/<road_id>/<direction>``             | 

@@ -1,5 +1,5 @@
 import json
-from os import name
+import time
 from flask import request
 from flask import render_template
 from flask import jsonify
@@ -23,7 +23,6 @@ from location_speed_encoding import Traffic_light
 
 
 # Shared variables
-total_vehicles = total_number_of_vehicles
 reported_vehicles = 0
 
 total_congestion_compute_workers = 12
@@ -32,16 +31,19 @@ reported_congestion_compute = 0
 vehicle_records = list()
 congestion_compute_records = list()
 
+traffic_light_reported = False
+
 
 # Function to update the database and store temporary records
 def update(mode, id, value):
 
-    global total_vehicles
+    global total_number_of_vehicles
     global reported_vehicles
     global total_congestion_compute_workers
     global reported_congestion_compute
     global vehicle_records
     global congestion_compute_records
+    global traffic_light_reported
     global clock    
     global current_states
 
@@ -85,11 +87,13 @@ def update(mode, id, value):
                 current_states[Road(id).name][Direction.DIRECTION_LEFT.name]["congestion_index"] = \
                     value[Direction.DIRECTION_LEFT.name]["congestion_index"]
         
-    elif (mode == "signal_lights"):
+    elif (mode == "signal_lights") and (not traffic_light_reported):
 
         for key in value:
             current_states[key] = value[key]
             current_states["all_traffic_lights"][key] = value[key]
+
+        traffic_light_reported = True
 
     elif (mode == "add_vehicle"):
 
@@ -130,13 +134,21 @@ def update(mode, id, value):
         return permission_to_add_vehicle
     
     # If all threads have reported, update the database
-    if (reported_vehicles == total_vehicles) \
-        and (reported_congestion_compute == total_congestion_compute_workers):
+    if (reported_vehicles == total_number_of_vehicles) \
+        and (reported_congestion_compute == total_congestion_compute_workers) \
+            and traffic_light_reported:
+
+        time.sleep(1)
 
         reported_vehicles = 0
-        reported_congestion_compute = 0        
+        reported_congestion_compute = 0    
+
+        if (len(vehicle_records) != total_number_of_vehicles):
+            print("error")
+
         vehicle_records.clear()
-        congestion_compute_records.clear()        
+        congestion_compute_records.clear()    
+        traffic_light_reported = False    
 
         clock += 2
     
@@ -158,6 +170,10 @@ def update(mode, id, value):
                         if current_road_segment_vehicles[key]["vehicle_location"] in tmpp_position_list:
 
                             collision += 1
+
+                            print("Collision")
+                            print(road_segment)
+                            print(current_road_segment_vehicles[key])                            
 
                         else:
 
@@ -193,8 +209,8 @@ def update(mode, id, value):
                 has_vehicle_finished = True
 
             # Check traffic light violations
-            if (past_position["location"] == 0 \
-                or past_position["location"] == 29) \
+            if (past_position["location"] == 0 and past_position["direction"] != Direction.DIRECTION_RIGHT \
+                or past_position["location"] == 29 and past_position["direction"] != Direction.DIRECTION_LEFT) \
                     and (past_position["road_segment"] != Road.ROAD_A.value \
                         and past_position["direction"] != Direction.DIRECTION_RIGHT.value):
 
@@ -212,7 +228,7 @@ def update(mode, id, value):
 
                         traffic_light_violation += 1
 
-                        print("vehicle_%d" % i)
+                        print("vehicle_%d red light violation" % i)
                         print(response)
                         print(past_position)
                         print(current_position)
@@ -244,6 +260,9 @@ def update(mode, id, value):
         #     for orientation in db_response:                
 
         #         print("orientation: %s, status %s" % (orientation, db_response[orientation]))       
+
+        # Flush Redis DB
+        redis_db.flushdb()
 
         for key in current_states:                                
 

@@ -61,7 +61,7 @@ class Congestion_Computation(threading.Thread):
             response = requests.post("http://127.0.0.1:5000/set_road_congestion/%d" % \
                 (self.road_segment.value), json=payload)
                              
-            time.sleep(polling_interval)
+            # time.sleep(polling_interval)
             
             
             

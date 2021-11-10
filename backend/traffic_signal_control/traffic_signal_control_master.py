@@ -24,7 +24,9 @@ class Traffic_signal_control_master:
 
             for signal_light_position in Signal_light_positions:
 
-                self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.RED.name
+                if signal_light_position in traffic_light_direction_sequence[crossroad]:
+
+                    self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.RED.name
 
     def run_traffic_light_control(self):
         
@@ -32,9 +34,11 @@ class Traffic_signal_control_master:
 
         while True:                
 
-            if self.timer >= 60:
+            if self.timer >= 12:
                 
                 self.timer = 0
+
+            print("Time = %d" % self.timer)
             
             for crossroad in Crossroads:
 
@@ -42,13 +46,18 @@ class Traffic_signal_control_master:
 
                 for signal_light_position in Signal_light_positions:
 
-                    if signal_light_position == traffic_light_direction_sequence[crossroad][self.timer % number_of_signals]:
+                    if signal_light_position in traffic_light_direction_sequence[crossroad]:
 
-                        self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.GREEN.name
+                        if signal_light_position == traffic_light_direction_sequence[crossroad][self.timer % number_of_signals]:
 
-                    else:
+                            self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.GREEN.name
 
-                        self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.RED.name    
+                        else:
+
+                            self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.RED.name  
+
+                print(crossroad)
+                print(self.traffic_lights[crossroad.name])  
 
             self.timer += 1      
             
@@ -56,7 +65,7 @@ class Traffic_signal_control_master:
             response = requests.post("http://127.0.0.1:5000/set_signal_lights", \
                 json=self.traffic_lights)
 
-            time.sleep(polling_interval)
+            # time.sleep(polling_interval)
 
 
 
