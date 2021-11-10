@@ -8,7 +8,7 @@ from congestion_computation import Congestion_Computation
 from location_speed_encoding import Road
 
 # Number of vehicles
-vehicle_number = 150
+vehicle_number = 130
 
 # Start a list of vehicle threads
 vehicle_thread_list = list()

@@ -33,7 +33,7 @@ logger.setLevel(logging.ERROR)
 current_states = {}
 
 # Number of vehicles, whether enroute or not
-total_number_of_vehicles = 150
+total_number_of_vehicles = 130
 
 # Clock
 clock = 0
