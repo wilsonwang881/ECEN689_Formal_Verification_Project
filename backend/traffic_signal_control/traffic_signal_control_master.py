@@ -74,7 +74,7 @@ class Traffic_signal_control_master:
                         
                         num2 = 0
                     
-                    if num1 > num2:
+                    if num1 >= num2:
                     
                         self.traffic_lights[Crossroads.CROSSROAD_B.name][Signal_light_positions.SOUTH.name] = Traffic_light.GREEN.name
                         
@@ -124,7 +124,7 @@ class Traffic_signal_control_master:
                         
                         num2 = 0
                    
-                    if num1 > num2:
+                    if num1 >= num2:
                    
                         self.traffic_lights[Crossroads.CROSSROAD_C.name][Signal_light_positions.EAST.name] = Traffic_light.GREEN.name
                        
@@ -174,7 +174,7 @@ class Traffic_signal_control_master:
                         
                         num2 = 0
                    
-                    if num1 > num2:
+                    if num1 >= num2:
                    
                         self.traffic_lights[Crossroads.CROSSROAD_D.name][Signal_light_positions.EAST.name] = Traffic_light.GREEN.name
                        
