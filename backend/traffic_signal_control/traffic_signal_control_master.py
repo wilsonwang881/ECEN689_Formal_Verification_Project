@@ -270,9 +270,7 @@ class Traffic_signal_control_master:
 
                         self.traffic_lights[Crossroads.CROSSROAD_U.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_U.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_U.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name                                               
                        
                     elif num2 == maxcar:
                    
@@ -282,9 +280,7 @@ class Traffic_signal_control_master:
 
                         self.traffic_lights[Crossroads.CROSSROAD_U.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_U.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_U.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name                                                
 
                     elif num3 == maxcar:
                    
@@ -294,9 +290,7 @@ class Traffic_signal_control_master:
 
                         self.traffic_lights[Crossroads.CROSSROAD_U.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_U.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_U.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name                                                
 
                     elif num4 == maxcar:
                    
@@ -306,9 +300,7 @@ class Traffic_signal_control_master:
 
                         self.traffic_lights[Crossroads.CROSSROAD_U.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_U.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_U.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name                                                
 
                 elif crossroad == Crossroads.CROSSROAD_V:
                
@@ -374,9 +366,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_V.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_V.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_V.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name                                                
                        
                     elif num2 == maxcar:
                    
@@ -384,9 +374,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_V.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_V.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_V.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name                                                
 
                     elif num3 == maxcar:
                    
@@ -394,9 +382,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_V.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_V.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_V.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name                                                
 
                 elif crossroad == Crossroads.CROSSROAD_W:
                
@@ -463,9 +449,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_W.name][Signal_light_positions.NORTH.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_W.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_W.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name                                                
                        
                     elif num2 == maxcar:
                    
@@ -473,10 +457,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_W.name][Signal_light_positions.NORTH.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_W.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name
-                        
-                        continue
-
+                        self.traffic_lights[Crossroads.CROSSROAD_W.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name                                                
 
                     elif num3 == maxcar:
                    
@@ -484,9 +465,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_W.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_W.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_W.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name                                                
 
                 elif crossroad == Crossroads.CROSSROAD_X:
                
@@ -554,9 +533,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_X.name][Signal_light_positions.NORTH.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_X.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_X.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name                                                
 
                     elif num3 == maxcar:
                    
@@ -564,9 +541,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_X.name][Signal_light_positions.NORTH.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_X.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_X.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name                                                
 
                     elif num4 == maxcar:
                    
@@ -574,9 +549,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_X.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_X.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_X.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name                                                
 
                 elif crossroad == Crossroads.CROSSROAD_Y:
                
@@ -642,9 +615,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_Y.name][Signal_light_positions.NORTH.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_Y.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_Y.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name                                                
                        
                     elif num2 == maxcar:
                    
@@ -652,10 +623,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_Y.name][Signal_light_positions.NORTH.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_Y.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name
-                        
-                        continue
-
+                        self.traffic_lights[Crossroads.CROSSROAD_Y.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name                                                
 
                     elif num3 == maxcar:
                    
@@ -663,9 +631,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_Y.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_Y.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_Y.name][Signal_light_positions.SOUTH.name] = Traffic_light.RED.name                                                
 
                 elif crossroad == Crossroads.CROSSROAD_Z:
                
@@ -737,9 +703,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.NORTH.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name                                                
                        
                     elif num2 == maxcar:
                    
@@ -747,10 +711,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.NORTH.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name
-                        
-                        continue
-
+                        self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name                                                
 
                     elif num3 == maxcar:
                    
@@ -758,9 +719,7 @@ class Traffic_signal_control_master:
                        
                         self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.EAST.name] = Traffic_light.RED.name
 
-                        self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name
-                        
-                        continue
+                        self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name                                                
             
             while True:
 
