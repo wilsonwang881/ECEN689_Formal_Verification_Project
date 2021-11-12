@@ -12,10 +12,9 @@ polling_interval = 0.8
 
 class Traffic_signal_control_master:
     def __init__(self) -> None:
+
         self.current_time = 0
-        self.traffic_lights = {}        
-        self.green_position = Signal_light_positions.NORTH
-        self.timer = 0
+        self.traffic_lights = {}                
 
         for crossroad in Crossroads:
 
@@ -31,19 +30,12 @@ class Traffic_signal_control_master:
 
         while True:                
 
-            # if self.timer >= 60:
-                
-            #     self.timer = 0
-            
             for crossroad in Crossroads:
-
-                # number_of_signals = len(traffic_light_direction_sequence[crossroad])
 
                 num1 = 0
                 num2 = 0
                 num3 = 0
 
-                
                 if crossroad == Crossroads.CROSSROAD_B:
                     
                     exist_car1 = 0
@@ -769,33 +761,10 @@ class Traffic_signal_control_master:
                         self.traffic_lights[Crossroads.CROSSROAD_Z.name][Signal_light_positions.WEST.name] = Traffic_light.RED.name
                         
                         continue
-
-                # else:
-
-                #     for signal_light_position in Signal_light_positions:
-
-                #         if signal_light_position == traffic_light_direction_sequence[crossroad][self.timer % number_of_signals]:
-
-                #             self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.GREEN.name
-
-                #         else:
-
-                #             self.traffic_lights[crossroad.name][signal_light_position.name] = Traffic_light.RED.name    
-
-            # self.timer += 1      
-            
-            # Send the updated traffic light signals to the backend
-
-            # print("Updated traffic light clock %d" % int(self.current_time))
-
-            # print("CROSSROAD: %s" % crossroad.name)
-            # print(self.traffic_lights[crossroad.name])
             
             while True:
 
                 time.sleep(polling_interval)
-
-                # print("Before %d" % int(self.current_time))
 
                 self.traffic_lights["clock"] = self.current_time
 
@@ -806,11 +775,6 @@ class Traffic_signal_control_master:
 
                     self.current_time = response.text
 
-                    # print("Traffic light clock %d" % int(self.current_time))
                     break
-
-                # else:
-
-                    # print("Sleeping")
 
                 

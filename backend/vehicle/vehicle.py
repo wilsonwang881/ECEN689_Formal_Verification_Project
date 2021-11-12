@@ -53,8 +53,6 @@ class Vehicle(threading.Thread):
 
             time.sleep(polling_interval)
 
-            # print("Before %d" % int(self.current_time))
-
             response = requests.post("http://127.0.0.1:5000/set_vehicle_status/%d" \
                 % (self.id), json=payload)
             
@@ -62,15 +60,9 @@ class Vehicle(threading.Thread):
 
                 self.current_time = response.text  
 
-                # print("Vehicle Clock %d" % int(self.current_time))
+                break       
 
-                break  
 
-            # else:
-
-            
-
-    
     def crossroad_reached_check(self, last_road_segment, current_road_segment, target_crossroad):
         
         crossroad_list_last_road_segment = list()

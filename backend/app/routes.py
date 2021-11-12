@@ -54,8 +54,6 @@ def update(mode, id, value):
         reported_vehicles += 1
         vehicle_records.append(id)     
 
-        # print("Reported_Vehicle = %d" % reported_vehicles)   
-
         # Update the current vehicle record
         current_states["vehicle_%d" % id] = value       
 
@@ -92,8 +90,6 @@ def update(mode, id, value):
                     value[Direction.DIRECTION_LEFT.name]["congestion_index"]
         
     elif (mode == "signal_lights") and (not traffic_light_reported): 
-
-        # print("Signal light reported")   
 
         traffic_light_reported = True
 
@@ -141,16 +137,6 @@ def update(mode, id, value):
             print("A at time %d, vehicle %d added" % (clock, id))
 
         return permission_to_add_vehicle
-
-    # if (reported_vehicles == total_number_of_vehicles) \
-    #    and (not traffic_light_reported):
-
-    #    print("Waiting for traffic_light_report")
-
-    # if (reported_vehicles != total_number_of_vehicles) \
-    #    and (traffic_light_reported):
-
-    #    print("Waiting for vehicle report")
     
     # If all threads have reported, update the database
     if (reported_vehicles == total_number_of_vehicles) \
@@ -280,9 +266,6 @@ def update(mode, id, value):
             # for orientation in db_response:                
 
                 # print("orientation: %s, status %s" % (orientation, db_response[orientation]))
-        
-        # Flush Redis DB
-        # redis_db.flushdb()
 
         for key in current_states:                                
 
@@ -361,15 +344,9 @@ def set_signal_lights():
 
     global clock 
 
-    if int(payload["clock"]) == clock:   
-
-        # print("Checking traffic light")     
+    if int(payload["clock"]) == clock:     
 
         update("signal_lights", 9, payload)
-
-    # else:
-
-    #     print("Equal %d <-> %d" % (int(payload["clock"]), clock))
 
     mutex.release()
     
