@@ -17,7 +17,7 @@ from location_speed_encoding import Speed
 from location_speed_encoding import Traffic_light
 
 
-polling_interval = 1.0
+polling_interval = 0.8
 
 
 # Each vehicle in the traffic system is represented by a thread
@@ -47,14 +47,28 @@ class Vehicle(threading.Thread):
         payload["location"] = self.location
         payload["vehicle_speed"] = self.speed.value
         payload["route_completion"] = self.route_completion_status.value
+        payload["clock"] = self.current_time
+
+        while True:
+
+            time.sleep(polling_interval)
+
+            # print("Before %d" % int(self.current_time))
+
+            response = requests.post("http://127.0.0.1:5000/set_vehicle_status/%d" \
+                % (self.id), json=payload)
             
-        response = requests.post("http://127.0.0.1:5000/set_vehicle_status/%d" \
-            % (self.id), json=payload)
-        
-        if response.text != self.current_time:
-            self.current_time = response.text                                                                         
+            if int(response.text) == (int(self.current_time) + 2):
+
+                self.current_time = response.text  
+
+                # print("Vehicle Clock %d" % int(self.current_time))
+
+                break  
+
+            # else:
+
             
-        time.sleep(polling_interval)        
 
     
     def crossroad_reached_check(self, last_road_segment, current_road_segment, target_crossroad):
@@ -339,23 +353,11 @@ class Vehicle(threading.Thread):
                         self.speed = Speed.STOPPED
                         self.location_visited.clear()
                         self.route_completion_status = Route_completion_status.ENROUTE   
-                        break;
+                        break
 
                     else:
 
-                        self.update_backend()                                                                            
-                                 
-            elif self.route_completion_status == Route_completion_status.FINISHED:
-
-                # If the vehicle just finished the route
-                # Reset its status to NOT_STARTED
-
-                self.road_segment = Road.ROAD_A
-                self.direction = Direction.DIRECTION_LEFT
-                self.location = 2
-                self.speed = Speed.STOPPED
-                self.location_visited.clear()
-                self.route_completion_status = Route_completion_status.NOT_STARTED
+                        self.update_backend()                                                                                                                       
 
             elif self.route_completion_status == Route_completion_status.ENROUTE:
 
@@ -368,7 +370,12 @@ class Vehicle(threading.Thread):
 
                     if self.location == 1:
 
-                        self.route_completion_status = Route_completion_status.FINISHED                        
+                        self.road_segment = Road.ROAD_A
+                        self.direction = Direction.DIRECTION_LEFT
+                        self.location = 2
+                        self.speed = Speed.STOPPED
+                        self.location_visited.clear()
+                        self.route_completion_status = Route_completion_status.NOT_STARTED                           
 
                     else:
 

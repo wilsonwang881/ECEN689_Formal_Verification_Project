@@ -9,7 +9,7 @@ from traffic_signal_control import Traffic_signal_control_master
 from location_speed_encoding import Road
 
 # Number of vehicles
-vehicle_number = 150
+vehicle_number = 200
 
 # Start a list of vehicle threads
 vehicle_thread_list = list()
