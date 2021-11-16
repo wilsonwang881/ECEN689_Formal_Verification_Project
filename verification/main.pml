@@ -71,68 +71,93 @@ mtype:Traffic_light = {
     RED
 }
 
-typedef Road_Direction_Def {
+typedef MAP_ROAD_DIRECTION_Def {
     mtype:Crossroads crossroad;
     mtype:Signal_light_positions traffic_light_orientation;
 };
 
-typedef Road_Def {
-    Road_Direction_Def direction_left_record;
-    Road_Direction_Def direction_right_record;
+typedef MAP_ROAD_DEF {
+    MAP_ROAD_DIRECTION_Def direction_left_record;
+    MAP_ROAD_DIRECTION_Def direction_right_record;
 };
 
-typedef Crossroad_Def {
+typedef MAP_CROSSROAD_DEF {
     mtype:Road EAST_ROAD;
     mtype:Road SOUTH_ROAD;
     mtype:Road WEST_ROAD;
     mtype:Road NORTH_ROAD;
-}
+};
 
-typedef Map_Def {
-    Road_Def ROAD_A_RECORD;
-    Road_Def ROAD_E_RECORD;
-    Road_Def ROAD_F_RECORD;
-    Road_Def ROAD_G_RECORD;
-    Road_Def ROAD_H_RECORD;
-    Road_Def ROAD_I_RECORD;
-    Road_Def ROAD_J_RECORD;
-    Road_Def ROAD_K_RECORD;
-    Road_Def ROAD_L_RECORD;
-    Road_Def ROAD_M_RECORD;
-    Road_Def ROAD_N_RECORD;
-    Road_Def ROAD_O_RECORD;
-    Road_Def ROAD_P_RECORD;
-    Crossroad_Def CROSSROAD_Z_RECORD;
-    Crossroad_Def CROSSROAD_X_RECORD;
-    Crossroad_Def CROSSROAD_D_RECORD;
-    Crossroad_Def CROSSROAD_Y_RECORD;
-    Crossroad_Def CROSSROAD_U_RECORD;
-    Crossroad_Def CROSSROAD_W_RECORD;
-    Crossroad_Def CROSSROAD_B_RECORD;
-    Crossroad_Def CROSSROAD_V_RECORD;
-    Crossroad_Def CROSSROAD_C_RECORD;
-}
+typedef MAP_DEF {
+    MAP_ROAD_DEF ROAD_A_RECORD;
+    MAP_ROAD_DEF ROAD_E_RECORD;
+    MAP_ROAD_DEF ROAD_F_RECORD;
+    MAP_ROAD_DEF ROAD_G_RECORD;
+    MAP_ROAD_DEF ROAD_H_RECORD;
+    MAP_ROAD_DEF ROAD_I_RECORD;
+    MAP_ROAD_DEF ROAD_J_RECORD;
+    MAP_ROAD_DEF ROAD_K_RECORD;
+    MAP_ROAD_DEF ROAD_L_RECORD;
+    MAP_ROAD_DEF ROAD_M_RECORD;
+    MAP_ROAD_DEF ROAD_N_RECORD;
+    MAP_ROAD_DEF ROAD_O_RECORD;
+    MAP_ROAD_DEF ROAD_P_RECORD;
+    MAP_CROSSROAD_DEF CROSSROAD_Z_RECORD;
+    MAP_CROSSROAD_DEF CROSSROAD_X_RECORD;
+    MAP_CROSSROAD_DEF CROSSROAD_D_RECORD;
+    MAP_CROSSROAD_DEF CROSSROAD_Y_RECORD;
+    MAP_CROSSROAD_DEF CROSSROAD_U_RECORD;
+    MAP_CROSSROAD_DEF CROSSROAD_W_RECORD;
+    MAP_CROSSROAD_DEF CROSSROAD_B_RECORD;
+    MAP_CROSSROAD_DEF CROSSROAD_V_RECORD;
+    MAP_CROSSROAD_DEF CROSSROAD_C_RECORD;
+};
+
+typedef DB_CROSSROAD_RECORD_DEF {
+    mtype:Traffic_light east_color;
+    mtype:Traffic_light south_color;
+    mtype:Traffic_light west_color;
+    mtype:Traffic_light north_color;
+};
 
 mtype:Crossroads target_crossroad[3];
 
-Map_Def MAP;
+MAP_DEF MAP;
 
 // All communication channels are synchronous
-chan query_signal_lights = [0] of {byte};
+typedef Query_Signal_Lights_Send_Def {
+    short vehicle_id;
+    mtype:Crossroads crossroad;    
+};
+
+chan query_signal_lights = [0] of {Query_Signal_Lights_Send_Def};
+
+typedef Query_Signal_Lights_Recv_Def {
+    short vehicle_id;
+    DB_CROSSROAD_RECORD_DEF crossroad_lights;
+}
+
+chan query_signal_lights_return = [0] of {Query_Signal_Lights_Recv_Def};
 
 chan set_signal_lights = [0] of {byte};
 
+chan set_signal_lights_return = [0] of {byte};
+
 chan query_vehicle_status = [0] of {byte};
+
+chan query_vehicle_status_return = [0] of {byte};
 
 chan set_vehicle_status = [0] of {byte};
 
-chan query_road_congestion = [0] of {byte};
-
-chan set_road_congestion = [0] of {byte};
+chan set_vehicle_status_return = [0] of {byte};
 
 chan query_location = [0] of {byte};
 
+chan query_location_return = [0] of {byte};
+
 chan add_vehicle = [0] of {short};
+
+chan add_vehicle_return = [0] of {short};
 
 proctype Vehicle(short id) {
 

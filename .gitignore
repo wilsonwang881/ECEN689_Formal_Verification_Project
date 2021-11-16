@@ -1,4 +1,6 @@
 pan
+pan.*
+model
 *.tmp
 *.trail
 
