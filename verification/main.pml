@@ -11,7 +11,65 @@ All logics from the Python application are included and modeled.
 
 short NUMBER_OF_VEHICLES = 150;
 
-byte NUMBER_OF_ROAD_SEGMENTS = 12;
+short NUMBER_OF_ROAD_SEGMENTS = 12;
+
+bit mutex = 0;
+
+mtype:Crossroads = {
+    CROSSROAD_Z,
+    CROSSROAD_Y,
+    CROSSROAD_X,
+    CROSSROAD_W,
+    CROSSROAD_V,
+    CROSSROAD_U,
+    CROSSROAD_D,
+    CROSSROAD_C,
+    CROSSROAD_B
+}
+
+mtype:Direction = {
+    DIRECTION_LEFT,
+    DIRECTION_RIGHT
+}
+
+mtype:Road = {
+    ROAD_P,
+    ROAD_O,
+    ROAD_N,
+    ROAD_M,
+    ROAD_L,
+    ROAD_K,
+    ROAD_J,
+    ROAD_I,
+    ROAD_H,
+    ROAD_G,
+    ROAD_F,
+    ROAD_E,
+    ROAD_A
+}
+
+mtype:Route_completion_status = {
+    FINISHED,
+    ENROUTE,
+    NOT_STARTED
+}
+
+mtype:Signal_light_positions = {
+    EAST,
+    WEST,
+    SOUTH,
+    NORTH
+}
+
+mtype:speed = {
+    STOPPED,
+    MOVING
+}
+
+mtype:Traffic_light = {
+    GREEN,
+    RED
+}
 
 // All communication channels are synchronous
 chan query_signal_lights = [0] of {byte};
@@ -30,19 +88,6 @@ chan query_location = [0] of {byte};
 
 chan add_vehicle = [0] of {short};
 
-proctype Congestion_Computation(short crossroad_id) {
-
-    short self_id = crossroad_id;
-    printf("Congestion computation worker %d running\n", self_id);
-
-    byte congestion_index = 0;
-
-    do
-    ::set_road_congestion!congestion_index;
-    od
-
-}
-
 proctype Vehicle(short id) {
 
     short self_id = id;
@@ -60,15 +105,21 @@ proctype Backend() {
 
     printf("Backend running\n");
 
-    byte congestion_index[NUMBER_OF_ROAD_SEGMENTS];
+    spin_lock(mutex);
 
-    do
-    ::set_road_congestion?congestion_index[0];
-    od
+    spin_unlock(mutex);
+
+    // byte congestion_index[2];
+
+    // congestion_index[0] = 0;
+    // congestion_index[1] = 0;
+
+    // do
+    // ::set_road_congestion?congestion_index[0];
+    // od
 
 }
 
-// Start all threads
 init {
 
     short id;
@@ -79,10 +130,5 @@ init {
         run Vehicle(id);
     }
 
-    for (id : 1..NUMBER_OF_ROAD_SEGMENTS) {
-        run Congestion_Computation(id);
-    }
-
     run Traffic_Signal_Control_Master();
-    
 }
