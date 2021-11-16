@@ -71,6 +71,52 @@ mtype:Traffic_light = {
     RED
 }
 
+typedef Road_Direction_Def {
+    mtype:Crossroads crossroad;
+    mtype:Signal_light_positions traffic_light_orientation;
+};
+
+typedef Road_Def {
+    Road_Direction_Def direction_left_record;
+    Road_Direction_Def direction_right_record;
+};
+
+typedef Crossroad_Def {
+    mtype:Road EAST_ROAD;
+    mtype:Road SOUTH_ROAD;
+    mtype:Road WEST_ROAD;
+    mtype:Road NORTH_ROAD;
+}
+
+typedef Map_Def {
+    Road_Def ROAD_A_RECORD;
+    Road_Def ROAD_E_RECORD;
+    Road_Def ROAD_F_RECORD;
+    Road_Def ROAD_G_RECORD;
+    Road_Def ROAD_H_RECORD;
+    Road_Def ROAD_I_RECORD;
+    Road_Def ROAD_J_RECORD;
+    Road_Def ROAD_K_RECORD;
+    Road_Def ROAD_L_RECORD;
+    Road_Def ROAD_M_RECORD;
+    Road_Def ROAD_N_RECORD;
+    Road_Def ROAD_O_RECORD;
+    Road_Def ROAD_P_RECORD;
+    Crossroad_Def CROSSROAD_Z_RECORD;
+    Crossroad_Def CROSSROAD_X_RECORD;
+    Crossroad_Def CROSSROAD_D_RECORD;
+    Crossroad_Def CROSSROAD_Y_RECORD;
+    Crossroad_Def CROSSROAD_U_RECORD;
+    Crossroad_Def CROSSROAD_W_RECORD;
+    Crossroad_Def CROSSROAD_B_RECORD;
+    Crossroad_Def CROSSROAD_V_RECORD;
+    Crossroad_Def CROSSROAD_C_RECORD;
+}
+
+mtype:Crossroads target_crossroad[3];
+
+Map_Def MAP;
+
 // All communication channels are synchronous
 chan query_signal_lights = [0] of {byte};
 
@@ -121,6 +167,14 @@ proctype Backend() {
 }
 
 init {
+
+    // Initialize target crossroad list
+    target_crossroad[0] = CROSSROAD_B;
+    target_crossroad[1] = CROSSROAD_C;
+    target_crossroad[2] = CROSSROAD_D;
+
+    // Initialize MAP
+    
 
     short id;
 
