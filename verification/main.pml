@@ -120,30 +120,34 @@ typedef DB_CROSSROAD_RECORD_DEF {
     mtype:Traffic_light north_color;
 };
 
+typedef DB_ALL_CROSSROADS_DEF {
+    DB_CROSSROAD_RECORD_DEF crossroad_Z_record;
+    DB_CROSSROAD_RECORD_DEF crossroad_Y_record;
+    DB_CROSSROAD_RECORD_DEF crossroad_X_record;
+    DB_CROSSROAD_RECORD_DEF crossroad_W_record;
+    DB_CROSSROAD_RECORD_DEF crossroad_V_record;
+    DB_CROSSROAD_RECORD_DEF crossroad_U_record;
+    DB_CROSSROAD_RECORD_DEF crossroad_D_record;
+    DB_CROSSROAD_RECORD_DEF crossroad_C_record;
+    DB_CROSSROAD_RECORD_DEF crossroad_B_record;
+}
+
 mtype:Crossroads target_crossroad[3];
 
 MAP_DEF MAP;
 
+int clock;
+
 // All communication channels are synchronous
-typedef Query_Signal_Lights_Send_Def {
-    short vehicle_id;
-    mtype:Crossroads crossroad;    
-};
+chan query_signal_lights = [0] of {short, mtype:Crossroads}; // vehicle ID, crossroad name
 
-chan query_signal_lights = [0] of {Query_Signal_Lights_Send_Def};
+chan query_signal_lights_return = [0] of {short, DB_CROSSROAD_RECORD_DEF}; // vehicle ID, crossroad record
 
-typedef Query_Signal_Lights_Recv_Def {
-    short vehicle_id;
-    DB_CROSSROAD_RECORD_DEF crossroad_lights;
-}
+chan set_signal_lights = [0] of {int, DB_ALL_CROSSROADS_DEF}; // Sender clock, payload
 
-chan query_signal_lights_return = [0] of {Query_Signal_Lights_Recv_Def};
+chan set_signal_lights_return = [0] of {int}; // Receiver clock
 
-chan set_signal_lights = [0] of {byte};
-
-chan set_signal_lights_return = [0] of {byte};
-
-chan query_vehicle_status = [0] of {byte};
+chan query_vehicle_status = [0] of {short, short}; // vehicle ID, vehicle ID (queried one)
 
 chan query_vehicle_status_return = [0] of {byte};
 
@@ -175,6 +179,8 @@ proctype Traffic_Signal_Control_Master() {
 proctype Backend() {
 
     printf("Backend running\n");
+
+    clock = 0;
 
     spin_lock(mutex);
 
