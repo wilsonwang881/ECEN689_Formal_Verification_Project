@@ -4,7 +4,8 @@ Texas A&M University
 Date: 2021.11.7
 
 This file serves the purpose of model checking with Spin.
-All logics from the Python application are included and modeled.
+
+The file is written in Promela syntax.
 */
 
 #include "lock.h"
@@ -77,8 +78,8 @@ typedef MAP_ROAD_DIRECTION_Def {
 };
 
 typedef MAP_ROAD_DEF {
-    MAP_ROAD_DIRECTION_Def direction_left_record;
-    MAP_ROAD_DIRECTION_Def direction_right_record;
+    MAP_ROAD_DIRECTION_Def direction_records[3];
+    // MAP_ROAD_DIRECTION_Def direction_right_record;
 };
 
 typedef MAP_CROSSROAD_DEF {
@@ -89,19 +90,7 @@ typedef MAP_CROSSROAD_DEF {
 };
 
 typedef MAP_DEF {
-    MAP_ROAD_DEF ROAD_A_RECORD;
-    MAP_ROAD_DEF ROAD_E_RECORD;
-    MAP_ROAD_DEF ROAD_F_RECORD;
-    MAP_ROAD_DEF ROAD_G_RECORD;
-    MAP_ROAD_DEF ROAD_H_RECORD;
-    MAP_ROAD_DEF ROAD_I_RECORD;
-    MAP_ROAD_DEF ROAD_J_RECORD;
-    MAP_ROAD_DEF ROAD_K_RECORD;
-    MAP_ROAD_DEF ROAD_L_RECORD;
-    MAP_ROAD_DEF ROAD_M_RECORD;
-    MAP_ROAD_DEF ROAD_N_RECORD;
-    MAP_ROAD_DEF ROAD_O_RECORD;
-    MAP_ROAD_DEF ROAD_P_RECORD;
+    MAP_ROAD_DEF ROAD_RECORD[14];
     MAP_CROSSROAD_DEF CROSSROAD_Z_RECORD;
     MAP_CROSSROAD_DEF CROSSROAD_X_RECORD;
     MAP_CROSSROAD_DEF CROSSROAD_D_RECORD;
@@ -130,7 +119,25 @@ typedef DB_ALL_CROSSROADS_DEF {
     DB_CROSSROAD_RECORD_DEF crossroad_D_record;
     DB_CROSSROAD_RECORD_DEF crossroad_C_record;
     DB_CROSSROAD_RECORD_DEF crossroad_B_record;
-}
+};
+
+typedef DB_VEHICLE_RECORD_DEF {
+    short vehicle_id;
+    mtype:Road road_segment;
+    mtype:Direction direction;
+    byte location;
+    mtype:speed speed;
+    mtype:Route_completion_status route_completion;
+};
+
+typedef DB_ROAD_ONE_SIDE_SEGMENT_RECORD_DEF {
+    DB_VEHICLE_RECORD_DEF vehicle_record[30];
+};
+
+typedef DB_ROAD_SEGMENT_RECORD_DEF {
+    DB_ROAD_ONE_SIDE_SEGMENT_RECORD_DEF left_lane_vehicle_record;
+    DB_ROAD_ONE_SIDE_SEGMENT_RECORD_DEF right_lane_vehicle_record;
+};
 
 mtype:Crossroads target_crossroad[3];
 
@@ -147,26 +154,27 @@ chan set_signal_lights = [0] of {int, DB_ALL_CROSSROADS_DEF}; // Sender clock, p
 
 chan set_signal_lights_return = [0] of {int}; // Receiver clock
 
-chan query_vehicle_status = [0] of {short, short}; // vehicle ID, vehicle ID (queried one)
+chan set_vehicle_status = [0] of {short, DB_VEHICLE_RECORD_DEF, int}; // vehicle ID, vehicle record, clock
 
-chan query_vehicle_status_return = [0] of {byte};
+chan set_vehicle_status_return = [0] of {short, int}; // vehicle ID, clock
 
-chan set_vehicle_status = [0] of {byte};
+chan query_location = [0] of {short, mtype:Road, mtype:Direction, byte}; // vehicle ID, road segment name, direction, location
 
-chan set_vehicle_status_return = [0] of {byte};
+chan query_location_return = [0] of {short, bit, DB_VEHICLE_RECORD_DEF}; // vehicle ID, vehicle present or not, vehicle record if any
 
-chan query_location = [0] of {byte};
+chan add_vehicle = [0] of {short}; // vehicle ID
 
-chan query_location_return = [0] of {byte};
-
-chan add_vehicle = [0] of {short};
-
-chan add_vehicle_return = [0] of {short};
+chan add_vehicle_return = [0] of {short, bit, int}; // vehicle ID, result of adding vehicles, clock
 
 proctype Vehicle(short id) {
 
-    short self_id = id;
-    printf("Vehicle %d running\n", self_id);
+    DB_VEHICLE_RECORD_DEF self;
+    self.vehicle_id = id;
+
+    bit location_visited[4];
+    int current_time = 0;
+
+    printf("Vehicle %d running\n", self.vehicle_id);
     
 }
 
@@ -186,15 +194,6 @@ proctype Backend() {
 
     spin_unlock(mutex);
 
-    // byte congestion_index[2];
-
-    // congestion_index[0] = 0;
-    // congestion_index[1] = 0;
-
-    // do
-    // ::set_road_congestion?congestion_index[0];
-    // od
-
 }
 
 init {
@@ -205,7 +204,8 @@ init {
     target_crossroad[2] = CROSSROAD_D;
 
     // Initialize MAP
-    
+    MAP.ROAD_RECORD[ROAD_A].direction_records[DIRECTION_LEFT].crossroad = CROSSROAD_Z;
+    MAP.ROAD_RECORD[ROAD_A].direction_records[DIRECTION_LEFT].traffic_light_orientation = EAST;
 
     short id;
 
