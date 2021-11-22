@@ -142,8 +142,9 @@ ECEN689_Formal_Verification_Project\    ----------> Root directory
         run_threads.py    ------------------------> Start vehicle and congestion computation
     .gitignore    --------------------------------> Used by Git to exclude files
     verification\   ------------------------------> Promela and Spin model checking
-        main.pml    ------------------------------> Main Promela code
         lock.h    --------------------------------> Mutex macros
+        main.pml    ------------------------------> Main Promela code
+        run_spin.sh    ---------------------------> Run verification code
     README.md    ---------------------------------> Documentation
     requirements.txt    --------------------------> Python library requirements
 ```
