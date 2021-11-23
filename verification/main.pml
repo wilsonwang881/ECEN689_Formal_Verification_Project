@@ -346,6 +346,9 @@ init {
     db_reported.throughtput = 0;
     db_reported.red_light_violations = 0;
 
+    // Set the clock
+    clock n= 2;
+
     short id;
 
     run Backend();
