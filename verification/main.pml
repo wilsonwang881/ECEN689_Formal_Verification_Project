@@ -10,9 +10,9 @@ The file is written in Promela syntax.
 
 #include "lock.h"
 
-short NUMBER_OF_VEHICLES = 100;
+byte NUMBER_OF_VEHICLES = 12;
 
-short NUMBER_OF_ROAD_SEGMENTS = 12;
+byte NUMBER_OF_ROAD_SEGMENTS = 12;
 
 bit mutex = 0;
 
@@ -113,7 +113,7 @@ typedef DB_ROAD_SEGMENT_RECORD_DEF {
 typedef DB_DEF {
     DB_ROAD_SEGMENT_RECORD_DEF road_segment_records[13+1];
     DB_CROSSROAD_RECORD_DEF crossroad_records[9+1];  
-    DB_VEHICLE_RECORD_DEF vehicle_records[100];
+    DB_VEHICLE_RECORD_DEF vehicle_records[50];
     short total_vehicles;
     short pending_vehicles;
     short vehicle_collisions;
@@ -122,8 +122,8 @@ typedef DB_DEF {
     short red_light_violations;
 };
 
-DB_DEF db;
-DB_DEF db_reported;
+// DB_DEF db;
+// DB_DEF db_reported;
 
 typedef ALL_CROSSROADS_DEF {
     DB_CROSSROAD_RECORD_DEF crossroad_Z_record;
@@ -137,38 +137,64 @@ typedef ALL_CROSSROADS_DEF {
     DB_CROSSROAD_RECORD_DEF crossroad_B_record;
 };
 
-int clock;
+byte clock;
 
 // All communication channels are synchronous
-chan query_signal_lights = [0] of {short, mtype:Crossroads}; // vehicle ID, crossroad name
+chan query_signal_lights = [0] of {byte, mtype:Crossroads}; // vehicle ID, crossroad name
 
-chan query_signal_lights_return = [0] of {short, DB_CROSSROAD_RECORD_DEF}; // vehicle ID, crossroad record
+chan query_signal_lights_return = [0] of {byte, DB_CROSSROAD_RECORD_DEF}; // vehicle ID, crossroad record
 
-chan set_signal_lights = [0] of {int, ALL_CROSSROADS_DEF}; // Sender clock, payload
+chan set_signal_lights = [0] of {byte, ALL_CROSSROADS_DEF}; // Sender clock, payload
 
-chan set_signal_lights_return = [0] of {int}; // Receiver clock
+chan set_signal_lights_return = [0] of {byte}; // Receiver clock
 
-chan set_vehicle_status = [0] of {short, DB_VEHICLE_RECORD_DEF, int}; // vehicle ID, vehicle record, clock
+chan set_vehicle_status = [0] of {byte, DB_VEHICLE_RECORD_DEF, byte}; // vehicle ID, vehicle record, clock
 
-chan set_vehicle_status_return = [0] of {short, int}; // vehicle ID, clock
+chan set_vehicle_status_return = [0] of {byte, byte}; // vehicle ID, clock
 
-chan query_location = [0] of {short, mtype:Road, mtype:Direction, byte}; // vehicle ID, road segment name, direction, location
+chan query_location = [0] of {byte, mtype:Road, mtype:Direction, byte}; // vehicle ID, road segment name, direction, location
 
-chan query_location_return = [0] of {short, bit, DB_VEHICLE_RECORD_DEF}; // vehicle ID, vehicle present or not, vehicle record if any
+chan query_location_return = [0] of {byte, bit, DB_VEHICLE_RECORD_DEF}; // vehicle ID, vehicle present or not, vehicle record if any
 
-chan add_vehicle = [0] of {short}; // vehicle ID
+chan add_vehicle = [0] of {byte}; // vehicle ID
 
-chan add_vehicle_return = [0] of {short, bit, int}; // vehicle ID, result of adding vehicles, clock
+chan add_vehicle_return = [0] of {byte, bit, byte}; // vehicle ID, result of adding vehicles, clock
 
 proctype Backend() {
 
-    printf("Backend running\n");
+    // printf("Backend running\n");
 
-    clock = 0;
+    bit reported_vehicles[12 + 1];
+    byte reported_vehicle_counter = 0;
 
-    spin_lock(mutex);
+    short i;
 
-    spin_unlock(mutex);
+    for(i: 0..NUMBER_OF_VEHICLES) {
+        reported_vehicles[i] = 0;
+    }
+
+    byte query_id;
+    mtype:Crossroads queried_crossroad;
+
+    do
+    ::query_signal_lights?query_id,queried_crossroad;      
+      if
+      ::(reported_vehicles[query_id] == 0) 
+            ->  reported_vehicles[query_id] = 1;
+                reported_vehicle_counter++;
+            if
+            ::  (reported_vehicle_counter == NUMBER_OF_VEHICLES)
+                    ->break;
+            ::  else -> printf("Vehicle reporting %d\n", reported_vehicle_counter);
+            fi
+      fi
+    od
+
+    // spin_lock(mutex);
+
+    printf("Vehicle reported %d\n", reported_vehicle_counter);
+
+    // spin_unlock(mutex);
 
 }
 
@@ -177,9 +203,11 @@ proctype Vehicle(short id) {
     DB_VEHICLE_RECORD_DEF self;
 
     bit location_visited[4];
-    int current_time = 0;
+    byte current_time = 0;
 
-    printf("Vehicle %d running\n", id);
+    // printf("Vehicle %d running\n", id);
+
+    query_signal_lights!id,CROSSROAD_Z;
     
 }
 
@@ -298,64 +326,64 @@ init {
 
     // Initialize road segment records
     // Iteration order: road -> direction -> position
-    for(i: ROAD_A..ROAD_P) {
-        for(j: DIRECTION_RIGHT..DIRECTION_LEFT) {
-            for(k: 0..29) {
-                db.road_segment_records[i].lane_records[j * k] = 0;
-                db_reported.road_segment_records[i].lane_records[j * k] = 0;
-            }            
-        }
-    }
+    // for(i: ROAD_A..ROAD_P) {
+    //     for(j: DIRECTION_RIGHT..DIRECTION_LEFT) {
+    //         for(k: 0..29) {
+    //             db.road_segment_records[i].lane_records[j * k] = 0;
+    //             db_reported.road_segment_records[i].lane_records[j * k] = 0;
+    //         }            
+    //     }
+    // }
 
     // Initialize crossroad records
     // Iteration order: crossroad -> orientation
-    for(i: CROSSROAD_B..CROSSROAD_Z) {
-        for(j: NORTH..EAST) {
-            db.crossroad_records[i].traffic_lights[j] = RED;
-            db_reported.crossroad_records[i].traffic_lights[j] = RED;
-        }
-    }
+    // for(i: CROSSROAD_B..CROSSROAD_Z) {
+    //     for(j: NORTH..EAST) {
+    //         db.crossroad_records[i].traffic_lights[j] = RED;
+    //         db_reported.crossroad_records[i].traffic_lights[j] = RED;
+    //     }
+    // }
 
     // Initialize vehicle records
-    for(i: 0..NUMBER_OF_VEHICLES-1) {
-        db.vehicle_records[i].road_segment = ROAD_A;
-        db.vehicle_records[i].direction = DIRECTION_LEFT;
-        db.vehicle_records[i].location = 2;
-        db.vehicle_records[i].speed = STOPPED;
-        db.vehicle_records[i].route_completion = NOT_STARTED;
+    // for(i: 0..NUMBER_OF_VEHICLES-1) {
+    //     db.vehicle_records[i].road_segment = ROAD_A;
+    //     db.vehicle_records[i].direction = DIRECTION_LEFT;
+    //     db.vehicle_records[i].location = 2;
+    //     db.vehicle_records[i].speed = STOPPED;
+    //     db.vehicle_records[i].route_completion = NOT_STARTED;
 
-        db_reported.vehicle_records[i].road_segment = ROAD_A;
-        db_reported.vehicle_records[i].direction = DIRECTION_LEFT;
-        db_reported.vehicle_records[i].location = 2;
-        db_reported.vehicle_records[i].speed = STOPPED;
-        db_reported.vehicle_records[i].route_completion = NOT_STARTED;
-    }
+    //     db_reported.vehicle_records[i].road_segment = ROAD_A;
+    //     db_reported.vehicle_records[i].direction = DIRECTION_LEFT;
+    //     db_reported.vehicle_records[i].location = 2;
+    //     db_reported.vehicle_records[i].speed = STOPPED;
+    //     db_reported.vehicle_records[i].route_completion = NOT_STARTED;
+    // }
 
     // Set statistics
-    db.total_vehicles = NUMBER_OF_VEHICLES;
-    db.pending_vehicles = NUMBER_OF_VEHICLES;
-    db.vehicle_collisions = 0;
-    db.u_turns = 0;
-    db.throughtput = 0;
-    db.red_light_violations = 0;
+    // db.total_vehicles = NUMBER_OF_VEHICLES;
+    // db.pending_vehicles = NUMBER_OF_VEHICLES;
+    // db.vehicle_collisions = 0;
+    // db.u_turns = 0;
+    // db.throughtput = 0;
+    // db.red_light_violations = 0;
 
-    db_reported.total_vehicles = NUMBER_OF_VEHICLES;
-    db_reported.pending_vehicles = NUMBER_OF_VEHICLES;
-    db_reported.vehicle_collisions = 0;
-    db_reported.u_turns = 0;
-    db_reported.throughtput = 0;
-    db_reported.red_light_violations = 0;
+    // db_reported.total_vehicles = NUMBER_OF_VEHICLES;
+    // db_reported.pending_vehicles = NUMBER_OF_VEHICLES;
+    // db_reported.vehicle_collisions = 0;
+    // db_reported.u_turns = 0;
+    // db_reported.throughtput = 0;
+    // db_reported.red_light_violations = 0;
 
     // Set the clock
-    clock n= 2;
+    clock = 2;
 
-    short id;
+    byte id;
 
     run Backend();
 
-    for (id: 1..NUMBER_OF_VEHICLES) {
+    run Traffic_Signal_Control_Master();
+
+    for (id: 0..(NUMBER_OF_VEHICLES-1)) {
         run Vehicle(id);
     }
-
-    run Traffic_Signal_Control_Master();
 }
