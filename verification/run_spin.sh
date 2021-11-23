@@ -1,3 +1,3 @@
 spin -a main.pml
-gcc -DVECTORSZ=2048 -o model pan.c
+gcc -DVECTORSZ=6000 -o model pan.c
 ./model

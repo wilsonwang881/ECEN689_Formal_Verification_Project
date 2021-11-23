@@ -10,7 +10,7 @@ The file is written in Promela syntax.
 
 #include "lock.h"
 
-short NUMBER_OF_VEHICLES = 150;
+short NUMBER_OF_VEHICLES = 100;
 
 short NUMBER_OF_ROAD_SEGMENTS = 12;
 
@@ -91,14 +91,41 @@ typedef MAP_DEF {
     mtype:Crossroads target_crossroad[3];
 };
 
+MAP_DEF MAP;
+
 typedef DB_CROSSROAD_RECORD_DEF {
-    mtype:Traffic_light east_color;
-    mtype:Traffic_light south_color;
-    mtype:Traffic_light west_color;
-    mtype:Traffic_light north_color;
+    mtype:Traffic_light traffic_lights[4+1];
 };
 
-typedef DB_ALL_CROSSROADS_DEF {
+typedef DB_VEHICLE_RECORD_DEF {
+    mtype:Road road_segment;
+    mtype:Direction direction;
+    byte location;
+    mtype:speed speed;
+    mtype:Route_completion_status route_completion;
+};
+
+// Direction * position = index in lane_records
+typedef DB_ROAD_SEGMENT_RECORD_DEF {
+    short lane_records[60];
+};
+
+typedef DB_DEF {
+    DB_ROAD_SEGMENT_RECORD_DEF road_segment_records[13+1];
+    DB_CROSSROAD_RECORD_DEF crossroad_records[9+1];  
+    DB_VEHICLE_RECORD_DEF vehicle_records[100];
+    short total_vehicles;
+    short pending_vehicles;
+    short vehicle_collisions;
+    short u_turns;
+    short throughtput;
+    short red_light_violations;
+};
+
+DB_DEF db;
+DB_DEF db_reported;
+
+typedef ALL_CROSSROADS_DEF {
     DB_CROSSROAD_RECORD_DEF crossroad_Z_record;
     DB_CROSSROAD_RECORD_DEF crossroad_Y_record;
     DB_CROSSROAD_RECORD_DEF crossroad_X_record;
@@ -110,26 +137,6 @@ typedef DB_ALL_CROSSROADS_DEF {
     DB_CROSSROAD_RECORD_DEF crossroad_B_record;
 };
 
-typedef DB_VEHICLE_RECORD_DEF {
-    short vehicle_id;
-    mtype:Road road_segment;
-    mtype:Direction direction;
-    byte location;
-    mtype:speed speed;
-    mtype:Route_completion_status route_completion;
-};
-
-typedef DB_ROAD_ONE_SIDE_SEGMENT_RECORD_DEF {
-    DB_VEHICLE_RECORD_DEF vehicle_record[30];
-};
-
-typedef DB_ROAD_SEGMENT_RECORD_DEF {
-    DB_ROAD_ONE_SIDE_SEGMENT_RECORD_DEF left_lane_vehicle_record;
-    DB_ROAD_ONE_SIDE_SEGMENT_RECORD_DEF right_lane_vehicle_record;
-};
-
-MAP_DEF MAP;
-
 int clock;
 
 // All communication channels are synchronous
@@ -137,7 +144,7 @@ chan query_signal_lights = [0] of {short, mtype:Crossroads}; // vehicle ID, cros
 
 chan query_signal_lights_return = [0] of {short, DB_CROSSROAD_RECORD_DEF}; // vehicle ID, crossroad record
 
-chan set_signal_lights = [0] of {int, DB_ALL_CROSSROADS_DEF}; // Sender clock, payload
+chan set_signal_lights = [0] of {int, ALL_CROSSROADS_DEF}; // Sender clock, payload
 
 chan set_signal_lights_return = [0] of {int}; // Receiver clock
 
@@ -153,24 +160,6 @@ chan add_vehicle = [0] of {short}; // vehicle ID
 
 chan add_vehicle_return = [0] of {short, bit, int}; // vehicle ID, result of adding vehicles, clock
 
-proctype Vehicle(short id) {
-
-    DB_VEHICLE_RECORD_DEF self;
-    self.vehicle_id = id;
-
-    bit location_visited[4];
-    int current_time = 0;
-
-    printf("Vehicle %d running\n", self.vehicle_id);
-    
-}
-
-proctype Traffic_Signal_Control_Master() {
-
-    printf("Traffic light control master running\n");
-
-}
-
 proctype Backend() {
 
     printf("Backend running\n");
@@ -183,9 +172,26 @@ proctype Backend() {
 
 }
 
+proctype Vehicle(short id) {
+
+    DB_VEHICLE_RECORD_DEF self;
+
+    bit location_visited[4];
+    int current_time = 0;
+
+    printf("Vehicle %d running\n", id);
+    
+}
+
+proctype Traffic_Signal_Control_Master() {
+
+    printf("Traffic light control master running\n");
+
+}
+
 init {    
 
-    // Initialize MAP and the target crossroad list
+    // Initialize the MAP and the target crossroad list
     MAP.ROAD_RECORD[ROAD_A].direction_records[DIRECTION_LEFT].crossroad = CROSSROAD_Z;
     MAP.ROAD_RECORD[ROAD_A].direction_records[DIRECTION_LEFT].traffic_light_orientation = EAST;
 
@@ -286,11 +292,65 @@ init {
     MAP.target_crossroad[0] = CROSSROAD_B;
     MAP.target_crossroad[1] = CROSSROAD_C;
     MAP.target_crossroad[2] = CROSSROAD_D;
+
+    // Initialize both db(past state) and db_reported(current state)
+    int i, j, k;
+
+    // Initialize road segment records
+    // Iteration order: road -> direction -> position
+    for(i: ROAD_A..ROAD_P) {
+        for(j: DIRECTION_RIGHT..DIRECTION_LEFT) {
+            for(k: 0..29) {
+                db.road_segment_records[i].lane_records[j * k] = 0;
+                db_reported.road_segment_records[i].lane_records[j * k] = 0;
+            }            
+        }
+    }
+
+    // Initialize crossroad records
+    // Iteration order: crossroad -> orientation
+    for(i: CROSSROAD_B..CROSSROAD_Z) {
+        for(j: NORTH..EAST) {
+            db.crossroad_records[i].traffic_lights[j] = RED;
+            db_reported.crossroad_records[i].traffic_lights[j] = RED;
+        }
+    }
+
+    // Initialize vehicle records
+    for(i: 0..NUMBER_OF_VEHICLES-1) {
+        db.vehicle_records[i].road_segment = ROAD_A;
+        db.vehicle_records[i].direction = DIRECTION_LEFT;
+        db.vehicle_records[i].location = 2;
+        db.vehicle_records[i].speed = STOPPED;
+        db.vehicle_records[i].route_completion = NOT_STARTED;
+
+        db_reported.vehicle_records[i].road_segment = ROAD_A;
+        db_reported.vehicle_records[i].direction = DIRECTION_LEFT;
+        db_reported.vehicle_records[i].location = 2;
+        db_reported.vehicle_records[i].speed = STOPPED;
+        db_reported.vehicle_records[i].route_completion = NOT_STARTED;
+    }
+
+    // Set statistics
+    db.total_vehicles = NUMBER_OF_VEHICLES;
+    db.pending_vehicles = NUMBER_OF_VEHICLES;
+    db.vehicle_collisions = 0;
+    db.u_turns = 0;
+    db.throughtput = 0;
+    db.red_light_violations = 0;
+
+    db_reported.total_vehicles = NUMBER_OF_VEHICLES;
+    db_reported.pending_vehicles = NUMBER_OF_VEHICLES;
+    db_reported.vehicle_collisions = 0;
+    db_reported.u_turns = 0;
+    db_reported.throughtput = 0;
+    db_reported.red_light_violations = 0;
+
     short id;
 
     run Backend();
 
-    for (id : 1..NUMBER_OF_VEHICLES) {
+    for (id: 1..NUMBER_OF_VEHICLES) {
         run Vehicle(id);
     }
 
