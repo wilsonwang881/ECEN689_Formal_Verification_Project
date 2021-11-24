@@ -1,5 +1,8 @@
-spin -a main.pml
-gcc -DVECTORSZ=6000 -o model pan.c
-./model
+# Elaborate Model
+spin -a main.pml -O
 
-# spin -c main.pml
+# Compile the code
+gcc -DNOBOUNDCHECK -DVECTORSZ=8192 -DMEMLIM=60000 -DSPACE -DBITSTATE -DNOFAIR -DSAFETY -DSFH -DNCORE=16 -DVMAX=6000 -o model pan.c
+
+# Execute the code
+./model -w30

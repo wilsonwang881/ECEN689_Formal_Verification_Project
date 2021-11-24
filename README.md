@@ -451,9 +451,9 @@ The verification replies on re-writing the application in Promela, including the
 
 The communication between threads and the backend can be modeled with communication channels in Promela.
 
-In other words, ``route`` in Python Flask = ``chan`` in Promela.
+In other words, ``route`` in Python Flask is equivalent to ``chan`` in Promela.
 
-One ``proctype`` definition corresponds to one type of threads.
+One ``proctype`` definition corresponds to one thread or one process.
 
 The mutex locking behaviour, though has no direct implementation in Promela, can be modeled with macros from this [post](https://lwn.net/Articles/243851/):
 
@@ -473,6 +473,16 @@ The mutex locking behaviour, though has no direct implementation in Promela, can
 #define spin_unlock(mutex) \
   mutex = 0
 ```
+
+To run the verification code, change directory to ``verification/`` and run ``run_spin.sh``.
+
+If one wishes to simply run the code, type ``spin -c main.pml`` in ``verification/``.
+
+Running model checking code written in Promela with Spin can take a long time and need huge memory, compile-time options can help reduce memory usage while maintain a reasonable speed.
+
+Compile the Promela code with ``-DNCORE=N`` (``N`` being the number of cores assigned) to allow multi-core verification for speedup.
+
+Compile the Promela code with ``-DBITSTATE`` to reduce memory usage.
 
 
 ## Tutorials
@@ -495,3 +505,5 @@ The mutex locking behaviour, though has no direct implementation in Promela, can
 [Tcl Developer Xchange](https://www.tcl.tk/software/tcltk/)
 
 [Basic Spin Manual](https://spinroot.com/spin/Man/Manual.html)
+
+[Pan Man Page](http://spinroot.com/spin/Man/Pan.html)

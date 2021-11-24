@@ -10,9 +10,9 @@ The file is written in Promela syntax.
 
 #include "lock.h"
 
-byte NUMBER_OF_VEHICLES = 12;
+short NUMBER_OF_VEHICLES = 60;
 
-byte NUMBER_OF_ROAD_SEGMENTS = 12;
+byte NUMBER_OF_ROAD_SEGMENTS = 13;
 
 bit mutex = 0;
 
@@ -113,7 +113,7 @@ typedef DB_ROAD_SEGMENT_RECORD_DEF {
 typedef DB_DEF {
     DB_ROAD_SEGMENT_RECORD_DEF road_segment_records[13+1];
     DB_CROSSROAD_RECORD_DEF crossroad_records[9+1];  
-    DB_VEHICLE_RECORD_DEF vehicle_records[50];
+    DB_VEHICLE_RECORD_DEF vehicle_records[60];
     short total_vehicles;
     short pending_vehicles;
     short vehicle_collisions;
@@ -122,8 +122,8 @@ typedef DB_DEF {
     short red_light_violations;
 };
 
-// DB_DEF db;
-// DB_DEF db_reported;
+DB_DEF db;
+DB_DEF db_reported;
 
 typedef ALL_CROSSROADS_DEF {
     DB_CROSSROAD_RECORD_DEF crossroad_Z_record;
@@ -164,12 +164,12 @@ proctype Backend() {
 
     // printf("Backend running\n");
 
-    bit reported_vehicles[12 + 1];
-    byte reported_vehicle_counter = 0;
+    bit reported_vehicles[NUMBER_OF_VEHICLES];
+    short reported_vehicle_counter = 0;
 
     short i;
 
-    for(i: 0..NUMBER_OF_VEHICLES) {
+    for(i: 0..(NUMBER_OF_VEHICLES-1)) {
         reported_vehicles[i] = 0;
     }
 
@@ -211,7 +211,17 @@ proctype Vehicle(short id) {
     
 }
 
+// inline MAP_Test (num) {
+//     num = 10;
+// }
+
 proctype Traffic_Signal_Control_Master() {
+
+    // short test_num = 0;
+
+    // MAP_Test(test_num);
+
+    // assert(test_num == 10);
 
     printf("Traffic light control master running\n");
 
@@ -326,58 +336,58 @@ init {
 
     // Initialize road segment records
     // Iteration order: road -> direction -> position
-    // for(i: ROAD_A..ROAD_P) {
-    //     for(j: DIRECTION_RIGHT..DIRECTION_LEFT) {
-    //         for(k: 0..29) {
-    //             db.road_segment_records[i].lane_records[j * k] = 0;
-    //             db_reported.road_segment_records[i].lane_records[j * k] = 0;
-    //         }            
-    //     }
-    // }
+    for(i: ROAD_A..ROAD_P) {
+        for(j: DIRECTION_RIGHT..DIRECTION_LEFT) {
+            for(k: 0..29) {
+                db.road_segment_records[i].lane_records[j * k] = 0;
+                db_reported.road_segment_records[i].lane_records[j * k] = 0;
+            }            
+        }
+    }
 
     // Initialize crossroad records
     // Iteration order: crossroad -> orientation
-    // for(i: CROSSROAD_B..CROSSROAD_Z) {
-    //     for(j: NORTH..EAST) {
-    //         db.crossroad_records[i].traffic_lights[j] = RED;
-    //         db_reported.crossroad_records[i].traffic_lights[j] = RED;
-    //     }
-    // }
+    for(i: CROSSROAD_B..CROSSROAD_Z) {
+        for(j: NORTH..EAST) {
+            db.crossroad_records[i].traffic_lights[j] = RED;
+            db_reported.crossroad_records[i].traffic_lights[j] = RED;
+        }
+    }
 
     // Initialize vehicle records
-    // for(i: 0..NUMBER_OF_VEHICLES-1) {
-    //     db.vehicle_records[i].road_segment = ROAD_A;
-    //     db.vehicle_records[i].direction = DIRECTION_LEFT;
-    //     db.vehicle_records[i].location = 2;
-    //     db.vehicle_records[i].speed = STOPPED;
-    //     db.vehicle_records[i].route_completion = NOT_STARTED;
+    for(i: 0..(NUMBER_OF_VEHICLES-1)) {
+        db.vehicle_records[i].road_segment = ROAD_A;
+        db.vehicle_records[i].direction = DIRECTION_LEFT;
+        db.vehicle_records[i].location = 2;
+        db.vehicle_records[i].speed = STOPPED;
+        db.vehicle_records[i].route_completion = NOT_STARTED;
 
-    //     db_reported.vehicle_records[i].road_segment = ROAD_A;
-    //     db_reported.vehicle_records[i].direction = DIRECTION_LEFT;
-    //     db_reported.vehicle_records[i].location = 2;
-    //     db_reported.vehicle_records[i].speed = STOPPED;
-    //     db_reported.vehicle_records[i].route_completion = NOT_STARTED;
-    // }
+        db_reported.vehicle_records[i].road_segment = ROAD_A;
+        db_reported.vehicle_records[i].direction = DIRECTION_LEFT;
+        db_reported.vehicle_records[i].location = 2;
+        db_reported.vehicle_records[i].speed = STOPPED;
+        db_reported.vehicle_records[i].route_completion = NOT_STARTED;
+    }
 
     // Set statistics
-    // db.total_vehicles = NUMBER_OF_VEHICLES;
-    // db.pending_vehicles = NUMBER_OF_VEHICLES;
-    // db.vehicle_collisions = 0;
-    // db.u_turns = 0;
-    // db.throughtput = 0;
-    // db.red_light_violations = 0;
+    db.total_vehicles = NUMBER_OF_VEHICLES;
+    db.pending_vehicles = NUMBER_OF_VEHICLES;
+    db.vehicle_collisions = 0;
+    db.u_turns = 0;
+    db.throughtput = 0;
+    db.red_light_violations = 0;
 
-    // db_reported.total_vehicles = NUMBER_OF_VEHICLES;
-    // db_reported.pending_vehicles = NUMBER_OF_VEHICLES;
-    // db_reported.vehicle_collisions = 0;
-    // db_reported.u_turns = 0;
-    // db_reported.throughtput = 0;
-    // db_reported.red_light_violations = 0;
+    db_reported.total_vehicles = NUMBER_OF_VEHICLES;
+    db_reported.pending_vehicles = NUMBER_OF_VEHICLES;
+    db_reported.vehicle_collisions = 0;
+    db_reported.u_turns = 0;
+    db_reported.throughtput = 0;
+    db_reported.red_light_violations = 0;
 
     // Set the clock
     clock = 2;
 
-    byte id;
+    short id;
 
     run Backend();
 

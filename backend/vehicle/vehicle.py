@@ -687,5 +687,3 @@ class Vehicle(threading.Thread):
 
             self.update_backend()            
                                                                                                           
-            
-        

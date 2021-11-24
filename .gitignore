@@ -1,8 +1,8 @@
-pan
-pan.*
-model
-*.tmp
-*.trail
+# Verification folder ignore
+verification/*
+!lock.h
+!main.pml
+!run_spin.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
