@@ -1,3 +1,7 @@
+# Delete trail files
+rm *_rst*
+rm *_trail*
+
 # Elaborate Model
 spin -a main.pml -O
 

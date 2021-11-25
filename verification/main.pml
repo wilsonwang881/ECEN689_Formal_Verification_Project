@@ -10,7 +10,7 @@ The file is written in Promela syntax.
 
 #include "lock.h"
 
-short NUMBER_OF_VEHICLES = 60;
+short NUMBER_OF_VEHICLES = 20;
 
 byte NUMBER_OF_ROAD_SEGMENTS = 13;
 
@@ -140,25 +140,25 @@ typedef ALL_CROSSROADS_DEF {
 byte clock;
 
 // All communication channels are synchronous
-chan query_signal_lights = [0] of {byte, mtype:Crossroads}; // vehicle ID, crossroad name
+chan query_signal_lights = [0] of {short, mtype:Crossroads}; // vehicle ID, crossroad name
 
-chan query_signal_lights_return = [0] of {byte, DB_CROSSROAD_RECORD_DEF}; // vehicle ID, crossroad record
+chan query_signal_lights_return = [0] of {short, DB_CROSSROAD_RECORD_DEF}; // vehicle ID, crossroad record
 
 chan set_signal_lights = [0] of {byte, ALL_CROSSROADS_DEF}; // Sender clock, payload
 
 chan set_signal_lights_return = [0] of {byte}; // Receiver clock
 
-chan set_vehicle_status = [0] of {byte, DB_VEHICLE_RECORD_DEF, byte}; // vehicle ID, vehicle record, clock
+chan set_vehicle_status = [0] of {short, DB_VEHICLE_RECORD_DEF, byte}; // vehicle ID, vehicle record, clock
 
-chan set_vehicle_status_return = [0] of {byte, byte}; // vehicle ID, clock
+chan set_vehicle_status_return = [0] of {short, byte}; // vehicle ID, clock
 
-chan query_location = [0] of {byte, mtype:Road, mtype:Direction, byte}; // vehicle ID, road segment name, direction, location
+chan query_location = [0] of {short, mtype:Road, mtype:Direction, byte}; // vehicle ID, road segment name, direction, location
 
-chan query_location_return = [0] of {byte, bit, DB_VEHICLE_RECORD_DEF}; // vehicle ID, vehicle present or not, vehicle record if any
+chan query_location_return = [0] of {short, bit, DB_VEHICLE_RECORD_DEF}; // vehicle ID, vehicle present or not, vehicle record if any
 
-chan add_vehicle = [0] of {byte}; // vehicle ID
+chan add_vehicle = [0] of {short}; // vehicle ID
 
-chan add_vehicle_return = [0] of {byte, bit, byte}; // vehicle ID, result of adding vehicles, clock
+chan add_vehicle_return = [0] of {short, bit, byte}; // vehicle ID, result of adding vehicles, clock
 
 proctype Backend() {
 
@@ -173,21 +173,29 @@ proctype Backend() {
         reported_vehicles[i] = 0;
     }
 
-    byte query_id;
+    short query_id;
     mtype:Crossroads queried_crossroad;
 
+    byte traffic_light_control_clock;
+    ALL_CROSSROADS_DEF received_traffic_light_report;
+
     do
-    ::query_signal_lights?query_id,queried_crossroad;      
-      if
-      ::(reported_vehicles[query_id] == 0) 
+    :: nempty(query_signal_lights) ->
+       query_signal_lights?query_id,queried_crossroad;
+       query_signal_lights_return!query_id,db.crossroad_records[queried_crossroad];             
+        if
+        :: (reported_vehicles[query_id] == 0) 
             ->  reported_vehicles[query_id] = 1;
                 reported_vehicle_counter++;
             if
             ::  (reported_vehicle_counter == NUMBER_OF_VEHICLES)
-                    ->break;
+                    -> printf("Waiting\n");
             ::  else -> printf("Vehicle reporting %d\n", reported_vehicle_counter);
             fi
-      fi
+        fi 
+    :: nempty(set_signal_lights)
+        -> set_signal_lights?traffic_light_control_clock,received_traffic_light_report;                 
+           set_signal_lights_return!clock;  
     od
 
     // spin_lock(mutex);
@@ -203,27 +211,44 @@ proctype Vehicle(short id) {
     DB_VEHICLE_RECORD_DEF self;
 
     bit location_visited[4];
-    byte current_time = 0;
+    byte current_time = 0;    
 
-    // printf("Vehicle %d running\n", id);
+    DB_CROSSROAD_RECORD_DEF crossroad_lights;
 
-    query_signal_lights!id,CROSSROAD_Z;
-    
+    do
+    :: query_signal_lights!id,CROSSROAD_Z;
+       query_signal_lights_return??id,crossroad_lights;      
+    od
 }
-
-// inline MAP_Test (num) {
-//     num = 10;
-// }
 
 proctype Traffic_Signal_Control_Master() {
 
-    // short test_num = 0;
+    ALL_CROSSROADS_DEF self_traffic_light_records;
+    ALL_CROSSROADS_DEF received_traffic_light_records
 
-    // MAP_Test(test_num);
+    byte self_clock;   
+    byte received_clock;
 
-    // assert(test_num == 10);
-
-    printf("Traffic light control master running\n");
+    decision_making_state:  
+    do
+    :: goto backend_reporting_state;
+    od
+    
+    backend_reporting_state:
+    do
+    :: empty(set_signal_lights)
+        ->  set_signal_lights!self_clock,self_traffic_light_records;
+            set_signal_lights_return?received_clock;
+            if
+            :: (self_clock != received_clock)
+                ->  self_clock = received_clock;
+                    goto decision_making_state;
+            :: goto decision_making_state;
+            fi
+            goto decision_making_state;
+    :: nempty(set_signal_lights) -> goto decision_making_state;
+      
+    od
 
 }
 
@@ -396,4 +421,10 @@ init {
     for (id: 0..(NUMBER_OF_VEHICLES-1)) {
         run Vehicle(id);
     }
+
+    bit blocking = 1;
+
+    do
+    ::blocking = 1;
+    od
 }
