@@ -226,7 +226,7 @@ def update(mode, id, value):
 
                 response = json.loads(redis_db.get(crossroad_to_query.name))
 
-                signal_light = Traffic_light[response[traffic_light_orientation.name]] 
+                signal_light = Traffic_light[response[traffic_light_orientation.name]]
 
                 if signal_light == Traffic_light.RED:
 
