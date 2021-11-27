@@ -10,7 +10,9 @@ The file is written in Promela syntax.
 
 #include "lock.h"
 
-short NUMBER_OF_VEHICLES = 10;
+short NUMBER_OF_VEHICLES = 5;
+
+#define CHANNEL_LENGTH 1
 
 bit mutex = 0;
 
@@ -137,47 +139,59 @@ typedef ALL_CROSSROADS_DEF {
 byte clock;
 
 // All communication channels are synchronous
-chan query_signal_lights = [0] of {short, mtype:Crossroads}; // vehicle ID, crossroad name
+chan query_signal_lights = [CHANNEL_LENGTH] of {short, mtype:Crossroads}; // vehicle ID, crossroad name
 
-chan query_signal_lights_return = [0] of {short, DB_CROSSROAD_RECORD_DEF}; // vehicle ID, crossroad record
+chan query_signal_lights_return = [CHANNEL_LENGTH] of {short, DB_CROSSROAD_RECORD_DEF}; // vehicle ID, crossroad record
 
-chan set_signal_lights = [0] of {byte, ALL_CROSSROADS_DEF}; // Sender clock, payload
+chan set_signal_lights = [1] of {byte, ALL_CROSSROADS_DEF}; // Sender clock, payload
 
-chan set_signal_lights_return = [0] of {byte}; // Receiver clock
+chan set_signal_lights_return = [1] of {byte}; // Receiver clock
 
-chan set_vehicle_status = [0] of {short, DB_VEHICLE_RECORD_DEF, byte}; // vehicle ID, vehicle record, clock
+chan set_vehicle_status = [1] of {short, DB_VEHICLE_RECORD_DEF, byte}; // vehicle ID, vehicle record, clock
 
-chan set_vehicle_status_return = [0] of {short, byte}; // vehicle ID, clock
+chan set_vehicle_status_return = [1] of {short, byte}; // vehicle ID, clock
 
-chan query_location = [0] of {short, mtype:Road, mtype:Direction, byte}; // vehicle ID, road segment name, direction, location
+chan query_location = [1] of {short, mtype:Road, mtype:Direction, byte}; // vehicle ID, road segment name, direction, location
 
-chan query_location_return = [0] of {short, bit, byte}; // vehicle ID, vehicle present or nots, number of vehicles on that lane
+chan query_location_return = [1] of {short, bit, byte}; // vehicle ID, vehicle present or nots, number of vehicles on that lane
 
-chan add_vehicle = [0] of {short}; // vehicle ID
+chan add_vehicle = [1] of {short}; // vehicle ID
 
-chan add_vehicle_return = [0] of {short, bit, byte}; // vehicle ID, result of adding vehicles, clock
+chan add_vehicle_return = [1] of {short, bit, byte}; // vehicle ID, result of adding vehicles, clock
 
 proctype Backend_query_signal_lights() {
 
     short query_id;
     mtype:Crossroads query_crossroad;
 
-    byte i;
+    mtype:Signal_light_positions i;
 
     DB_CROSSROAD_RECORD_DEF crossroad_record;
 
+    loop:
     do
-    ::  query_signal_lights?query_id, query_crossroad;
+    ::  len(query_signal_lights) >= 0 ->
+        query_signal_lights?query_id, query_crossroad;
 
         spin_lock(mutex);
 
         for(i: 0..EAST) {
-            crossroad_record.traffic_lights[i] =db.crossroad_records[query_crossroad].traffic_lights[i];
+            crossroad_record.traffic_lights[i] = db.crossroad_records[query_crossroad].traffic_lights[i];
         }
+        
 
         spin_unlock(mutex);
 
-        query_signal_lights_return!query_id, crossroad_record;        
+        return_signal_light_query:
+        do
+        ::  len(query_signal_lights_return) >= 0 ->
+            query_signal_lights_return!query_id, crossroad_record;
+            break;
+        ::  else ->
+            goto return_signal_light_query;       
+        od     
+    ::  else ->
+        goto loop;
     od
 }
 
@@ -188,8 +202,10 @@ proctype Backend_set_signal_lights() {
 
     byte i;
 
+    loop:
     do
-    ::  set_signal_lights?query_clock,payload;
+    ::  len(set_signal_lights) >= 0 ->
+        set_signal_lights?query_clock,payload;
 
         spin_lock(mutex);
 
@@ -199,45 +215,50 @@ proctype Backend_set_signal_lights() {
             traffic_light_reported = 1;
 
             for(i: 0..EAST) {
-                db.crossroad_records[CROSSROAD_Z].traffic_lights[i] = payload.crossroad_Z_record.traffic_lights[i];
+                db_reported.crossroad_records[CROSSROAD_Z].traffic_lights[i] = payload.crossroad_Z_record.traffic_lights[i];
             }
 
             for(i: 0..EAST) {
-                db.crossroad_records[CROSSROAD_Y].traffic_lights[i] = payload.crossroad_Y_record.traffic_lights[i];
+                db_reported.crossroad_records[CROSSROAD_Y].traffic_lights[i] = payload.crossroad_Y_record.traffic_lights[i];
             }
 
             for(i: 0..EAST) {
-                db.crossroad_records[CROSSROAD_X].traffic_lights[i] = payload.crossroad_X_record.traffic_lights[i];
+                db_reported.crossroad_records[CROSSROAD_X].traffic_lights[i] = payload.crossroad_X_record.traffic_lights[i];
             }
 
             for(i: 0..EAST) {
-                db.crossroad_records[CROSSROAD_W].traffic_lights[i] = payload.crossroad_W_record.traffic_lights[i];
+                db_reported.crossroad_records[CROSSROAD_W].traffic_lights[i] = payload.crossroad_W_record.traffic_lights[i];
             }
 
             for(i: 0..EAST) {
-                db.crossroad_records[CROSSROAD_V].traffic_lights[i] = payload.crossroad_V_record.traffic_lights[i];
+                db_reported.crossroad_records[CROSSROAD_V].traffic_lights[i] = payload.crossroad_V_record.traffic_lights[i];
             }
 
             for(i: 0..EAST) {
-                db.crossroad_records[CROSSROAD_U].traffic_lights[i] = payload.crossroad_U_record.traffic_lights[i];
+                db_reported.crossroad_records[CROSSROAD_U].traffic_lights[i] = payload.crossroad_U_record.traffic_lights[i];
             }
 
             for(i: 0..EAST) {
-                db.crossroad_records[CROSSROAD_D].traffic_lights[i] = payload.crossroad_D_record.traffic_lights[i];
+                db_reported.crossroad_records[CROSSROAD_D].traffic_lights[i] = payload.crossroad_D_record.traffic_lights[i];
             }
 
             for(i: 0..EAST) {
-                db.crossroad_records[CROSSROAD_C].traffic_lights[i] = payload.crossroad_C_record.traffic_lights[i];
+                db_reported.crossroad_records[CROSSROAD_C].traffic_lights[i] = payload.crossroad_C_record.traffic_lights[i];
             }
 
             for(i: 0..EAST) {
-                db.crossroad_records[CROSSROAD_B].traffic_lights[i] = payload.crossroad_B_record.traffic_lights[i];
+                db_reported.crossroad_records[CROSSROAD_B].traffic_lights[i] = payload.crossroad_B_record.traffic_lights[i];
             }
-        fi
+
+        ::  else ->
+            skip;
+        fi        
 
         spin_unlock(mutex);
 
         set_signal_lights_return!clock; 
+    ::  else ->
+        goto loop;
     od
 }
 
@@ -251,8 +272,10 @@ proctype Backend_set_vehicle_status() {
 
     bit number_of_vehicles_finished[31];
 
+    loop:
     do
-    ::  set_vehicle_status?query_id, payload, query_clock;
+    ::  len(set_vehicle_status) >= 0 ->
+        set_vehicle_status?query_id, payload, query_clock;
 
         spin_lock(mutex);
 
@@ -268,12 +291,16 @@ proctype Backend_set_vehicle_status() {
             db_reported.vehicle_records[query_id].location = payload.location;
             db_reported.vehicle_records[query_id].speed = payload.speed;
             db_reported.vehicle_records[query_id].route_completion = payload.route_completion;
+        ::  else ->
+            goto return_set_vehicle_status;
         fi
 
         // Adjust the number of pending vehicles
         if
         ::  ((payload.road_segment == ROAD_A) && (payload.location == 2) && (payload.direction == DIRECTION_LEFT)) ->
             db_reported.pending_vehicles++;
+        ::  else ->
+            goto return_set_vehicle_status;
         fi
 
         // If all vehicles and traffic lights have reported, update the database
@@ -308,9 +335,15 @@ proctype Backend_set_vehicle_status() {
                                 (db_reported.vehicle_records[i].direction == db_reported.vehicle_records[j].direction) && 
                                 (db_reported.vehicle_records[i].location == db_reported.vehicle_records[j].location)) ->
                                 db_reported.vehicle_collisions++;
+                            ::  else ->
+                                skip;
                             fi
+                        ::  else ->
+                            skip;
                         fi
                     }
+                ::  else ->
+                    skip;
                 fi
             }
 
@@ -332,6 +365,8 @@ proctype Backend_set_vehicle_status() {
                     (db.vehicle_records[i].road_segment != ROAD_A) && \
                     (db.vehicle_records[i].location != 2)) ->
                     db_reported.u_turns++;
+                ::  else ->
+                    skip;
                 fi
 
                 // Check throughput
@@ -340,6 +375,8 @@ proctype Backend_set_vehicle_status() {
                     db_reported.vehicle_records[i].direction == DIRECTION_RIGHT && \
                     db_reported.vehicle_records[i].location == 1) ->
                     has_vehicle_finished = 1;
+                ::  else ->
+                    skip;
                 fi
 
                 // Check traffic light violations
@@ -359,8 +396,14 @@ proctype Backend_set_vehicle_status() {
                         if
                         ::  (db_reported.vehicle_records[i].road_segment != db.vehicle_records[i].road_segment) ->
                             db_reported.red_light_violations++;
+                        ::  else ->
+                            skip;
                         fi
+                    ::  else ->
+                        skip;
                     fi
+                ::  else ->
+                    skip;
                 fi                                
             }
 
@@ -403,11 +446,21 @@ proctype Backend_set_vehicle_status() {
                     db.crossroad_records[i].traffic_lights[j] = db_reported.crossroad_records[i].traffic_lights[j];                     
                 }
             }
+        ::  else ->
+            goto return_set_vehicle_status;
         fi
-        
-        spin_unlock(mutex);
 
-        set_vehicle_status_return!query_id, clock;        
+        return_set_vehicle_status:
+        spin_unlock(mutex);
+        do
+        ::  len(set_vehicle_status_return) >= 0 ->
+            set_vehicle_status_return!query_id, clock;                
+            break;
+        ::  else ->
+            goto return_set_vehicle_status;
+        od
+    ::  else ->
+        goto loop;
     od
 
 }
@@ -423,8 +476,10 @@ proctype Backend_query_location() {
 
     short i, number_of_vehicles_on_that_lane;
 
+    loop:
     do
-    ::  query_location?query_id, query_road, query_direction, location;
+    ::  len(query_location) >= 0 ->
+        query_location?query_id, query_road, query_direction, location;
 
         spin_lock(mutex);
 
@@ -434,6 +489,8 @@ proctype Backend_query_location() {
                 (db.vehicle_records[i].direction == query_direction) && \
                 (db.vehicle_records[i].location == location)) ->
                 vehicle_presence = 1;
+            ::  else ->
+                skip;
             fi
 
             number_of_vehicles_on_that_lane = 0;
@@ -442,12 +499,16 @@ proctype Backend_query_location() {
             ::  ((db.vehicle_records[i].road_segment == query_road) && \
                 (db.vehicle_records[i].direction == query_direction)) ->
                 number_of_vehicles_on_that_lane++;
+            ::  else ->
+                skip;
             fi
         }
 
         spin_unlock(mutex);
 
-        query_location_return!query_id, vehicle_presence, number_of_vehicles_on_that_lane;        
+        query_location_return!query_id, vehicle_presence, number_of_vehicles_on_that_lane;    
+    ::  else ->
+        goto loop;    
     od
 }
 
@@ -459,8 +520,10 @@ proctype Backend_add_vehicle() {
 
     short i;
 
+    loop:
     do
-    ::  add_vehicle?query_id;
+    ::  len(add_vehicle) >= 0 ->
+        add_vehicle?query_id;
 
         spin_lock(mutex);
 
@@ -475,6 +538,8 @@ proctype Backend_add_vehicle() {
                 (db.vehicle_records[i].direction == DIRECTION_LEFT) && \
                 (db.vehicle_records[i].location == 1)) ->
                 permission_to_add_vehicle = 0;
+            ::  else ->
+                skip;
             fi
 
             if
@@ -482,6 +547,8 @@ proctype Backend_add_vehicle() {
                 (db_reported.vehicle_records[i].direction == DIRECTION_LEFT) && \
                 (db_reported.vehicle_records[i].location == 1)) ->
                 permission_to_add_vehicle = 0;
+            ::  else ->
+                skip;
             fi
         }
 
@@ -497,7 +564,9 @@ proctype Backend_add_vehicle() {
 
         spin_unlock(mutex);
 
-        add_vehicle_return!query_id, vehicle_added, clock;        
+        add_vehicle_return!query_id, vehicle_added, clock;
+    ::  else ->
+        goto loop;
     od
 }
 
@@ -505,20 +574,52 @@ proctype Vehicle(short id) {
 
     DB_VEHICLE_RECORD_DEF self;
 
+    self.road_segment = ROAD_A;
+    self.direction = DIRECTION_LEFT;
+    self.location = 2;
+    self.speed = STOPPED;
+    self.route_completion = NOT_STARTED;
+
     bit location_visited[4];
-    byte current_time = 0;    
+
+    short i;
+
+    for(i: 0..3) {
+        location_visited[i] = 0;
+    }
+
+    byte current_time = 0;
+
+    mtype:Crossroads crossroad_query_targt = CROSSROAD_Z;
 
     DB_CROSSROAD_RECORD_DEF crossroad_lights;
 
-    DB_VEHICLE_RECORD_DEF self_record;
-    byte self_clock;
+    byte received_clock;
+
+    update_backend:
+    do
+    ::  len(set_vehicle_status) >= 0 ->
+        set_vehicle_status!id, self, current_time;
+        set_vehicle_status_return??eval(id), received_clock;
+
+        if
+        ::  received_clock == (current_time + 2) ->
+            current_time = received_clock;
+            goto query_backend; 
+        ::  else ->
+            goto update_backend;  
+        fi        
+    :: goto update_backend;  
+    od
 
     query_backend:
     do
-    ::  query_signal_lights!id,CROSSROAD_Z;
-        query_signal_lights_return??id,crossroad_lights;  
-        set_vehicle_status!id, self_record, self_clock;
-        set_vehicle_status_return??id, self_clock;
+    ::  len(query_signal_lights) >= 0 ->
+        query_signal_lights!id,crossroad_query_targt;
+        query_signal_lights_return??eval(id),crossroad_lights;  
+        goto update_backend;
+    ::  else ->
+        goto query_backend;        
     od
 }
 
@@ -537,9 +638,19 @@ proctype Traffic_Signal_Control_Master() {
     
     backend_reporting_state:
     do
-    ::  set_signal_lights!self_clock,self_traffic_light_records;
+    ::  len(set_signal_lights) >= 0 ->
+        set_signal_lights!self_clock,self_traffic_light_records;
         set_signal_lights_return?received_clock;
-        goto backend_reporting_state;  
+
+        if
+        ::  (received_clock == (self_clock + 2)) ->
+            self_clock = received_clock
+            goto decision_making_state; 
+        ::  else ->
+            goto backend_reporting_state;
+        fi
+    ::  else ->
+        goto backend_reporting_state;
     od
 }
 
@@ -697,6 +808,8 @@ init {
     clock = 2;
 
     short id;
+
+    mutex = 0;
 
     atomic {
         run Backend_query_signal_lights();
