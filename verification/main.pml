@@ -56,7 +56,6 @@ mtype:Road = {
 }
 
 mtype:Route_completion_status = {
-    FINISHED,
     ENROUTE,
     NOT_STARTED
 }
@@ -570,7 +569,145 @@ proctype Backend_add_vehicle() {
     od
 }
 
+proctype get_road_segment(chan get_road_segment_return; byte current_road_segment; byte current_crossroad) {
+    
+    if
+    ::  current_road_segment == ROAD_A ->
+        get_road_segment_return!0, ROAD_A, ROAD_A, ROAD_A, current_crossroad;
+
+    ::  else ->
+
+        byte i, j;
+
+        for(i: DIRECTION_RIGHT..DIRECTION_LEFT) {
+            if
+            ::  MAP.ROAD_RECORD[current_road_segment].direction_records[i].crossroad != current_crossroad ->
+
+                mtype:Crossroads crossroad_to_query = MAP.ROAD_RECORD[current_road_segment].direction_records[i].crossroad;
+
+                mtype:Road road_segment_list[3];
+
+                j = 0;
+
+                for(i: NORTH..EAST) {
+                    if
+                    ::  MAP.CROSSROAD_RECORD[crossroad_to_query].road_records[i] != current_road_segment ->
+                        road_segment_list[j] = MAP.CROSSROAD_RECORD[crossroad_to_query].road_records[i];
+                        j++;
+                    ::  else ->
+                        skip;
+                    fi
+                }
+
+                get_road_segment_return!j, road_segment_list[0], road_segment_list[1], road_segment_list[2], crossroad_to_query;
+
+            ::  else ->
+                skip;
+            fi
+        }
+    fi
+   
+}
+
+proctype routing(chan routing_return; byte current_crossroad; byte next_road_segment; byte target_crossroad) {
+
+    byte minimum_route_length = 6;
+    byte tmpp_minimum_route_length = 6;
+
+    mtype:Road next_road_segment_to_take;
+
+    byte step_2_current_crossroad;
+    byte step_3_current_crossroad;
+    byte step_4_current_crossroad;
+    byte step_5_current_crossroad;
+    byte step_6_current_crossroad;
+
+    byte number_of_step_1_road_segment;
+    byte number_of_step_2_road_segment;
+    byte number_of_step_3_road_segment;
+    byte number_of_step_4_road_segment;
+    byte number_of_step_5_road_segment;
+
+    byte list_of_step_1_road_segment[3];
+    byte list_of_step_2_road_segment[3];
+    byte list_of_step_3_road_segment[3];
+    byte list_of_step_4_road_segment[3];
+    byte list_of_step_5_road_segment[3];
+
+    byte i_1;
+    byte i_2;
+    byte i_3;
+    byte i_4;
+    byte i_5;
+
+    chan return_get_road_segment = [0] of {short, mtype:Road, mtype:Road, mtype:Road, mtype:Crossroads};
+
+    run get_road_segment(return_get_road_segment, next_road_segment, current_crossroad);
+    return_get_road_segment?number_of_step_1_road_segment, list_of_step_1_road_segment[0], list_of_step_1_road_segment[1], list_of_step_1_road_segment[2], step_2_current_crossroad;
+
+    for(i_1: 0..number_of_step_1_road_segment) {
+
+        run get_road_segment(return_get_road_segment, list_of_step_1_road_segment[i_1], step_2_current_crossroad);
+        return_get_road_segment?number_of_step_2_road_segment, list_of_step_2_road_segment[0], list_of_step_2_road_segment[1], list_of_step_2_road_segment[2], step_3_current_crossroad;
+
+        for(i_2: 0..number_of_step_2_road_segment) {
+
+            run get_road_segment(return_get_road_segment, list_of_step_2_road_segment[i_2], step_3_current_crossroad);
+            return_get_road_segment?number_of_step_3_road_segment, list_of_step_3_road_segment[0], list_of_step_3_road_segment[1], list_of_step_3_road_segment[2], step_4_current_crossroad;
+
+            for(i_3: 0..number_of_step_3_road_segment) {
+
+                run get_road_segment(return_get_road_segment, list_of_step_3_road_segment[i_2], step_4_current_crossroad);
+                return_get_road_segment?number_of_step_4_road_segment, list_of_step_4_road_segment[0], list_of_step_4_road_segment[1], list_of_step_4_road_segment[2], step_5_current_crossroad;
+
+                for(i_4: 0..number_of_step_4_road_segment) {
+
+                    run get_road_segment(return_get_road_segment, list_of_step_4_road_segment[i_2], step_5_current_crossroad);
+                    return_get_road_segment?number_of_step_5_road_segment, list_of_step_5_road_segment[0], list_of_step_5_road_segment[1], list_of_step_5_road_segment[2], step_6_current_crossroad;
+
+                    for(i_5: 0..number_of_step_5_road_segment) {
+
+                        if
+                        ::  current_crossroad == target_crossroad ->
+                            tmpp_minimum_route_length = 1;
+                            next_road_segment_to_take = next_road_segment;
+                        ::  step_2_current_crossroad == target_crossroad ->
+                            tmpp_minimum_route_length = 2;
+                            next_road_segment_to_take = next_road_segment;
+                        ::  step_3_current_crossroad == target_crossroad ->
+                            tmpp_minimum_route_length = 3;
+                            next_road_segment_to_take = next_road_segment;
+                        ::  step_4_current_crossroad == target_crossroad ->
+                            tmpp_minimum_route_length = 4;
+                            next_road_segment_to_take = next_road_segment;
+                        ::  step_5_current_crossroad == target_crossroad ->
+                            tmpp_minimum_route_length = 5;
+                            next_road_segment_to_take = next_road_segment;
+                        ::  step_6_current_crossroad == target_crossroad ->
+                            tmpp_minimum_route_length = 6;
+                            next_road_segment_to_take = next_road_segment;
+                        ::  else->
+                            skip;
+                        fi
+
+                        if
+                        ::  tmpp_minimum_route_length < minimum_route_length ->
+                            minimum_route_length = tmpp_minimum_route_length;
+                        ::  else ->
+                            skip;
+                        fi
+                    }
+                }
+            }            
+        }
+    }
+
+    routing_return!minimum_route_length;
+}
+
 proctype Vehicle(short id) {
+
+    chan return_routing = [0] of {byte};
 
     DB_VEHICLE_RECORD_DEF self;
 
@@ -583,7 +720,7 @@ proctype Vehicle(short id) {
     mtype:Crossroads location_visited[4];
     byte total_number_location_visited = 0;
 
-    short i;
+    short i, j;
 
     for(i: 0..3) {
         location_visited[i] = 0;
@@ -616,7 +753,8 @@ proctype Vehicle(short id) {
         ::  else ->
             goto update_backend;  
         fi        
-    :: goto update_backend;  
+    ::  else ->
+        goto update_backend;  
     od
 
     query_backend:
@@ -778,9 +916,13 @@ proctype Vehicle(short id) {
 
             goto query_backend;
 
+        // ::  else ->
+        //     skip;
+
         // At crossroads, need to check traffic lights
-        ::  self.location == 0 || \
-            self.location == 29 ->
+        // ::  self.location == 0 || \
+        //     self.location == 29 ->
+        ::  else ->
 
             crossroad_query_targt = MAP.ROAD_RECORD[self.road_segment].direction_records[self.direction].crossroad;
             mtype:Signal_light_positions traffic_light_orientation = MAP.ROAD_RECORD[self.road_segment].direction_records[self.direction].traffic_light_orientation;
@@ -1032,32 +1174,522 @@ proctype Vehicle(short id) {
                     self.road_segment = road_segment_to_move_to
 
                 // If the vehicle can move to more than one side of the crossroad
-                ::  else ->
+                ::  else ->                    
 
+                    byte shortest_route_length = 7;
+
+                    byte road_segment_path_length[3];
+
+                    byte path_length_tmpp;
+
+                    if 
+                    // Vehicle has visited all target crossroads, route to crossroad Z
+                    ::  total_number_location_visited == 3 ->
+
+                        for(i: 0..2) {
+
+                            if
+                            ::  road_segment_to_query_enable[i] ->
+                                run routing(return_routing, crossroad_query_targt, road_segment_to_query_val_road_segment[i], CROSSROAD_Z);
+                                return_routing?path_length_tmpp;
+                                road_segment_path_length[i] = path_length_tmpp;
+                            ::  else ->
+                                road_segment_path_length[i] = 7;
+                            fi
+                        }
+
+                    // Vehicle has not yet visited all target crossroads
+                    ::  else ->
+
+                        for(i: 0..2) {
+
+                            bit found = 0;
+
+                            for(j: 0..total_number_location_visited) {
+
+                                if
+                                ::  location_visited[j] == MAP.target_crossroad[i] ->
+                                    found = 1;
+                                ::  else ->
+                                    skip;
+                                fi
+                            }
+
+                            if
+                            ::  found == 0 ->                                
+
+                                for(j: 0..3) {
+
+                                    if
+                                    ::  road_segment_to_query_enable[j] ->
+                                        run routing(return_routing, crossroad_query_targt, road_segment_to_query_val_road_segment[j], MAP.target_crossroad[i]);
+                                        return_routing?path_length_tmpp;
+                                    
+                                        if
+                                        ::  path_length_tmpp < road_segment_path_length[j] ->
+                                            road_segment_path_length[i] = path_length_tmpp;
+                                        ::  else ->
+                                            skip;
+                                        fi
+                                    ::  else ->
+                                        skip; 
+                                    fi
+                                }
+                                
+                            ::  else ->
+                                skip;
+                            fi
+
+                        }                        
+                    fi
+
+                    for(i: 0..3) {
+                        
+                        if
+                        ::  road_segment_to_query_enable[j] ->
+
+                            if
+                            ::  road_segment_path_length[i] < shortest_route_length ->
+                                shortest_route_length = road_segment_path_length[i];
+                            ::  else ->
+                                skip;
+                            fi
+
+                        ::  else ->
+                            skip;
+                        fi
+                    }
+
+                    mtype:Road next_road;
+
+                    if
+                    ::  road_segment_to_query_enable[0] && \
+                        road_segment_path_length[0] == shortest_route_length ->
+                        next_road = road_segment_to_query_val_road_segment[0];
+                    ::  road_segment_to_query_enable[1] && \
+                        road_segment_path_length[1] == shortest_route_length ->
+                        next_road = road_segment_to_query_val_road_segment[1];
+                    ::  road_segment_to_query_enable[2] && \
+                        road_segment_path_length[2] == shortest_route_length ->
+                        next_road = road_segment_to_query_val_road_segment[2];
+                    ::  else ->
+                        skip;
+                    fi
+
+                    found_in_target_crossroad = 0;
+                
+                    for(i: 0..3) {
+                        if
+                        ::  crossroad_query_targt == location_visited[i] ->
+                            found_in_target_crossroad = 1;
+                            break;
+                        ::  else ->
+                            skip
+                        fi
+                    }
+
+                    if
+                    ::  found_in_target_crossroad == 0 ->
+                        for(i: 0..2) {
+                            if
+                            ::  crossroad_query_targt == MAP.target_crossroad[i] ->
+                                found_in_target_crossroad = 1;
+                                location_visited[total_number_location_visited] = 1;
+                                total_number_location_visited++;
+                                break;
+                            ::  else ->
+                                skip;
+                            fi
+                        }
+                    ::  else ->
+                        skip;
+                    fi
+
+                    // Decide if change lane direction and self direction
+
+                    for(i: NORTH..EAST) {
+                        if
+                        ::  MAP.CROSSROAD_RECORD[crossroad_query_targt].road_records[i] == next_road ->
+                            position_key_tmpp = i;
+                            break;
+                        ::  else ->
+                            skip;
+                        fi
+                    }
+
+                    if
+                    ::  self_crossroad_position == SOUTH ->
+                        if
+                        ::  position_key_tmpp == EAST || \
+                            position_key_tmpp == NORTH ->
+                            change_query_direction = 0;
+                        ::  else ->
+                            change_query_direction = 1;
+                        fi
+                    ::  self_crossroad_position == EAST ->
+                        if
+                        ::  position_key_tmpp == WEST || \
+                            position_key_tmpp == SOUTH ->
+                            change_query_direction = 0;
+                        ::  else ->
+                            change_query_direction = 1;
+                        fi
+                    ::  self_crossroad_position == NORTH ->
+                        if
+                        ::  position_key_tmpp == SOUTH || \
+                            position_key_tmpp == WEST ->
+                            change_query_direction = 0;
+                        ::  else ->
+                            change_query_direction = 1;
+                        fi
+                    ::  else ->
+                        if
+                        ::  position_key_tmpp == EAST || \
+                            position_key_tmpp == NORTH ->
+                            change_query_direction = 0;
+                        ::  else ->
+                            change_query_direction = 1;
+                        fi
+                    fi
+
+                    if
+                    ::  change_query_direction ->
+                        if
+                        ::  self.direction == DIRECTION_LEFT ->
+                            self.direction = DIRECTION_RIGHT;
+                        ::  else ->
+                            self.direction = DIRECTION_LEFT;
+                        fi
+                    ::  else ->
+                        self.location = 29 - self.location;
+                    fi
+
+                    self.road_segment = road_segment_to_move_to;
+                    
                 fi
             fi
 
             goto query_backend;
-        
-        ::  else ->
-            goto query_backend;
+                
         fi
+
     ::  else ->
         goto query_backend;
+
     od
+}
+
+proctype traffic_light_get_vehicle_location(chan res; byte road; byte lane_direction; byte location_to_query) {
+
+    short id = NUMBER_OF_VEHICLES + 1;
+
+    bit vehicle_present_or_not;
+    short number_of_vehicles_on_that_lane;
+
+    query:
+    do
+    ::  len(query_location) >= 0 ->
+        query_location!id, road, lane_direction, location_to_query;
+        query_location_return??eval(id), vehicle_present_or_not, number_of_vehicles_on_that_lane;
+        break;
+    ::  else ->
+        goto query;
+    od
+
+    res!vehicle_present_or_not, number_of_vehicles_on_that_lane;
 }
 
 proctype Traffic_Signal_Control_Master() {
 
+    chan query_return = [0] of {bit, short};
+
+    bit exist_car1;
+    bit exist_car2;
+    bit exist_car3
+    bit exist_car4;
+
+    short number_of_vehicles_on_that_lane;
+
     ALL_CROSSROADS_DEF self_traffic_light_records;
     ALL_CROSSROADS_DEF received_traffic_light_records
+
+    byte i;
+
+    for(i: 0..4) {
+        self_traffic_light_records.crossroad_Z_record.traffic_lights[i] = RED;
+        self_traffic_light_records.crossroad_Y_record.traffic_lights[i] = RED;
+        self_traffic_light_records.crossroad_X_record.traffic_lights[i] = RED;
+        self_traffic_light_records.crossroad_W_record.traffic_lights[i] = RED;
+        self_traffic_light_records.crossroad_V_record.traffic_lights[i] = RED;
+        self_traffic_light_records.crossroad_U_record.traffic_lights[i] = RED;
+        self_traffic_light_records.crossroad_D_record.traffic_lights[i] = RED;
+        self_traffic_light_records.crossroad_C_record.traffic_lights[i] = RED;
+        self_traffic_light_records.crossroad_B_record.traffic_lights[i] = RED;
+    }
 
     byte self_clock;   
     byte received_clock;
 
     decision_making_state:  
     do
-    ::  goto backend_reporting_state;
+    ::  true ->
+
+        byte num1 = 0;
+        byte num2 = 0;
+        byte num3 = 0;
+        byte num4 = 0;
+
+        exist_car1 = 0;
+        exist_car2 = 0;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_L, DIRECTION_RIGHT, 29);
+        query_return?exist_car1, num1;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_O, DIRECTION_RIGHT, 29);
+        query_return?exist_car2, num2;
+
+        if
+        ::  num1 >= num2 ->
+            self_traffic_light_records.crossroad_B_record.traffic_lights[SOUTH] = GREEN;
+            self_traffic_light_records.crossroad_B_record.traffic_lights[WEST] = RED;
+        ::  else ->
+            self_traffic_light_records.crossroad_B_record.traffic_lights[WEST] = GREEN;
+            self_traffic_light_records.crossroad_B_record.traffic_lights[SOUTH] = RED;
+        fi
+
+        exist_car1 = 0;
+        exist_car2 = 0;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_P, DIRECTION_LEFT, 0);
+        query_return?exist_car1, num1;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_N, DIRECTION_RIGHT, 29);
+        query_return?exist_car2, num2;
+
+        if
+        ::  num1 >= num2 ->
+            self_traffic_light_records.crossroad_C_record.traffic_lights[EAST] = GREEN;
+            self_traffic_light_records.crossroad_C_record.traffic_lights[SOUTH] = RED;
+        ::  else ->
+            self_traffic_light_records.crossroad_C_record.traffic_lights[SOUTH] = GREEN;
+            self_traffic_light_records.crossroad_C_record.traffic_lights[EAST] = RED;
+        fi
+
+        exist_car1 = 0;
+        exist_car2 = 0;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_F, DIRECTION_LEFT, 0);
+        query_return?exist_car1, num1;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_I, DIRECTION_LEFT, 0);
+        query_return?exist_car2, num2;
+
+        if
+        ::  num1 >= num2 ->
+            self_traffic_light_records.crossroad_D_record.traffic_lights[EAST] = GREEN;
+            self_traffic_light_records.crossroad_D_record.traffic_lights[NORTH] = RED;
+        ::  else ->
+            self_traffic_light_records.crossroad_D_record.traffic_lights[NORTH] = GREEN;
+            self_traffic_light_records.crossroad_D_record.traffic_lights[EAST] = RED;
+        fi
+
+        exist_car1 = 0;
+        exist_car2 = 0;
+        exist_car3 = 0;
+        exist_car4 = 0;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_H, DIRECTION_RIGHT, 29);
+        query_return?exist_car1, num1;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_J, DIRECTION_LEFT, 0);
+        query_return?exist_car2, num2;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_K, DIRECTION_RIGHT, 29);
+        query_return?exist_car3, num3;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_M, DIRECTION_LEFT, 0);
+        query_return?exist_car4, num4;
+
+        if
+        ::  num1 >= num2 && \
+            num1 >= num3 && \
+            num1 >= num4 ->
+            self_traffic_light_records.crossroad_U_record.traffic_lights[SOUTH] = GREEN;
+            self_traffic_light_records.crossroad_U_record.traffic_lights[NORTH] = RED;
+            self_traffic_light_records.crossroad_U_record.traffic_lights[WEST] = RED;
+            self_traffic_light_records.crossroad_U_record.traffic_lights[EAST] = RED;
+        ::  num2 >= num1 && \
+            num2 >= num3 && \
+            num2 >= num4 ->
+            self_traffic_light_records.crossroad_U_record.traffic_lights[EAST] = GREEN;
+            self_traffic_light_records.crossroad_U_record.traffic_lights[NORTH] = RED;
+            self_traffic_light_records.crossroad_U_record.traffic_lights[SOUTH] = RED;
+            self_traffic_light_records.crossroad_U_record.traffic_lights[WEST] = RED;
+        ::  num3 >= num1 && \
+            num3 >= num2 && \
+            num3 >= num4 ->
+            self_traffic_light_records.crossroad_U_record.traffic_lights[WEST] = GREEN;
+            self_traffic_light_records.crossroad_U_record.traffic_lights[NORTH] = RED;
+            self_traffic_light_records.crossroad_U_record.traffic_lights[SOUTH] = RED;
+            self_traffic_light_records.crossroad_U_record.traffic_lights[EAST] = RED;
+        ::  else ->
+            self_traffic_light_records.crossroad_U_record.traffic_lights[NORTH] = GREEN;
+            self_traffic_light_records.crossroad_U_record.traffic_lights[EAST] = RED;
+            self_traffic_light_records.crossroad_U_record.traffic_lights[SOUTH] = RED;
+            self_traffic_light_records.crossroad_U_record.traffic_lights[WEST] = RED;
+        fi
+
+        exist_car1 = 0;
+        exist_car2 = 0;
+        exist_car3 = 0;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_M, DIRECTION_RIGHT, 29);
+        query_return?exist_car1, num1;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_O, DIRECTION_LEFT, 0);
+        query_return?exist_car2, num2;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_P, DIRECTION_RIGHT, 29);
+        query_return?exist_car3, num3;
+
+        if
+        ::  num1 >= num2 && \
+            num1 >= num3 ->
+            self_traffic_light_records.crossroad_V_record.traffic_lights[SOUTH] = GREEN;
+            self_traffic_light_records.crossroad_V_record.traffic_lights[WEST] = RED;
+            self_traffic_light_records.crossroad_V_record.traffic_lights[EAST] = RED;
+        ::  num2 >= num1 && \
+            num2 >= num3 ->
+            self_traffic_light_records.crossroad_V_record.traffic_lights[EAST] = GREEN;
+            self_traffic_light_records.crossroad_V_record.traffic_lights[SOUTH] = RED;
+            self_traffic_light_records.crossroad_V_record.traffic_lights[WEST] = RED;        
+        ::  else ->
+            self_traffic_light_records.crossroad_V_record.traffic_lights[WEST] = GREEN;
+            self_traffic_light_records.crossroad_V_record.traffic_lights[SOUTH] = RED;
+            self_traffic_light_records.crossroad_V_record.traffic_lights[EAST] = RED;         
+        fi
+
+        exist_car1 = 0;
+        exist_car2 = 0;
+        exist_car3 = 0;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_I, DIRECTION_RIGHT, 29);
+        query_return?exist_car1, num1;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_K, DIRECTION_LEFT, 0);
+        query_return?exist_car2, num2;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_N, DIRECTION_LEFT, 0);
+        query_return?exist_car3, num3;
+
+        if
+        ::  num1 >= num2 && \
+            num1 >= num3 ->
+            self_traffic_light_records.crossroad_W_record.traffic_lights[SOUTH] = GREEN;
+            self_traffic_light_records.crossroad_W_record.traffic_lights[NORTH] = RED;
+            self_traffic_light_records.crossroad_W_record.traffic_lights[EAST] = RED;
+        ::  num2 >= num1 && \
+            num2 >= num3 ->
+            self_traffic_light_records.crossroad_W_record.traffic_lights[EAST] = GREEN;
+            self_traffic_light_records.crossroad_W_record.traffic_lights[NORTH] = RED;
+            self_traffic_light_records.crossroad_W_record.traffic_lights[SOUTH] = RED;        
+        ::  else ->
+            self_traffic_light_records.crossroad_W_record.traffic_lights[NORTH] = GREEN;
+            self_traffic_light_records.crossroad_W_record.traffic_lights[EAST] = RED;
+            self_traffic_light_records.crossroad_W_record.traffic_lights[SOUTH] = RED;         
+        fi
+
+        exist_car1 = 0;
+        exist_car2 = 0;
+        exist_car3 = 0;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_E, DIRECTION_LEFT, 0);
+        query_return?exist_car1, num1;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_F, DIRECTION_RIGHT, 29);
+        query_return?exist_car2, num2;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_H, DIRECTION_LEFT, 0);
+        query_return?exist_car3, num3;
+
+        if
+        ::  num1 >= num2 && \
+            num1 >= num3 ->
+            self_traffic_light_records.crossroad_X_record.traffic_lights[EAST] = GREEN;
+            self_traffic_light_records.crossroad_X_record.traffic_lights[NORTH] = RED;
+            self_traffic_light_records.crossroad_X_record.traffic_lights[WEST] = RED;
+        ::  num2 >= num1 && \
+            num2 >= num3 ->
+            self_traffic_light_records.crossroad_X_record.traffic_lights[WEST] = GREEN;
+            self_traffic_light_records.crossroad_X_record.traffic_lights[NORTH] = RED;
+            self_traffic_light_records.crossroad_X_record.traffic_lights[EAST] = RED;        
+        ::  else ->
+            self_traffic_light_records.crossroad_X_record.traffic_lights[NORTH] = GREEN;
+            self_traffic_light_records.crossroad_X_record.traffic_lights[EAST] = RED;
+            self_traffic_light_records.crossroad_X_record.traffic_lights[WEST] = RED;        
+        fi
+
+        exist_car1 = 0;
+        exist_car2 = 0;
+        exist_car3 = 0;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_G, DIRECTION_RIGHT, 29);
+        query_return?exist_car1, num1;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_J, DIRECTION_RIGHT, 29);
+        query_return?exist_car2, num2;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_L, DIRECTION_LEFT, 0);
+        query_return?exist_car3, num3;
+
+        if
+        ::  num1 >= num2 && \
+            num1 >= num3 ->
+            self_traffic_light_records.crossroad_Y_record.traffic_lights[SOUTH] = GREEN;
+            self_traffic_light_records.crossroad_Y_record.traffic_lights[NORTH] = RED;
+            self_traffic_light_records.crossroad_Y_record.traffic_lights[WEST] = RED;
+        ::  num2 >= num1 && \
+            num2 >= num3 ->
+            self_traffic_light_records.crossroad_Y_record.traffic_lights[WEST] = GREEN;
+            self_traffic_light_records.crossroad_Y_record.traffic_lights[NORTH] = RED;
+            self_traffic_light_records.crossroad_Y_record.traffic_lights[SOUTH] = RED;        
+        ::  else ->
+            self_traffic_light_records.crossroad_Y_record.traffic_lights[NORTH] = GREEN;
+            self_traffic_light_records.crossroad_Y_record.traffic_lights[WEST] = RED;
+            self_traffic_light_records.crossroad_Y_record.traffic_lights[SOUTH] = RED;  
+        fi
+
+        exist_car1 = 0;
+        exist_car2 = 0;
+        exist_car3 = 0;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_A, DIRECTION_LEFT, 0);
+        query_return?exist_car1, num1;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_E, DIRECTION_RIGHT, 29);
+        query_return?exist_car2, num2;
+
+        run traffic_light_get_vehicle_location(query_return, ROAD_G, DIRECTION_LEFT, 0);
+        query_return?exist_car3, num3;
+
+        if
+        ::  num1 >= num2 && \
+            num1 >= num3 ->
+            self_traffic_light_records.crossroad_Z_record.traffic_lights[EAST] = GREEN;
+            self_traffic_light_records.crossroad_Z_record.traffic_lights[NORTH] = RED;
+            self_traffic_light_records.crossroad_Z_record.traffic_lights[WEST] = RED;
+        ::  num2 >= num1 && \
+            num2 >= num3 ->
+            self_traffic_light_records.crossroad_Z_record.traffic_lights[WEST] = GREEN;
+            self_traffic_light_records.crossroad_Z_record.traffic_lights[NORTH] = RED;
+            self_traffic_light_records.crossroad_Z_record.traffic_lights[EAST] = RED;        
+        ::  else ->
+            self_traffic_light_records.crossroad_Z_record.traffic_lights[NORTH] = GREEN;
+            self_traffic_light_records.crossroad_Z_record.traffic_lights[EAST] = RED;
+            self_traffic_light_records.crossroad_Z_record.traffic_lights[WEST] = RED;       
+        fi
+        
+        goto backend_reporting_state;
     od
     
     backend_reporting_state:

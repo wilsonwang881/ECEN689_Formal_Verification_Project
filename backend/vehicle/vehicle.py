@@ -653,11 +653,11 @@ class Vehicle(threading.Thread):
 
                             route_index = 0
 
-                            if len(route_candidate) > 1:                                
+                            if len(route_candidate) > 1:
 
-                                route_index = random.randint(0, len(route_candidate) - 1)                                            
+                                route_index = random.randint(0, len(route_candidate) - 1)
 
-                            route_to_be_taken = route_candidate[route_index]                          
+                            route_to_be_taken = route_candidate[route_index]
                                                     
                             # Dummy value
                             position_key_tmpp = Signal_light_positions.EAST
