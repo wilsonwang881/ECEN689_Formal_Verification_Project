@@ -580,7 +580,7 @@ proctype Vehicle(short id) {
     self.speed = STOPPED;
     self.route_completion = NOT_STARTED;
 
-    bit location_visited[4];
+    mtype:Crossroads location_visited[4];
     byte total_number_location_visited = 0;
 
     short i;
@@ -807,9 +807,11 @@ proctype Vehicle(short id) {
                     road_segment_to_query_enable[i] = 0;
                 }                
 
-                mtype:Road road_segment_to_query[3];
+                mtype:Signal_light_positions road_segment_to_query_key_direction[3];
+                mtype:Road road_segment_to_query_val_road_segment[3];
 
                 byte road_segment_to_query_number = 0;
+                byte available_road_segment_to_query_number = 0;
 
                 mtype:Signal_light_positions self_crossroad_position = NORTH;
 
@@ -818,8 +820,15 @@ proctype Vehicle(short id) {
                     ::  MAP.CROSSROAD_RECORD[crossroad_query_targt].road_records[i] != 0 && \
                         MAP.CROSSROAD_RECORD[crossroad_query_targt].road_records[i] != self.road_segment ->
                         road_segment_to_query_enable[road_segment_to_query_number] = 1;
-                        road_segment_to_query[road_segment_to_query_number] = MAP.CROSSROAD_RECORD[crossroad_query_targt].road_records[i];
+                        road_segment_to_query_key_direction[road_segment_to_query_number] = i;
+                        road_segment_to_query_val_road_segment[road_segment_to_query_number] = MAP.CROSSROAD_RECORD[crossroad_query_targt].road_records[i];
                         road_segment_to_query_number++;
+                        available_road_segment_to_query_number++;
+                    ::  else ->
+                        skip;
+                    fi
+                    
+                    if
                     ::  MAP.CROSSROAD_RECORD[crossroad_query_targt].road_records[i] != 0 && \
                         MAP.CROSSROAD_RECORD[crossroad_query_targt].road_records[i] == self.road_segment ->
                         self_crossroad_position = i;
@@ -829,11 +838,13 @@ proctype Vehicle(short id) {
                 }
 
                 road_segment_to_query_number--;
+                available_road_segment_to_query_number--;
 
-                for(i: 0..road_segment_to_query_number) {
-                    bit change_query_direction = 0;
+                bit change_query_direction = 0;
 
-                    mtype:Signal_light_positions position_key = road_segment_to_query[i];
+                for(i: 0..road_segment_to_query_number) {                    
+
+                    mtype:Signal_light_positions position_key = road_segment_to_query_key_direction[i];
 
                     if
                     ::  self_crossroad_position == SOUTH ->
@@ -854,32 +865,180 @@ proctype Vehicle(short id) {
                         fi
                     ::  self_crossroad_position == NORTH ->
                         if
-                        ::  self_crossroad_position == SOUTH || \
-                            self_crossroad_position == WEST ->
+                        ::  position_key == SOUTH || \
+                            position_key == WEST ->
                             change_query_direction = 0;
                         ::  else ->
                             change_query_direction = 1;
                         fi
                     ::  else ->
                         if
-                        ::  self_crossroad_position == EAST || \
-                            self_crossroad_position == NORTH ->
+                        ::  position_key == EAST || \
+                            position_key == NORTH ->
                             change_query_direction = 0;
                         ::  else ->
                             change_query_direction = 1;
                         fi
                     fi
 
+                    mtype:Direction query_direction = self.direction;
+                    
+                    byte target_query_location = self.location;
+
+                    if
+                    ::  change_query_direction ->
+                        if
+                        ::  self.direction == DIRECTION_LEFT ->
+                            query_direction = DIRECTION_RIGHT;
+                        ::  else ->
+                            query_direction = DIRECTION_LEFT;
+                        fi
+                    ::  else ->
+                        target_query_location = 29 - self.location;
+                    fi
+
+                    // Check whether there are vehicles on other sides of the crossroad
+                    check_vehicles_on_other_sides_of_crossroad:
+                    do
+                    ::  len(query_location) >= 0 ->
+                        query_location!id, road_segment_to_query_val_road_segment[i], query_direction, target_query_location;
+                        query_location_return??eval(id), vehicle_present_or_not, number_of_vehicles_on_that_lane;
+                        break;
+                    ::  else ->
+                        goto check_vehicles_on_other_sides_of_crossroad;
+                    od
+
+                    if
+                    ::  vehicle_present_or_not ->
+                        available_road_segment_to_query_number--;
+                        road_segment_to_query_enable[i] = 0;
+                    ::  else ->
+                        skip;
+                    fi
                 }
 
+                if
+                // All other sides of the crossroad have vehicles, stop
+                ::  available_road_segment_to_query_number == 0 ->
+                    self.speed = STOPPED;
+                // Only one side of the crossroad has space to move to, move
+                ::  available_road_segment_to_query_number == 1 ->
+                    
+                    self.speed = MOVING;
+
+                    mtype:Road road_segment_to_move_to;
+
+                    for(i: 0..2) {
+                        if
+                        ::  road_segment_to_query_enable[i] == 1 ->
+                            road_segment_to_move_to = road_segment_to_query_val_road_segment[i];
+                            break;
+                        ::  else ->
+                            skip;
+                        fi
+                    }
+
+                    // Check if the vehicle will move past one of the target crossroads
+
+                    bit found_in_target_crossroad = 0;
+                
+                    for(i: 0..3) {
+                        if
+                        ::  crossroad_query_targt == location_visited[i] ->
+                            found_in_target_crossroad = 1;
+                            break;
+                        ::  else ->
+                            skip
+                        fi
+                    }
+
+                    if
+                    ::  found_in_target_crossroad == 0 ->
+                        for(i: 0..2) {
+                            if
+                            ::  crossroad_query_targt == MAP.target_crossroad[i] ->
+                                found_in_target_crossroad = 1;
+                                location_visited[total_number_location_visited] = 1;
+                                total_number_location_visited++;
+                                break;
+                            ::  else ->
+                                skip;
+                            fi
+                        }
+                    ::  else ->
+                        skip;
+                    fi
+
+                    // Decide if change lane direction and self direction
+                    mtype:Signal_light_positions position_key_tmpp;
+
+                    for(i: NORTH..EAST) {
+                        if
+                        ::  MAP.CROSSROAD_RECORD[crossroad_query_targt].road_records[i] == road_segment_to_move_to ->
+                            position_key_tmpp = i;
+                            break;
+                        ::  else ->
+                            skip;
+                        fi
+                    }
+
+                    if
+                    ::  self_crossroad_position == SOUTH ->
+                        if
+                        ::  position_key_tmpp == EAST || \
+                            position_key_tmpp == NORTH ->
+                            change_query_direction = 0;
+                        ::  else ->
+                            change_query_direction = 1;
+                        fi
+                    ::  self_crossroad_position == EAST ->
+                        if
+                        ::  position_key_tmpp == WEST || \
+                            position_key_tmpp == SOUTH ->
+                            change_query_direction = 0;
+                        ::  else ->
+                            change_query_direction = 1;
+                        fi
+                    ::  self_crossroad_position == NORTH ->
+                        if
+                        ::  position_key_tmpp == SOUTH || \
+                            position_key_tmpp == WEST ->
+                            change_query_direction = 0;
+                        ::  else ->
+                            change_query_direction = 1;
+                        fi
+                    ::  else ->
+                        if
+                        ::  position_key_tmpp == EAST || \
+                            position_key_tmpp == NORTH ->
+                            change_query_direction = 0;
+                        ::  else ->
+                            change_query_direction = 1;
+                        fi
+                    fi
+
+                    if
+                    ::  change_query_direction ->
+                        if
+                        ::  self.direction == DIRECTION_LEFT ->
+                            self.direction = DIRECTION_RIGHT;
+                        ::  else ->
+                            self.direction = DIRECTION_LEFT;
+                        fi
+                    ::  else ->
+                        self.location = 29 - self.location;
+                    fi
+
+                    self.road_segment = road_segment_to_move_to
+
+                // If the vehicle can move to more than one side of the crossroad
+                ::  else ->
+
+                fi
             fi
 
             goto query_backend;
-
-        ::  len(query_signal_lights) >= 0 ->
-            query_signal_lights!id,crossroad_query_targt;
-            query_signal_lights_return??eval(id),crossroad_lights; 
-            goto query_backend;
+        
         ::  else ->
             goto query_backend;
         fi
