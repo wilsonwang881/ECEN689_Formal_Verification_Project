@@ -10,7 +10,7 @@ The file is written in Promela syntax.
 
 #include "lock.h"
 
-short NUMBER_OF_VEHICLES = 5;
+short NUMBER_OF_VEHICLES = 4;
 
 #define CHANNEL_LENGTH 1
 
@@ -581,6 +581,7 @@ proctype Vehicle(short id) {
     self.route_completion = NOT_STARTED;
 
     bit location_visited[4];
+    byte total_number_location_visited = 0;
 
     short i;
 
@@ -594,7 +595,13 @@ proctype Vehicle(short id) {
 
     DB_CROSSROAD_RECORD_DEF crossroad_lights;
 
+    bit added;
+
     byte received_clock;
+
+    bit vehicle_present_or_not;
+
+    byte number_of_vehicles_on_that_lane;
 
     update_backend:
     do
@@ -614,12 +621,270 @@ proctype Vehicle(short id) {
 
     query_backend:
     do
-    ::  len(query_signal_lights) >= 0 ->
-        query_signal_lights!id,crossroad_query_targt;
-        query_signal_lights_return??eval(id),crossroad_lights;  
-        goto update_backend;
+    // Try to join the map
+    ::  self.route_completion == NOT_STARTED ->
+        do
+        ::  len(add_vehicle) >= 0 ->
+            add_vehicle!id;
+            add_vehicle_return??eval(id), added, received_clock;
+            if
+            ::  added ->
+                self.road_segment = ROAD_A;
+                self.direction = DIRECTION_LEFT;
+                self.location = 1;
+                self.speed = STOPPED;
+                self.route_completion = ENROUTE;
+                for(i: 0..3) {
+                    location_visited[i] = 0;
+                }
+                total_number_location_visited = 0;
+            ::  else ->
+                goto update_backend;
+            fi
+        ::  else ->
+            goto update_backend;
+        od
+
+    // Already in the map
+    ::  self.route_completion == ENROUTE ->
+
+        if
+        // Finishing stage
+        ::  self.road_segment == ROAD_A && self.direction == DIRECTION_RIGHT ->
+            if
+            ::  self.location == 1 ->
+                self.road_segment = ROAD_A;
+                self.direction = DIRECTION_LEFT;
+                self.location = 2;
+                self.speed = STOPPED;
+                for(i: 0..3) {
+                    location_visited[i] = 0;
+                }
+                total_number_location_visited = 0;
+                self.route_completion = NOT_STARTED;
+            ::  else ->
+                query_road_A_location_1:
+                do
+                ::  len(query_location) >= 0 ->
+                    query_location!id, ROAD_A, DIRECTION_RIGHT, 1;
+                    query_location_return??eval(id), vehicle_present_or_not, number_of_vehicles_on_that_lane;
+
+                    if
+                    ::  vehicle_present_or_not ->
+                        self.speed = STOPPED;
+                        break;
+                    ::  else ->
+                        self.speed = MOVING;
+                        self.location++;
+                        break;
+                    fi
+                ::  else ->
+                    goto query_road_A_location_1;
+                od                
+            fi
+            goto update_backend;
+
+        // Vehicle moving without checking traffic lights
+        ::  (self.location != 0 && \
+            self.location != 29) || \
+            (self.location == 29 && \
+            self.direction == DIRECTION_LEFT) || \
+            (self.location == 0 && \
+            self.direction == DIRECTION_RIGHT) ->
+
+            // Determine the exact location to check
+            byte location_to_query;
+
+            if
+            ::  self.direction == DIRECTION_RIGHT ->
+                location_to_query = self.location + 1;
+            ::  else ->
+                location_to_query = self.location - 1;
+            fi
+
+            // check with the backend
+            check_location_no_traffic_lights:
+            do
+            ::  len(query_location) >= 0 ->
+                query_location!id, self.road_segment, self.direction, location_to_query;
+                query_location_return??eval(id), vehicle_present_or_not, number_of_vehicles_on_that_lane;
+                break;
+            ::  else ->
+                goto check_location_no_traffic_lights;
+            od
+
+            if
+            ::  vehicle_present_or_not ->
+                self.speed = STOPPED;
+            ::  else ->
+                self.location = location_to_query;
+            fi
+
+            goto query_backend;
+
+        // Waiting to finish the route around crossroad Z
+        :: (self.location ==  0 && \
+            self.road_segment == ROAD_G && \
+            self.direction == DIRECTION_LEFT && \
+            total_number_location_visited == 3) || \
+            (self.location ==  29 && \
+            self.road_segment == ROAD_E && \
+            self.direction == DIRECTION_RIGHT && \
+            total_number_location_visited == 3)            
+
+            check_traffic_light_at_crossroad_z:
+            do
+            ::  len(query_signal_lights) >= 0 ->
+                query_signal_lights!id, CROSSROAD_Z;
+                query_signal_lights_return??eval(id), crossroad_lights; 
+            ::  else ->
+                goto check_traffic_light_at_crossroad_z;
+            od
+
+            mtype:Traffic_light traffic_light_at_crossroad_z;
+
+            if
+            ::  self.road_segment == ROAD_E ->
+                traffic_light_at_crossroad_z = crossroad_lights.traffic_lights[3];
+            ::  else ->
+                traffic_light_at_crossroad_z = crossroad_lights.traffic_lights[1];
+            fi
+
+            if
+            ::  traffic_light_at_crossroad_z == RED ->
+                self.speed = STOPPED;
+            ::  else ->
+
+                check_location_near_crossroad_z:
+                do
+                ::  len(query_location) >= 0 ->
+                    query_location!id, ROAD_A, DIRECTION_RIGHT, 0;
+                    query_location_return??eval(id), vehicle_present_or_not, number_of_vehicles_on_that_lane;
+                    break;
+                ::  else ->
+                    goto check_location_near_crossroad_z;
+                od
+            fi
+
+            if
+            ::  vehicle_present_or_not ->
+                self.speed = STOPPED;
+            ::  else ->
+                self.speed = MOVING;
+                self.location = 0;
+                self.road_segment = ROAD_A;
+                self.direction = DIRECTION_RIGHT;
+            fi
+
+            goto query_backend;
+
+        // At crossroads, need to check traffic lights
+        ::  self.location == 0 || \
+            self.location == 29 ->
+
+            crossroad_query_targt = MAP.ROAD_RECORD[self.road_segment].direction_records[self.direction].crossroad;
+            mtype:Signal_light_positions traffic_light_orientation = MAP.ROAD_RECORD[self.road_segment].direction_records[self.direction].traffic_light_orientation;
+
+            check_traffic_light_at_crossroad:
+            do
+            ::  len(query_signal_lights) >= 0 ->
+                query_signal_lights!id, crossroad_query_targt;
+                query_signal_lights_return??eval(id), crossroad_lights; 
+            ::  else ->
+                goto check_traffic_light_at_crossroad;
+            od
+
+            mtype:Traffic_light traffic_light_at_crossroad = crossroad_lights.traffic_lights[traffic_light_orientation];
+
+            if
+            ::  traffic_light_at_crossroad == RED ->
+                self.speed = STOPPED;
+            ::  else ->            
+
+                bit road_segment_to_query_enable[3];
+
+                for(i: 0..2) {
+                    road_segment_to_query_enable[i] = 0;
+                }                
+
+                mtype:Road road_segment_to_query[3];
+
+                byte road_segment_to_query_number = 0;
+
+                mtype:Signal_light_positions self_crossroad_position = NORTH;
+
+                for(i: NORTH..EAST) {
+                    if
+                    ::  MAP.CROSSROAD_RECORD[crossroad_query_targt].road_records[i] != 0 && \
+                        MAP.CROSSROAD_RECORD[crossroad_query_targt].road_records[i] != self.road_segment ->
+                        road_segment_to_query_enable[road_segment_to_query_number] = 1;
+                        road_segment_to_query[road_segment_to_query_number] = MAP.CROSSROAD_RECORD[crossroad_query_targt].road_records[i];
+                        road_segment_to_query_number++;
+                    ::  MAP.CROSSROAD_RECORD[crossroad_query_targt].road_records[i] != 0 && \
+                        MAP.CROSSROAD_RECORD[crossroad_query_targt].road_records[i] == self.road_segment ->
+                        self_crossroad_position = i;
+                    ::  else ->
+                        skip;
+                    fi
+                }
+
+                road_segment_to_query_number--;
+
+                for(i: 0..road_segment_to_query_number) {
+                    bit change_query_direction = 0;
+
+                    mtype:Signal_light_positions position_key = road_segment_to_query[i];
+
+                    if
+                    ::  self_crossroad_position == SOUTH ->
+                        if
+                        ::  position_key == EAST || \
+                            position_key == NORTH ->
+                            change_query_direction = 0;
+                        ::  else ->
+                            change_query_direction = 1;
+                        fi
+                    ::  self_crossroad_position == EAST ->
+                        if
+                        ::  position_key == WEST || \
+                            position_key == SOUTH ->
+                            change_query_direction = 0;
+                        ::  else ->
+                            change_query_direction = 1;
+                        fi
+                    ::  self_crossroad_position == NORTH ->
+                        if
+                        ::  self_crossroad_position == SOUTH || \
+                            self_crossroad_position == WEST ->
+                            change_query_direction = 0;
+                        ::  else ->
+                            change_query_direction = 1;
+                        fi
+                    ::  else ->
+                        if
+                        ::  self_crossroad_position == EAST || \
+                            self_crossroad_position == NORTH ->
+                            change_query_direction = 0;
+                        ::  else ->
+                            change_query_direction = 1;
+                        fi
+                    fi
+
+                }
+
+            fi
+
+            goto query_backend;
+
+        ::  len(query_signal_lights) >= 0 ->
+            query_signal_lights!id,crossroad_query_targt;
+            query_signal_lights_return??eval(id),crossroad_lights; 
+            goto query_backend;
+        ::  else ->
+            goto query_backend;
+        fi
     ::  else ->
-        goto query_backend;        
+        goto query_backend;
     od
 }
 
