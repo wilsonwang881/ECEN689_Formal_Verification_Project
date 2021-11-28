@@ -14,6 +14,12 @@ short NUMBER_OF_VEHICLES = 4;
 
 #define CHANNEL_LENGTH 1
 
+#define g1 (Vehicle@waiting_to_finish_at_crossroad_z)
+
+#define g2 (Vehicle@moving_through_crossroad_not_z)
+
+ltl moving_through_crossroad_z { <> (g1 || g2) }
+
 bit mutex = 0;
 
 bit vehicles_reported[NUMBER_OF_VEHICLES];
@@ -200,6 +206,7 @@ proctype Backend_set_signal_lights() {
     ALL_CROSSROADS_DEF payload;
 
     byte i;
+    byte number_of_green_signals;
 
     loop:
     do
@@ -213,41 +220,140 @@ proctype Backend_set_signal_lights() {
 
             traffic_light_reported = 1;
 
+            number_of_green_signals = 0
+
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_Z].traffic_lights[i] = payload.crossroad_Z_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_Z_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_Y].traffic_lights[i] = payload.crossroad_Y_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_Y_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_X].traffic_lights[i] = payload.crossroad_X_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_X_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_W].traffic_lights[i] = payload.crossroad_W_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_W_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_V].traffic_lights[i] = payload.crossroad_V_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_V_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_U].traffic_lights[i] = payload.crossroad_U_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_U_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_D].traffic_lights[i] = payload.crossroad_D_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_D_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_C].traffic_lights[i] = payload.crossroad_C_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_C_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_B].traffic_lights[i] = payload.crossroad_B_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_B_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
 
         ::  else ->
             skip;
@@ -904,6 +1010,7 @@ proctype Vehicle(short id) {
                 od
             fi
 
+            waiting_to_finish_at_crossroad_z:
             if
             ::  vehicle_present_or_not ->
                 self.speed = STOPPED;
@@ -942,9 +1049,10 @@ proctype Vehicle(short id) {
             ::  traffic_light_at_crossroad == RED ->
                 self.speed = STOPPED;
             ::  else ->            
-
+                
                 bit road_segment_to_query_enable[3];
 
+                moving_through_crossroad_not_z:
                 for(i: 0..2) {
                     road_segment_to_query_enable[i] = 0;
                 }                
@@ -1688,7 +1796,7 @@ proctype Traffic_Signal_Control_Master() {
             self_traffic_light_records.crossroad_Z_record.traffic_lights[EAST] = RED;
             self_traffic_light_records.crossroad_Z_record.traffic_lights[WEST] = RED;       
         fi
-        
+
         goto backend_reporting_state;
     od
     
