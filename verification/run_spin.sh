@@ -5,10 +5,10 @@ rm model
 rm *pan*
 
 # Elaborate Model
-spin -a main.pml -O 
+spin -O2 -a main.pml 
 
 # Compile the code
-gcc -DNOBOUNDCHECK -DVECTORSZ=8192 -DMEMLIM=60000 -DSPACE -DBITSTATE -DNOFAIR -DSAFETY -DSFH -DNCORE=16 -DVMAX=9000 -o model pan.c
+gcc -DNOBOUNDCHECK -DVECTORSZ=4096 -DMEMLIM=60000 -DSPACE -DBITSTATE -DNOFAIR -DSAFETY -DSFH -DNCORE=16 -DVMAX=9000 -o model pan.c
 
 # Execute the code
-./model -w30 -m5000000
+./model -w30 -m50000

@@ -10,9 +10,15 @@ The file is written in Promela syntax.
 
 #include "lock.h"
 
-short NUMBER_OF_VEHICLES = 4;
+short NUMBER_OF_VEHICLES = 20;
 
 #define CHANNEL_LENGTH 1
+
+#define g1 (Vehicle@waiting_to_finish_at_crossroad_z)
+
+#define g2 (Vehicle@moving_through_crossroad_not_z)
+
+ltl moving_through_crossroad_z { <> (g1 || g2) }
 
 bit mutex = 0;
 
@@ -112,7 +118,7 @@ typedef DB_VEHICLE_RECORD_DEF {
 
 typedef DB_DEF {
     DB_CROSSROAD_RECORD_DEF crossroad_records[9 + 1];  
-    DB_VEHICLE_RECORD_DEF vehicle_records[10];
+    DB_VEHICLE_RECORD_DEF vehicle_records[20];
     short pending_vehicles;
     short vehicle_collisions;
     short u_turns;
@@ -200,6 +206,7 @@ proctype Backend_set_signal_lights() {
     ALL_CROSSROADS_DEF payload;
 
     byte i;
+    byte number_of_green_signals;
 
     loop:
     do
@@ -213,41 +220,140 @@ proctype Backend_set_signal_lights() {
 
             traffic_light_reported = 1;
 
+            number_of_green_signals = 0
+
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_Z].traffic_lights[i] = payload.crossroad_Z_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_Z_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_Y].traffic_lights[i] = payload.crossroad_Y_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_Y_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_X].traffic_lights[i] = payload.crossroad_X_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_X_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_W].traffic_lights[i] = payload.crossroad_W_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_W_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_V].traffic_lights[i] = payload.crossroad_V_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_V_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_U].traffic_lights[i] = payload.crossroad_U_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_U_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_D].traffic_lights[i] = payload.crossroad_D_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_D_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_C].traffic_lights[i] = payload.crossroad_C_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_C_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
+
+            number_of_green_signals = 0
 
             for(i: 0..EAST) {
                 db_reported.crossroad_records[CROSSROAD_B].traffic_lights[i] = payload.crossroad_B_record.traffic_lights[i];
+
+                if
+                ::  payload.crossroad_B_record.traffic_lights[i] == GREEN ->
+                    number_of_green_signals++;
+                ::  else ->
+                    skip;
+                fi
             }
+
+            assert(number_of_green_signals == 1);
 
         ::  else ->
             skip;
@@ -416,7 +522,7 @@ proctype Backend_set_vehicle_status() {
 
             short sum = 0;
 
-            for(i: 0..31) {
+            for(i: 0..30) {
                 sum = sum + number_of_vehicles_finished[i];
             }
 
@@ -751,7 +857,7 @@ proctype Vehicle(short id) {
             current_time = received_clock;
             goto query_backend; 
         ::  else ->
-            goto update_backend;  
+            skip;
         fi        
     ::  else ->
         goto update_backend;  
@@ -840,11 +946,14 @@ proctype Vehicle(short id) {
                 location_to_query = self.location - 1;
             fi
 
+            mtype:Road _road_segment = self.road_segment;
+            mtype:Direction _direction = self.direction;
+
             // check with the backend
             check_location_no_traffic_lights:
             do
             ::  len(query_location) >= 0 ->
-                query_location!id, self.road_segment, self.direction, location_to_query;
+                query_location!id, _road_segment, _direction, location_to_query;
                 query_location_return??eval(id), vehicle_present_or_not, number_of_vehicles_on_that_lane;
                 break;
             ::  else ->
@@ -904,6 +1013,7 @@ proctype Vehicle(short id) {
                 od
             fi
 
+            waiting_to_finish_at_crossroad_z:
             if
             ::  vehicle_present_or_not ->
                 self.speed = STOPPED;
@@ -942,9 +1052,10 @@ proctype Vehicle(short id) {
             ::  traffic_light_at_crossroad == RED ->
                 self.speed = STOPPED;
             ::  else ->            
-
+                
                 bit road_segment_to_query_enable[3];
 
+                moving_through_crossroad_not_z:
                 for(i: 0..2) {
                     road_segment_to_query_enable[i] = 0;
                 }                
@@ -1386,10 +1497,13 @@ proctype traffic_light_get_vehicle_location(chan res; byte road; byte lane_direc
     bit vehicle_present_or_not;
     short number_of_vehicles_on_that_lane;
 
+    mtype:Road _road = road;
+    mtype:Direction _lane_direction = lane_direction;
+
     query:
     do
     ::  len(query_location) >= 0 ->
-        query_location!id, road, lane_direction, location_to_query;
+        query_location!id, _road, _lane_direction, location_to_query;
         query_location_return??eval(id), vehicle_present_or_not, number_of_vehicles_on_that_lane;
         break;
     ::  else ->
@@ -1688,7 +1802,7 @@ proctype Traffic_Signal_Control_Master() {
             self_traffic_light_records.crossroad_Z_record.traffic_lights[EAST] = RED;
             self_traffic_light_records.crossroad_Z_record.traffic_lights[WEST] = RED;       
         fi
-        
+
         goto backend_reporting_state;
     od
     
