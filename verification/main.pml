@@ -10,7 +10,7 @@ The file is written in Promela syntax.
 
 #include "lock.h"
 
-short NUMBER_OF_VEHICLES = 4;
+short NUMBER_OF_VEHICLES = 20;
 
 #define CHANNEL_LENGTH 1
 
@@ -118,7 +118,7 @@ typedef DB_VEHICLE_RECORD_DEF {
 
 typedef DB_DEF {
     DB_CROSSROAD_RECORD_DEF crossroad_records[9 + 1];  
-    DB_VEHICLE_RECORD_DEF vehicle_records[10];
+    DB_VEHICLE_RECORD_DEF vehicle_records[20];
     short pending_vehicles;
     short vehicle_collisions;
     short u_turns;
@@ -522,7 +522,7 @@ proctype Backend_set_vehicle_status() {
 
             short sum = 0;
 
-            for(i: 0..31) {
+            for(i: 0..30) {
                 sum = sum + number_of_vehicles_finished[i];
             }
 
@@ -857,7 +857,7 @@ proctype Vehicle(short id) {
             current_time = received_clock;
             goto query_backend; 
         ::  else ->
-            goto update_backend;  
+            skip;
         fi        
     ::  else ->
         goto update_backend;  
@@ -946,11 +946,14 @@ proctype Vehicle(short id) {
                 location_to_query = self.location - 1;
             fi
 
+            mtype:Road _road_segment = self.road_segment;
+            mtype:Direction _direction = self.direction;
+
             // check with the backend
             check_location_no_traffic_lights:
             do
             ::  len(query_location) >= 0 ->
-                query_location!id, self.road_segment, self.direction, location_to_query;
+                query_location!id, _road_segment, _direction, location_to_query;
                 query_location_return??eval(id), vehicle_present_or_not, number_of_vehicles_on_that_lane;
                 break;
             ::  else ->
@@ -1494,10 +1497,13 @@ proctype traffic_light_get_vehicle_location(chan res; byte road; byte lane_direc
     bit vehicle_present_or_not;
     short number_of_vehicles_on_that_lane;
 
+    mtype:Road _road = road;
+    mtype:Direction _lane_direction = lane_direction;
+
     query:
     do
     ::  len(query_location) >= 0 ->
-        query_location!id, road, lane_direction, location_to_query;
+        query_location!id, _road, _lane_direction, location_to_query;
         query_location_return??eval(id), vehicle_present_or_not, number_of_vehicles_on_that_lane;
         break;
     ::  else ->
